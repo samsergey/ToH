@@ -49,23 +49,24 @@ function start1(opts)
     var steps = opts["steps"] || 2000
     var averaging = opts["averaging"] || 0
     var maxIter  = opts["maxIter"] || 1000
+    var bound = opts["bound"] || 0
+    var side = opts["side"] || 'Lorentz'
     var s=1,ss=0,ds = exp(ln(maxIter)/steps)
     
     function exchange(data)
     {
 	var i = randomInteger(data.length)()
-//	    j = randomInteger(data.length)()
 	if (data[i] >= 1)
 	{
 	    d = 1 + floor(data[i]*alpha)
-	    data[i]-=d
 	    do	    {
 		j = randomInteger(data.length)()
-		//if (data[j]>=150) continue
 		df = min(d,1 + floor(data[j]*beta))
+		if (bound > 0 && data[j]>=bound-df) continue
+		data[i]-=df
 		data[j]+=df
 		d-=df
-	    } 	    while (d > 0)
+	    } while (d > 0)
 
 	}
 	return data
@@ -77,29 +78,31 @@ function start1(opts)
 	{
 	    xs = [m].repeat(n)
 	    s=1
-	    ss=0
+	    ss=i=0
 	    es=[]
-	    i=0;
 	}
 	var ls = new Histogram(10).fromList(xs)
 	p.cleanPaper()
 	    .histogram(ls,{'type':'PDF'})
-/*
-	es.push([ss+=s,ls.entropy])
-	p2.cleanPaper()
-	    .listPlot(es,{'joined':true,'points':false})
-	    .gridLines({'y':[1-ln(1/m)]})
-*/
-
-	p2.cleanPaper()
-	    .listPlot([[0,0],[1,1]], {'filled':true,
-				      'points':false,
-				      'joined':true,
-				      'class':'upper'})
-	    .listPlot(ls.LorenzCurve, {'filled':true,
-				       'points':true,
-				       'class':'lower'})
-	    .label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+	if(side=='entropy')
+	{
+	    es.push([ss+=s,ls.entropy])
+	    p2.cleanPaper()
+		.listPlot(es,{'joined':true,'points':false})
+		.gridLines({'y':[1-ln(1/m)]})
+	}
+	if(side=='Lorentz')
+	{
+	    p2.cleanPaper()
+		.listPlot([[0,0],[1,1]], {'filled':true,
+					  'points':false,
+					  'joined':true,
+					  'class':'upper'})
+		.listPlot(ls.LorenzCurve, {'filled':true,
+					   'points':true,
+					   'class':'lower'})
+		.label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+	}
 
 	xs = nest(exchange,xs,s*=ds)
     }
@@ -112,33 +115,35 @@ function start1(opts)
 	       xLabel : 'уровень богатства',
 	       xTickFormat : d3.format('i'),
 	       yTickFormat : d3.format('i')})
-/*    
-    var p2 = new Graphics(fig2)
-	.xRange([1,maxIter*steps/10])
-	.xAxisType('log')
-	.yRange([0,7])
-	.axes({yLabel : 'энтропия',
-	       xLabel : 'время',
-	       yTicks : 5,
-	       xTickValues : [1,100,10000,1000000],
-	       xTickFormat : d3.format('i'),
-	       yTickFormat : d3.format('i')})
-  */  
-    
-    var p2 = new Graphics(fig2,{'class':'Lorentz'})
-	.xRange([0,1])
-	.yRange([0,1])
-	.listPlot([[0,0],[1,1]], {'filled':true,
-				  'points':false,
-				  'joined':true,
-				  'class':'upper'})
-	.axes({xLabel : 'доля людей в группе',
-	       xTickFormat : fmt.percent,
-	       yTickFormat : fmt.percent,
-	       yLabel : 'доля общей суммы',
-	       xTickValues:[0,0.25,0.5,0.75,1],
-	       yTickValues:[0,0.25,0.5,0.75,1]})
-
+    if(side=='entropy')
+    {    
+	var p2 = new Graphics(fig2)
+	    .xRange([1,maxIter*steps/10])
+	    .xAxisType('log')
+	    .yRange([0,7])
+	    .axes({yLabel : 'энтропия',
+		   xLabel : 'время',
+		   yTicks : 5,
+		   xTickValues : [1,100,10000,1000000],
+		   xTickFormat : d3.format('i'),
+		   yTickFormat : d3.format('i')})
+    }
+    if(side=='Lorentz')
+    {
+	var p2 = new Graphics(fig2,{'class':'Lorentz'})
+	    .xRange([0,1])
+	    .yRange([0,1])
+	    .listPlot([[0,0],[1,1]], {'filled':true,
+				      'points':false,
+				      'joined':true,
+				      'class':'upper'})
+	    .axes({xLabel : 'доля людей в группе',
+		   xTickFormat : fmt.percent,
+		   yTickFormat : fmt.percent,
+		   yLabel : 'доля общей суммы',
+		   xTickValues:[0,0.25,0.5,0.75,1],
+		   yTickValues:[0,0.25,0.5,0.75,1]})
+    }
 	
     figure1()
     window.setInterval(figure1,1,xs)
@@ -147,10 +152,12 @@ function start1(opts)
 
 start1({'population':2000,
 	'shares':100,
-	'alpha':0.0,
-	'beta':0.0,
+	'alpha':0.5,
+	'beta':0.1,
 	'steps':1000,
-	'maxIter':2000000})
+	'maxIter':2000000,
+	'bound':00,
+	'side':'Lorentz'})
 
 function start2(opts)
 {

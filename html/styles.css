@@ -1,0 +1,42 @@
+body {
+    background-color:'yellow';
+}
+
+.Lorentz.upper.area {
+    fill : 'orange';
+}
+
+.Lorentz.upper.line {
+    stroke : 'indianred';
+    stroke-width : 3;
+}
+
+.Lorentz.lower.area {
+    fill : 'palegreen';
+}
+.Lorentz.lower.line {
+    stroke : 'black';
+    stroke-width : 1.5;
+}
+
+.listPlot.area {
+    fill : none;
+}
+
+.listPlot.line {
+    stroke : 'navy';
+    stroke-width : 1.5;
+    stroke-linejoin : "round";
+    stroke-linecap  : "round";
+}
+
+.axis {
+}
+
+.axis.label {
+    fill : 'black';
+    stroke : 'none';
+    font-family : 'sans';
+    font-style : 'italic';
+    font-size : 14px
+}

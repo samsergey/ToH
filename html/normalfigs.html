@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .points {
+	fill:indianred;
+    }
+    .curve {
+	stroke:navy;
+	stroke-dasharray:5,5;
+    }
+</style>
+  </head>
+    <body>
+    <svg id='fig1' width='500' height='400'></svg>
+    <script>
+
+
+var fig1 = d3.select("#fig1")
+
+function normalFig1()
+{
+    new Graphics(fig1)
+	.xRange([1,20])
+	.yRange([0,1])
+	.plot(x => (1 - Math.pow(0.85,x)),{'class':'curve'})
+	.listPlot(range(1,21).map(x => (1 - Math.pow(0.85,x))),{
+	    'pointSize':3,
+	    'class':'points'})
+	.axes({xTicks:20,
+	       xLabel:'размерность пространства',
+	       yLabel:'доля корки арбуза в общем объёме',
+	       yTickFormat : fmt.percent
+	      })
+}
+
+function normalFig2()
+{
+    new Graphics(fig1)
+	.xRange([1,20])
+	.yRange([0,1])
+	.plot(x => (1 - Math.pow(0.64,x)))
+	.listPlot(d3.range(1,20).map(n => Multispace2(n,1000,1)),{pointSize:3})
+	.axes({})
+}
+
+
+function Multispace(m,n,s)
+{
+    h = new Histogram(1)
+    range(n).forEach(() => h.add(isNormal(Normal(0,1).samples(m))))
+    return h.PDF(1)
+    
+    function isNormal(v)
+    {
+	return v.every(x => x <= s) ? 0 : 1
+    }
+}
+
+function Multispace2(m,n,s)
+{
+    h = new Histogram(1)
+    range(n).forEach(() => h.add(isNormal(Normal(0,1).samples(m))))
+    return h.PDF(1)
+    
+    function isNormal(v)
+    {
+	return (v.dot(v) < s*s) ? 0 : 1
+    }
+}
+
+
+normalFig2()
+
+function angle(v1,v2)
+{
+    return 180/Math.PI*Math.acos(v1.dot(v2))
+}
+
+function normalize(v)
+{
+    var n = Math.sqrt(v.dot(v))
+    return v.map(x => x / n)
+}
+
+function unitVector(m)
+{
+    return normalize(Normal(0,1).samples(m))
+}
+
+
+function angleHist(m,n)
+{
+    var h = new Histogram(180/40)
+    var v = unitVector(m)
+    d3.range(n).forEach(x => h.add(angle(v,unitVector(m))))
+    return h    
+}
+
+function angleDistPDF(m)
+{
+    return a => (a >= 180) ? 0 : 1/Math.sqrt(Math.PI)*gamma(m/2)/gamma((m-1)/2)*Math.pow(Math.sin(a/180*Math.PI),m-2)
+}
+
+function angleDistCDF(m)
+{
+    return a => integrate(angleDistPDF(m),[0,a])/180*Math.PI
+}
+
+function draw(m,n)
+{
+    new Graphics(fig1)
+	.xRange([0,180])
+	.histogram(angleHist(m,n),{type:'PDF'})
+	.plot(angleDistPDF(m))
+	.axes({})
+}
+
+function draw2()
+{
+    new Graphics(fig1)
+	.xRange([0,180])
+    	.yRange([0,1.5])
+	.plot(angleDistPDF(2))
+    	.plot(angleDistPDF(3),{domain:[0,180]})
+        .plot(angleDistPDF(4))
+        .plot(angleDistPDF(8))
+        .plot(angleDistPDF(16))
+	.axes({xLabel:'Угол между векторами',
+	       yLabel:'Плотность вероятности',
+	       xTickValues : d3.range(0,181,30)
+	      })
+    	.label('2',{at:[88,0.24]})
+	.label('3',{at:[88,0.41]})
+    	.label('4',{at:[88,0.66]})
+    	.label('8',{at:[88,1.05]})
+    	.label('16',{at:[86,1.55]})
+}
+
+//draw2(3)
+
+function draw3()
+{
+    new Graphics(fig1)
+	.xRange([-1.5,1.5])
+    	.yRange([-1.5,1.5])
+	.polarPlot(x => angleDistPDF(2)(x*180/Math.PI))
+        .polarPlot(x => angleDistPDF(4)(x*180/Math.PI))
+        .polarPlot(x => angleDistPDF(8)(x*180/Math.PI))
+        .polarPlot(x => angleDistPDF(16)(x*180/Math.PI))
+	.axes({})
+}
+
+//draw3()
+
+function Quantiles()
+{
+    new Graphics(fig1)
+	.xRange([2,11])
+	.yAxisType('log')
+	.discretePlot(m => angleDistCDF(m)(15),[2,11])
+    	.axes({xLabel:'размерность пространства',
+	       yLabel:'доля сонаправленных векторов',
+	       yTickFormat:fmt.normal})
+}
+
+//Quantiles()
+
+
+</script>
+  </body>
+</html>

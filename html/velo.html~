@@ -1,0 +1,70 @@
+<canvas id='paper' width=500 height=500></canvas>
+<p id='giny'></p>
+    <script src='signal.js'></script>
+<script src='statistics.js'></script>
+<script src='graphics.js'></script>
+<script>
+
+var L = 100
+var xs = table(() => [L*Math.random(),0.01,normal(0.5,0.1)()],[400])
+
+function route(x) {
+    var res = 0
+    for(var i=0;i<humps.length;i++)
+	res += humps[i]*gauss(i/2,0.5)(x)
+    return res
+}
+
+function route(x) {
+    return Math.cos(Math.PI*x/L*60)
+}
+
+function gauss(m,s)
+{
+    return x => Math.exp(-(x-m)*(x-m)/(2*s*s))
+}
+
+var humps = table(normal(0,1),[2*L])
+
+function step([x,v,F])
+{
+    var dx = 0.0001
+    return [(x + h*v) % L,
+	    v + h*(-(route(x+dx)-route(x-dx))/(2*dx) - C*v*v*Math.sign(v) + F/v),
+	    F]
+}
+
+var c = new Canvas(paper), ctx = c.context
+var v = new Histogram(0.05)
+
+var C = 0.8,h=0.01,t=0
+
+function next() {
+    t+=h
+    xs = xs.map(step)
+//    var v = new Histogram(0.05)
+    xs.forEach(x => v.add(x[1]))
+    c.clear()
+    c.context.fillStyle='blue'
+    c.context.globalAlpha=0.5
+    c.scale(0,2,0,8)
+    v.plot(c,'pdf')
+    //Xgrid(c,range(-0.025,2-0.025,0.1))
+    //Ygrid(c,range(0,5,0.5))
+
+    c.context.strokeStyle='red'
+    c.context.globalAlpha=1
+    c.scale(0,L,-15,5)
+    plot(c,route)
+    c.context.fillStyle='black'
+    xs.forEach(x => disc(c,x[0],route(x[0]),2))
+    c.scale(0,1,0,1)
+    listPlot(c,v.Lorenz())
+    Xgrid(c,[0.8])
+    Ygrid(c,[0.5])
+    giny.innerText = v.Giny()
+  }
+
+window.setInterval(next,1) 
+
+</script>

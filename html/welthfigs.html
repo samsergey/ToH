@@ -1,0 +1,534 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .welth .histogram {
+	stroke:orange;
+	fill:red;
+    }
+    .welth .histogram .line {
+	stroke-width:2;
+    }
+    .gridLines {
+	stroke:blue;
+    }
+    .path .line {
+	stroke:blue;
+	stroke-opacity:0.5;
+    }
+    </style>
+    </head>
+    <body>
+    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig2' width='300' height='300'></svg><br/>
+    <svg id='fig22' width='200' height='200'></svg>
+    <svg id='fig23' width='200' height='200'></svg>
+    <script>
+
+var fig1 = d3.select("#fig1")
+var fig2 = d3.select("#fig2")
+var fig22 = d3.select("#fig22")
+var fig23 = d3.select("#fig23")
+
+function start1(opts)
+{
+    var alpha = opts["alpha"] || 0
+    var beta = opts["beta"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 1000
+    var averaging = opts["averaging"] || 0
+    var maxIter  = opts["maxIter"] || 100000
+    var ds = exp(ln(maxIter)/steps),s = 1
+    
+    function exchange(data)
+    {
+	var i = randomInteger(data.length)()
+//	    j = randomInteger(data.length)()
+	if (data[i] >= 1)
+	{
+	    d = 1 + floor(data[i]*alpha)
+	    data[i]-=d
+	    do	    {
+		j = randomInteger(data.length)()
+		//if (data[j]>=150) continue
+		df = min(d,1 + floor(data[j]*beta))
+		data[j]+=df
+		d-=df
+	    } 	    while (d > 0)
+
+	}
+	return data//.sort((x,y) => x-y)
+    }
+    
+    function figure1()
+    {
+	if(i++ > steps)
+	{
+	    xs = [m].repeat(n)
+	    es=[]
+	    i=0;
+	}
+	var ls = new Histogram(10).fromList(xs)
+	es.push(ls.entropy)
+	p.cleanPaper()
+	    .histogram(ls,{'type':'PDF'})
+	p2.cleanPaper()
+	    .listPlot(es,{'joined':true,'points':false})
+	xs = nest(exchange,xs,s*=ds)
+    }
+
+    var xs = [m].repeat(n), es = [],i=0,s = 1
+    var p = new Graphics(fig1)
+	.xRange([0,m*10])
+	.yRange([0,0.012])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    var p2 = new Graphics(fig2)
+	.xRange([1,1500])
+	.yRange([0,10])
+	.axes({yLabel : 'энтропия',
+	       xLabel : 'время',
+	       yTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+	
+    figure1()
+    window.setInterval(figure1,1,xs)
+}
+
+/*
+start1({'population':10000,
+	'shares':100,
+	'alpha':0.0,
+	'beta':0.0,
+	'steps':1000,
+	'maxIter':1000000})
+*/
+
+function start2(opts)
+{
+    var alpha = opts["expences"] || 0
+    var beta = opts["income"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 1
+    var averaging = opts["averaging"] || 0
+
+    function exchange(data)
+    {
+	var friend = randomInteger(data.length)
+	for(var i = 0; i < data.length; i++)
+	{
+	    if (data[i] > 0)
+	    {
+		d = 1 + randomInteger(data[i]*alpha)()
+//		d = data[i]*alpha
+		data[i]-=d
+		while (d > 0)
+		{
+		    f = friend()
+		    df = min(d,1+randomInteger(data[f]*beta)())
+//		    df = d
+		    data[f]+=df
+		    d-=df
+		}
+	    }
+	}
+	return data
+    }
+    
+    function figure1()
+    {
+	if(i++ > 1500)
+	{
+	    xs = range(n).map(() => m)
+	    es=[]
+	    i=0;
+	}
+	var ls = new Histogram(20).fromList(xs)
+//	es.push(ls.entropy/(log2(m)-1))
+	es.push(xs.sum((x) => x/(xs.sample()||1)/n))
+	nest(exchange, xs, steps)
+	p.cleanPaper()
+	    .histogram(ls,{'type':'PDF'})
+	p2.cleanPaper()
+	    .listPlot(es,{'joined':true,'points':false})	
+	    .gridLines({'y':[(1+alpha)]})
+    }
+
+    var xs = range(n).map(() => m), es = [],i=0
+    var p = new Graphics(fig1)
+	.xRange([0,m*5])
+	.yRange([0,0.01])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+
+    var p2 = new Graphics(fig2)
+//	.xAxisType('log')
+//	.yAxisType('log')
+	.xRange([1,1500])
+	.yRange([0,2])
+	.axes({yLabel : 'энтропия',
+	       xLabel : 'время',
+	       yTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+	
+    figure1
+    window.setInterval(figure1,1,xs)
+}
+
+/*
+start2({'population':1000,
+	'shares':100,
+	'expences':0.14,
+	'income':0.7,
+	'steps':1})
+*/
+
+function start3(opts)
+{
+    var alpha = opts["expences"] || 0
+    var beta = opts["income"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 10000
+    var averaging = opts["averaging"] || 0
+    
+    function exchange3(data)
+    {
+	var friend = randomInteger(data.length)
+	for(var i = 0; i < data.length; i++)
+	{
+	    if (data[i] > 0)
+	    {
+		d = 1 + randomInteger(data[i]*alpha)()
+		data[i]-=d
+		while (d > 0)
+		{
+		    f = friend()
+		    df = min(d,1+randomInteger(data[f]*beta)())
+		    data[f]+=df
+		    d-=df
+		}
+	    }
+	}
+	return data
+    }
+
+    xs = range(n).map(() => m)
+    nest(exchange3, xs, steps)
+    ls = new Histogram(10).fromList(xs)
+    repeat(averaging,() => ls.addList(nest(exchange3, xs, steps)))
+    var p = new Graphics(fig1,{'class':'welth'})
+	.xRange([1,ls.maxBin])
+	.yRange([0,1.05*ls.maxValue/ls.number/ls.step])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+
+    p.histogram(ls,{'type':'PDF'})
+    fg = Gamma().fromHistogram(ls)
+    fn = Binomial().fromHistogram(ls)
+//    p.plot(fn.PDF)
+
+}
+
+
+/*
+start3({'population':1000,
+	'shares':100,
+	'expences':0.3,
+	'income':0.03,
+	'steps':500,
+	'averaging':10})
+
+//ls = new Histogram().fromList(LogNormal(4,2).samples(100))
+
+ls.QQPlot(fig21,LogNormal)
+ls.QQPlot(fig22,Gamma)
+ls.WeibullPlot(fig23)
+*/
+function start4(opts)
+{
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var any = randomInteger(n)
+    xs = [0].repeat(n)
+    repeat(n*m,() => xs[any()] += 1)
+    ls = new Histogram(1).fromList(xs)
+    f = Binomial(n*m,1/n)
+    var p = new Graphics(fig1,{'class':'welth'})
+	.xRange([1,m*2+1])
+	.yRange([0,1.05*ls.maxValue/ls.number/ls.step])
+//        .histogram(ls,{'type':'PDF'})
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+	.discretePlot(f.PMF)
+    h = new Histogram(1).fromList(f.samples(1000))
+    p.histogram(h,{'type':'PDF'})
+    fp = Binomial().fromHistogram(h,{'trials':2000})
+}
+
+/*
+start4({'population':100,
+	'shares':10})
+*/
+
+// распределение приращений каждого участника
+function start5(opts)
+{
+    var alpha = opts["expences"] || 0
+    var beta = opts["income"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 10000
+    var averaging = opts["averaging"] || 0
+    
+    function exchange3(data)
+    {
+	ds = [0].repeat(n)
+	var friend = randomInteger(n)
+	for(var i = 0; i < n; i++)
+	{
+	    if (data[i] > 0)
+	    {
+		d = data[i]*alpha
+		f = friend()
+		ds[f]+=d
+	    }
+	}
+	data = data.map(x => x*(1-alpha)).zipWith(ds,(x,y) => x + y)
+	ds = ds.filter(x => x > 0)
+	return data
+    }
+
+    var ds, xs = [m].repeat(n)
+    xs = nest(exchange3,xs,1000)
+    xs = nest(exchange3,xs,steps)
+    hs = new Histogram(1).fromList(ds)
+    repeat(averaging,() => {xs = nest(exchange3, xs, steps);hs.addList(ds)})
+    var p = new Graphics(fig1,{'class':'welth'})
+	.xRange([hs.minBin,hs.maxBin])
+	.yRange([0,1.05*hs.maxValue/hs.number/hs.step])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+
+    p.histogram(hs,{'type':'PDF'})
+    f = Gamma().fromList(xs)
+    fg = Gamma().fromHistogram(hs)
+//    fn = Binomial().fromHistogram(ls)
+    p.plot(fg.PDF)
+
+}
+/*
+start5({'population':1000,
+	'shares':100,
+	'expences':0.4,
+	'income':0.25,
+	'steps':200,
+	'averaging':5})
+*/
+
+
+/*
+function iterate(G)
+{
+    k = G.parameters.shape
+    b = G.parameters.rate
+    a = 0.25
+    x1 = Gamma(k, b/a).samples(10000)
+    x2 = Gamma(k, b/(1-a*a/(1-a))).samples(10000)
+    x3 = x1.zipWith(x2,add)
+    return Gamma().fromList(x3)
+}
+*/
+
+function start6(opts)
+{
+    var alpha = opts["alpha"] || 0
+    var beta = opts["beta"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 1
+    var averaging = opts["averaging"] || 0
+
+    function exchange(data)
+    {
+	var res = data.copy()
+	var i = randomInteger(res.length)()
+	if (res[i] >= 1)
+	{
+	    d = 1 + floor(res[i]*alpha)
+	    res[i]-=d
+	    do	    {
+		j = randomInteger(res.length)()
+		df = min(d,1 + floor(res[j]*beta))
+		res[j]+=df
+		d-=df
+	    } while (d > 0)
+
+	}
+	return res
+    }
+
+    xs = [10].repeat(10)
+    var res = nestList(exchange,nest(exchange,xs,1),2000).transpose()
+    
+    var p = new Graphics(fig1,{'class':'path'})
+	.xRange([0,2000])
+	.yRange([0,40])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    res.forEach(x => p.listPlot(x,{'joined':true,'points':false}))    
+}
+
+//start6({})
+
+function start7(opts)
+{
+    var n = opts["population"] || 1000
+    var steps = opts["steps"] || 100
+    var frames = 2000
+    var s=10, ds = exp(ln(steps)/frames)
+
+    function exchange(data)
+    {
+	var i = randomInteger(data.length)()
+	data[i]+=1
+	return data
+    }
+    
+    function figure1()
+    {
+	if(i++ > frames)
+	{
+	    xs = [0].repeat(n)
+	    s=10;
+	    i=0;
+	}
+	var ls = new Histogram(10).fromList(xs)
+	var f = Binomial(ls.total/n,1/n)
+	p.cleanPaper()
+	    .histogram(ls,{'type':'PDF'})
+//	    .plot(f.PMF)
+	p2.cleanPaper()
+	    .listPlot([[0,0],[1,1]], {'filled':true,
+				      'points':false,
+				      'joined':true,
+				      'class':'upper'})
+	    .listPlot(ls.LorenzCurve, {'filled':true,
+				       'points':true,
+				       'class':'lower'})
+	    .label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+	xs = nest(exchange,xs,s*=ds)
+    }
+
+    var xs = [0].repeat(n),i=0
+    var p = new Graphics(fig1)
+	.xRange([0,500])
+	.yRange([0,0.1])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    var p2 = new Graphics(fig2,{'class':'Lorentz'})
+	.xRange([0,1])
+	.yRange([0,1])
+	.listPlot([[0,0],[1,1]], {'filled':true,
+				  'points':false,
+				  'joined':true,
+				  'class':'upper'})
+	.axes({xLabel : 'доля людей в группе',
+	       xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       yLabel : 'доля общей суммы'})
+	
+    figure1()
+    window.setInterval(figure1,1,xs)
+  
+}
+
+//start7({})
+
+function start8(opts)
+{
+    var n = opts["population"] || 10000
+    var steps = opts["steps"] || 100
+    var frames = 1g00
+    var s=10, ds = 500/frames,i=0
+   
+    function figure1()
+    {
+	if(i++ > frames)
+	{
+	    s=10;
+	    i=0;
+	}
+	var ls = new Histogram(10).fromList(Uniform([1,s+=ds]).samples(n))
+	p.cleanPaper()
+	    .histogram(ls,{'type':'PDF'})
+	p2.cleanPaper()
+	    .listPlot([[0,0],[1,1]], {'filled':true,
+				      'points':false,
+				      'joined':true,
+				      'class':'upper'})
+	    .listPlot(ls.LorenzCurve, {'filled':true,
+				       'points':true,
+				       'class':'lower'})
+	    .label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+    }
+
+    var p = new Graphics(fig1)
+	.xRange([0,500])
+	.yRange([0,0.025])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    var p2 = new Graphics(fig2,{'class':'Lorentz'})
+	.xRange([0,1])
+	.yRange([0,1])
+	.listPlot([[0,0],[1,1]], {'filled':true,
+				  'points':false,
+				  'joined':true,
+				  'class':'upper'})
+	.axes({xLabel : 'доля людей в группе',
+	       xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       yLabel : 'доля общей суммы'})
+	
+    figure1()
+    window.setInterval(figure1,1)
+  
+}
+
+start8({})
+
+
+
+</script>
+    </body>
+    </html>

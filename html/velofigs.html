@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    </style>
+  </head>
+    <body>
+    <svg width='400' height='400'></svg>
+    <script>
+    
+var paper = d3.select("svg")
+var p = new Graphics(paper,{'class' : 'Lorentz'})
+    .listPlot([[0,0],[1,1]], {'filled':true,
+			      'points':false,
+			      'joined':true,
+			      'class':'upper'})
+    .listPlot([[0,0],[0.8,0.5],[1,1]], {'filled':true, 'class':'lower'})
+    .axes({xLabel : 'время путешествия',
+	   xTickFormat : fmt.percent,
+	   yTickFormat : fmt.percent,
+	   yLabel : 'длина пути'})
+    .label("постоянная скорость",
+	   {'at' : [0.3,0.35], 'angle' : 45 })
+    .label("в горку",
+	   {'at' : [0.4,0.18], 'angle' : 30 })
+    .label("с горки",
+	   {'at' : [0.9,0.6], 'angle' : 70 })
+	   
+  </script>
+  </body>
+</html>

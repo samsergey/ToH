@@ -1,0 +1,177 @@
+.paper {
+    stroke-width : 1.5;
+    stroke-linejoin : round;
+    stroke-linecap  : round;    
+    font-family : sans;
+    font-style : italic;
+    font-size : 16px
+}
+
+/* listPlot */
+
+
+.listPlot .area {
+    fill : skyblue;
+}
+
+.listPlot .line {
+    stroke : navy;
+}
+
+.listPlot .points {
+    stroke : white;
+    stroke-width : 1;
+    stroke-opacity : 0.5;
+    fill : navy;
+}
+
+.listPlot .needles {
+    stroke : goldenrod;
+    stroke-width : 1.5;
+    stroke-opacity : 0.5;
+}
+
+.listPlot .A .line {
+    stroke : navy;
+}
+
+.listPlot .A .area {
+    fill : palegreen;
+}
+
+.listPlot .B .line {
+    stroke : brown;
+}
+
+.listPlot .B .area {
+    fill : pink;
+}
+
+.listPlot .A .points {
+    stroke : white;
+    stroke-width : 1;
+    fill : navy;
+}
+
+.listPlot .B .points {
+    stroke : white;
+    stroke-width : 1;
+    fill : brown;
+}
+
+/* plot */
+
+
+.plot .area {
+    fill : skyblue;
+}
+
+.plot .line {
+    stroke : navy;
+}
+
+.plot .points {
+    stroke : white;
+    stroke-width : 1;
+    stroke-opacity : 0.5;
+    fill : navy;
+}
+
+.plot .A .line {
+    stroke : navy;
+}
+
+.plot .A .area {
+    fill : palegreen;
+}
+
+.plot .B .line {
+    stroke : brown;
+}
+
+.plot .B .area {
+    fill : pink;
+}
+
+/* Axes */
+
+.axis {
+    stroke-width : 1.25;
+    font-family : sans;
+    font-style : italic;
+    font-size : 14px
+}
+
+.axis .tick {
+    stroke-width : 1.25;
+    font-family : sans;
+    font-style : italic;
+    font-size : 13px
+}
+
+.axis .label {
+    fill : black;
+}
+
+/* labels */
+
+
+.label {
+    fill : navy;
+}
+
+/* diffListPlot */
+
+.diffListPlot .areaAbove {
+    fill : pink
+}
+
+.diffListPlot .areaBelow {
+    fill : skyblue
+}
+
+.diffListPlot1 .above line {
+    stroke : pink;
+    stroke-width:2;
+}
+
+.diffListPlot1 .below line {
+    stroke : skyblue;
+    stroke-width:2;
+}
+
+
+/* Lorentz curve */
+
+.Lorentz .upper .area {
+    fill : orange;
+}
+
+.Lorentz .upper .line {
+    stroke : indianred;
+    stroke-width : 3;
+}
+
+.Lorentz .lower .area {
+    fill : palegreen;
+}
+
+.Lorentz .lower .line {
+    stroke : black;
+}
+
+.gridLine {
+    stroke : blue;
+    stroke-opacity:0.25;
+}
+
+.gridLineLabel {
+    stroke : none;
+    fill:skyblue;
+}
+
+
+.histogram rect {
+    stroke : none;
+    fill : darkorange;
+}

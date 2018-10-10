@@ -1,0 +1,142 @@
+<html>
+    <canvas id='paper' width=600 height=500  style='border:dotted black 1px;'></canvas>
+    <br/>
+    <p id='output'></p>
+    <script>
+
+var ctx = paper.getContext('2d');
+
+
+var w = 600, h=500;
+
+var s = 1,
+    lambda = 1,
+    binW = 3;
+
+var alpha = 0.07,
+    xs=[0,0],
+    epochs = 1;
+
+
+var p = PoissonProcess(lambda)
+var A = GaussRandom(0,s)
+
+function next(x)
+{
+    var dx = A()*p();
+    var x1 = x + dx;
+    xs.unshift(xs[0]*(1-alpha)+x1*alpha);
+    life[(x1 - xs[0])>0 ? 'good' : 'bad']++
+    if (dx > 0)
+	news['good']++;
+    else if (dx < 0)
+	news['bad']++;
+
+    len++
+    if ((xs[0]-x1)*(xs[0]-x) < 0)
+    {
+	var bin = Math.trunc(len/binW)*binW;
+	epoch[bin] = epoch[bin] + 1 || 1;
+	len = 0;
+	epochs++;
+    }
+    return x1;
+}
+
+function event(f)
+{
+    return Math.random() < f ? 1 : 0
+}
+
+function PoissonProcess(lambda)
+{
+    var p = 1, e = Math.exp(-lambda);
+    return () => {
+	p *= Math.random();
+	if (p < e)
+	{
+	    p = 1;
+	    return 1;
+	}
+	else
+	    return 0;
+    }
+}
+
+function GaussRandom(m,s)
+{
+    var x = 2*Math.random()-1;
+    return () => {
+	var y,w;
+	do {
+	    y = 2*Math.random()-1;
+	    w = x*x + y*y;
+	} while (w >= 1)
+	x = y;
+	return m + s * x * Math.sqrt(-2*Math.log(w)/w);
+    }
+}
+
+
+var X = [0,0],
+    epoch = {}, len = 0,
+    news = {'good':0, 'bad':0},
+    life = {'good':0, 'bad':0};
+
+function step() {
+    X.unshift(next(X[0]));
+    clean()
+    barChart(epoch);
+    showLists(xs.map(x => (xs[200]-x)*10),X.map(x => (xs[200]-x)*10));
+    if (X.length > w) X.pop();
+    if (xs.length > w) xs.pop();
+    output.innerText = "Хорошие новости: " + Math.round(news['good']/(news['good'] + news['bad'])*100) + "%";
+    output.innerText += "\nПлохие новости: " + Math.round(news['bad']/(news['good'] + news['bad'])*100) + "%";
+    output.innerText += "\nЖизнь прекрасна: " + Math.round(life['good']/(life['good'] + life['bad'])*100) + "%";
+    output.innerText += "\nЖизнь ужасна: " + Math.round(life['bad']/(life['good'] + life['bad'])*100) + "%";
+}
+
+
+function clean() {
+    ctx.clearRect(0,0,w,h);
+}
+
+function showLists(l1, l2){
+    for(var i = 1; i<l1.length;i ++)
+    {
+	var x1 = l1[i], x2 = l2[i];
+	ctx.beginPath();
+	ctx.strokeStyle = x2-x1 > 0? 'red' : 'blue';
+	ctx.moveTo(i, h/2-x1);
+	ctx.lineTo(i, h/2-x2);
+	ctx.stroke();
+    };
+}
+
+function barChart(hist){
+    ctx.fillStyle = "orange";
+    ctx.globalAlpha = 0.53;
+    for(b in hist)
+    {
+	ctx.beginPath();
+	ctx.fillRect(b*2-10,h,20,-hist[b]/epochs*1000);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function histogram(lst,step)
+{
+    var bins = {};
+    for(var i=0; i<lst.length; i++)
+    {
+	bin = Math.trunc(lst[i]/step)*step
+	bins[bin] = bins[bin]+1 || 1;
+    }
+    return bins    
+}
+
+
+window.setInterval(step,0)
+
+  </script>
+</html>

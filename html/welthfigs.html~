@@ -1,0 +1,222 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .welth .histogram {
+	stroke:orange;
+	fill:red;
+    }
+    .welth .histogram .line {
+	stroke-width:2;
+    }
+    </style>
+    </head>
+    <body>
+    <svg id='fig1' width='500' height='300'></svg><br/>
+    <svg id='fig2' width='500' height='200'></svg>
+    <script>
+
+var fig1 = d3.select("#fig1")
+var fig2 = d3.select("#fig2")
+
+function start1()
+{
+    function exchange(data)
+    {
+	var friend = randomInteger(data.length)
+	for(var i = 0; i < data.length; i++)
+	{
+	    if (data[i] >= 1)
+	    {
+		data[i]--
+		data[friend()]++
+	    }
+	}
+	return data//.sort((x,y) => x-y)
+    }
+    
+    function figure1()
+    {
+	if(i++ > 1500)
+	{
+	    xs = range(1000).map(() => 100)
+	    es=[]
+	    i=0;
+	}
+	var ls = new Histogram(10).fromList(xs)
+	es.push(ls.entropy)
+	nest(exchange, xs, 10)
+	p.cleanPaper()
+	    .histogram(ls,{'type':'PDF'})
+	p2.cleanPaper()
+	    .listPlot(es,{'joined':true,'points':false})	
+    }
+
+    var xs = range(1000).map(() => 100), es = [],i=0
+    var p = new Graphics(fig1)
+	.xRange([0,500])
+	.yRange([0,0.012])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    var p2 = new Graphics(fig2)
+	.xRange([1,1500])
+	.yRange([0,6])
+	.axes({yLabel : 'энтропия',
+	       xLabel : 'время',
+	       yTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+	
+    figure1
+    window.setInterval(figure1,1,xs)
+}
+
+//start1()
+
+function start2(opts)
+{
+    var alpha = opts["expences"] || 0
+    var beta = opts["income"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 10000
+    var averaging = opts["averaging"] || 0
+
+    function exchange(data)
+    {
+	var friend = randomInteger(data.length)
+	for(var i = 0; i < data.length; i++)
+	{
+	    if (data[i] > 0)
+	    {
+		d = 1 + randomInteger(data[i]*alpha)()
+		data[i]-=d
+		while (d > 0)
+		{
+		    f = friend()
+		    df = min(d,1+randomInteger(data[f]*beta)())
+		    data[f]+=df
+		    d-=df
+		}
+	    }
+	}
+	return data
+    }
+    
+    function figure1()
+    {
+	if(i++ > 1500)
+	{
+	    xs = range(1000).map(() => 100)
+	    es=[]
+	    i=0;
+	}
+	var ls = new Histogram(10).fromList(xs)
+	es.push(ls.entropy)
+	nest(exchange, xs, 1)
+	p.cleanPaper()
+	    .histogram(ls,{'type':'PDF'})
+	p2.cleanPaper()
+	    .listPlot(es,{'joined':true,'points':false})	
+    }
+
+    var xs = range(1000).map(() => 100), es = [],i=0
+    var p = new Graphics(fig1)
+	.xRange([0,500])
+	.yRange([0,0.012])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    var p2 = new Graphics(fig2)
+	.xRange([1,1500])
+	.yRange([0,6])
+	.axes({yLabel : 'энтропия',
+	       xLabel : 'время',
+	       yTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+	
+    figure1
+    window.setInterval(figure1,1,xs)
+}
+
+/*start2({'population':1000,
+	'shares':100,
+	'expences':0.5,
+	'income':0.2,
+	'steps':5000,
+	'averaging':0})
+*/
+
+function start3(opts)
+{
+    var alpha = opts["expences"] || 0
+    var beta = opts["income"] || 0
+    var n = opts["population"] || 1000
+    var m = opts["shares"] || 100
+    var steps = opts["steps"] || 10000
+    var averaging = opts["averaging"] || 0
+    
+    function exchange3(data)
+    {
+	var friend = randomInteger(data.length)
+	for(var i = 0; i < data.length; i++)
+	{
+	    if (data[i] > 0)
+	    {
+		d = 1 + randomInteger(data[i]*alpha)()
+		data[i]-=d
+		while (d > 0)
+		{
+		    f = friend()
+		    df = min(d,1+randomInteger(data[f]*beta)())
+		    data[f]+=df
+		    d-=df
+		}
+	    }
+	}
+	return data
+    }
+
+    xs = range(n).map(() => m)
+    nest(exchange3, xs, steps)
+    ls = new Histogram(10).fromList(xs)
+    repeat(averaging,() => ls.addList(nest(exchange3, xs, steps)))
+    var p = new Graphics(fig1,{'class':'welth'})
+	.xRange([0,ls.maxBin])
+	.yRange([0,1.05*ls.maxValue/ls.number/ls.step])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+
+    p.histogram(ls,{'type':'PDF'})
+    f = Gamma().fromHistogram(ls)
+    p.plot(f.PDF)
+
+}
+
+start3({'population':1000,
+	'shares':100,
+	'expences':0.25,
+	'income':0.25,
+	'steps':500,
+	'averaging':20})
+
+
+</script>
+    </body>
+    </html>

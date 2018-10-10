@@ -1,0 +1,77 @@
+<html>
+    <canvas id='paper' width=600 height=500  style='border:dotted black 1px;'></canvas>
+    <br/>
+    <p id='output'></p>
+    <script>
+
+var ctx = paper.getContext('2d');
+var w = 600, h=500;
+
+function PoissonProcess(lambda)
+{
+    var p = 1, e = Math.exp(-lambda);
+    return () => {
+	p *= Math.random();
+	if (p < e)
+	{
+	    p = 1;
+	    return 1;
+	}
+	else
+	    return 0;
+    }
+}
+
+function GaussRandom(m,s)
+{
+    var x = 2*Math.random()-1;
+    return () => {
+	var y,w;
+	do {
+	    y = 2*Math.random()-1;
+	    w = x*x + y*y;
+	} while (w >= 1)
+	x = y;
+	return m + s * x * Math.sqrt(-2*Math.log(w)/w);
+    }
+}
+
+function showLists(l1, l2){
+    for(var i = 1; i<l1.length;i ++)
+    {
+	var x1 = l1[i], x2 = l2[i];
+	ctx.beginPath();
+	ctx.strokeStyle = x1-x2 > 0? 'red' : 'blue';
+	ctx.moveTo(i, h/2);
+	ctx.lineTo(i, h/2-(x1 - x2));
+	ctx.stroke();
+    };
+}
+
+var p = PoissonProcess(1)
+function next(x)
+{
+    return x + p()
+}
+
+var x1 = [0,0]
+var x2 = [0,0]
+
+function step() {
+    x1.unshift(next(x1[0]));
+    if (x1.length > w) x1.pop();
+    x2.unshift(next(x2[0]));
+    if (x2.length > w) x2.pop();
+    clean()
+    showLists(x1.map(x => x*5),x2.map(x => x*5));
+}
+
+function clean() {
+    ctx.clearRect(0,0,w,h);
+}
+
+window.setInterval(step,0)
+
+
+  </script>
+</html>

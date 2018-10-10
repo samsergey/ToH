@@ -1,0 +1,38 @@
+<canvas id='paper' width=500 height=500></canvas>
+<p id='giny'></p>
+    <script src='signal.js'></script>
+<script src='statistics.js'></script>
+<script src='graphics.js'></script>
+<script>
+
+
+function route(x) {
+    return Math.cos(x*Math.PI/2)
+}
+
+function step([x,v])
+{
+    var dx=0.0001
+    return [(x + h*v) % 20,
+	    v + h*(-(route(x+dx)-route(x-dx))/(2*dx) - C*v*v*Math.sign(v) + F)]
+}
+
+var c = new Canvas(paper), ctx = c.context
+
+var x = [0,0],t=0
+var C = 2,h=0.01,F=1.5
+function next() {
+    t = t+h
+    x = step(x)
+    c.clear()
+    c.scale(0,20,-10,10)
+    plot(c,route)
+    c.context.fillStyle='black'
+    disc(c,x[0],route(x[0]),2)
+    c.scale(0,20,-10,10)
+    disc(c,t,x[1],2)
+}
+
+window.setInterval(next,1) 
+
+</script>

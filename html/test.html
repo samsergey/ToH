@@ -1,0 +1,78 @@
+<html>
+    <head>
+    <style>
+    </style>
+  </head>
+    <body>
+    <p id='txt'></p>
+    <svg id='#graph'></svg>
+    <script src='../dev/d3.js'></script>
+    <script src='signal.js'></script>
+    <script src='statistics.js'></script>
+    <script src='graphics.js'></script>
+    <script>
+    
+var paper = d3.select("svg")
+paper.attr("width", 400).attr("height", 400);
+var p = new Graphics(paper)
+    .listPlot([[0,0],[1,1]],
+	      {'fill':'orange',
+	       'stroke':'indianred',
+	       'stroke-width' : 3})
+    .listPlot([[0,0],[0.8,0.5],[1,1]],
+	      {'fill' : 'palegreen'})
+    .axes({xLabel : 'время путешествия',
+	   xTickFormat : fmt.percent,
+	   yTickFormat : fmt.percent,
+	   yLabel : 'длина пути'})
+    .label("постоянная скорость",
+	   {'at' : [0.3,0.35], 'angle' : 45 })
+    .label("в горку",
+	   {'at' : [0.4,0.18], 'angle' : 30 })
+    .label("с горки",
+	   {'at' : [0.9,0.6], 'angle' : 70 })
+	   
+/*
+var N = 360
+var data = d3.range(N).map(d3.randomNormal(0,0.5)).accumsum()
+var life = data.ema(1/20)
+var df = new DiffPlot(data, life).lineBwidth(3).show(paper)
+*/
+
+/*
+var s = new Histogram(1)
+var g = d3.randomNormal(0,1)
+
+var a = 0, b = 0, d = 0, alpha = 1/120, l = 0;
+while(s.number < 10000)
+{
+    txt.innerText = s.number
+    a += g()
+    b = b*(1-alpha)+a*alpha
+    l++
+    if (d*(a - b) <= 0)
+    {
+	d = a - b
+	s.add(l)
+	l=0
+    }	
+} 
+
+var bch = new barChart(s,'pdf').barWidth(1).xRange([0,20]).show(paper)
+//new plot(x => -1.4*x,[0,Math.log(s.maxBin)],[Math.log(s.pdf(s.antimode)),0]).show(paper)
+var f = s.approximateGamma()
+new plot(x => f.pdf(x-1),[0,20],[0,s.pdf(s.mode)]).show(paper)
+*/
+
+/*
+var p2 = new listPlot([[0,0],[0.8,0.5],[1,1]])
+    .fill('palegreen')
+    .show(paper)
+new label(p,"кривая равенства",[0.3,0.35])
+    .angle(45)
+    .show()
+*/
+
+  </script>
+  </body>
+</html>

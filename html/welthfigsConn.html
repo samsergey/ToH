@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    </style>
+    </head>
+    <body>
+      <svg id='fig1' width='700' height='400'></svg>
+      <svg id='fig2' width='700' height='400'></svg>
+      <script>
+	
+var fig1 = d3.select("#fig1")
+
+var N = 100
+var net = randomConnections(N/2,[[]].repeat(N))
+var xs = [100].repeat(N)
+function randomConnections(l,net)
+{
+    var n = net.length
+    for(var i = 0; i < n; i++)
+	for(var j = 0; j < l; j++)
+	    connect(i, Math.floor(Math.random()*n), net)
+    return net
+}
+
+function connect(i,j,net)
+{
+    net[i] = net[i].add(j)
+    net[j] = net[j].add(i)
+    return net
+}
+
+function exchange(xs)
+{
+    net.forEach((n,i) => {if (xs[i]>0)
+			  {xs[n.sample()]++; xs[i]--}
+			 })
+    return xs
+}
+
+var h = new Histogram(10).fromList(nest(exchange,xs,2000))
+new Graphics(fig1)
+    .histogram(h)
+
+</script>
+    </body>
+</html>

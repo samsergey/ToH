@@ -46,10 +46,10 @@ function start1(opts)
     var beta = opts["beta"] || 0
     var n = opts["population"] || 1000
     var m = opts["shares"] || 100
-    var steps = opts["steps"] || 1000
+    var steps = opts["steps"] || 2000
     var averaging = opts["averaging"] || 0
-    var maxIter  = opts["maxIter"] || 100000
-    var ds = exp(ln(maxIter)/steps),s = 1
+    var maxIter  = opts["maxIter"] || 1000
+    var s=1,ss=0,ds = exp(ln(maxIter)/steps)
     
     function exchange(data)
     {
@@ -68,7 +68,7 @@ function start1(opts)
 	    } 	    while (d > 0)
 
 	}
-	return data//.sort((x,y) => x-y)
+	return data
     }
     
     function figure1()
@@ -76,47 +76,81 @@ function start1(opts)
 	if(i++ > steps)
 	{
 	    xs = [m].repeat(n)
+	    s=1
+	    ss=0
 	    es=[]
 	    i=0;
 	}
 	var ls = new Histogram(10).fromList(xs)
-	es.push(ls.entropy)
 	p.cleanPaper()
 	    .histogram(ls,{'type':'PDF'})
+/*
+	es.push([ss+=s,ls.entropy])
 	p2.cleanPaper()
 	    .listPlot(es,{'joined':true,'points':false})
+	    .gridLines({'y':[1-ln(1/m)]})
+*/
+
+	p2.cleanPaper()
+	    .listPlot([[0,0],[1,1]], {'filled':true,
+				      'points':false,
+				      'joined':true,
+				      'class':'upper'})
+	    .listPlot(ls.LorenzCurve, {'filled':true,
+				       'points':true,
+				       'class':'lower'})
+	    .label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+
 	xs = nest(exchange,xs,s*=ds)
     }
 
-    var xs = [m].repeat(n), es = [],i=0,s = 1
+    var xs = [m].repeat(n), es = [],i=0
     var p = new Graphics(fig1)
-	.xRange([0,m*10])
+	.xRange([0,m*7])
 	.yRange([0,0.012])
 	.axes({yLabel : 'доля людей в группе',
 	       xLabel : 'уровень богатства',
 	       xTickFormat : d3.format('i'),
 	       yTickFormat : d3.format('i')})
+/*    
     var p2 = new Graphics(fig2)
-	.xRange([1,1500])
-	.yRange([0,10])
+	.xRange([1,maxIter*steps/10])
+	.xAxisType('log')
+	.yRange([0,7])
 	.axes({yLabel : 'энтропия',
 	       xLabel : 'время',
 	       yTicks : 5,
+	       xTickValues : [1,100,10000,1000000],
 	       xTickFormat : d3.format('i'),
 	       yTickFormat : d3.format('i')})
+  */  
+    
+    var p2 = new Graphics(fig2,{'class':'Lorentz'})
+	.xRange([0,1])
+	.yRange([0,1])
+	.listPlot([[0,0],[1,1]], {'filled':true,
+				  'points':false,
+				  'joined':true,
+				  'class':'upper'})
+	.axes({xLabel : 'доля людей в группе',
+	       xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       yLabel : 'доля общей суммы',
+	       xTickValues:[0,0.25,0.5,0.75,1],
+	       yTickValues:[0,0.25,0.5,0.75,1]})
+
 	
     figure1()
     window.setInterval(figure1,1,xs)
 }
 
-/*
-start1({'population':10000,
+
+start1({'population':2000,
 	'shares':100,
 	'alpha':0.0,
 	'beta':0.0,
 	'steps':1000,
-	'maxIter':1000000})
-*/
+	'maxIter':2000000})
 
 function start2(opts)
 {
@@ -410,9 +444,9 @@ function start6(opts)
 function start7(opts)
 {
     var n = opts["population"] || 1000
-    var steps = opts["steps"] || 100
+    var steps = opts["steps"] || 40
     var frames = 2000
-    var s=10, ds = exp(ln(steps)/frames)
+    var s=40, ds = exp(ln(steps)/frames)
 
     function exchange(data)
     {
@@ -426,7 +460,7 @@ function start7(opts)
 	if(i++ > frames)
 	{
 	    xs = [0].repeat(n)
-	    s=10;
+	    s=40;
 	    i=0;
 	}
 	var ls = new Histogram(10).fromList(xs)
@@ -464,7 +498,9 @@ function start7(opts)
 	.axes({xLabel : 'доля людей в группе',
 	       xTickFormat : fmt.percent,
 	       yTickFormat : fmt.percent,
-	       yLabel : 'доля общей суммы'})
+	       yLabel : 'доля общей суммы',
+	       xTickValues:[0,0.25,0.5,0.75,1],
+	       yTickValues:[0,0.25,0.5,0.75,1]})
 	
     figure1()
     window.setInterval(figure1,1,xs)
@@ -475,9 +511,9 @@ function start7(opts)
 
 function start8(opts)
 {
-    var n = opts["population"] || 10000
+    var n = opts["population"] || 50000
     var steps = opts["steps"] || 100
-    var frames = 1g00
+    var frames = 100
     var s=10, ds = 500/frames,i=0
    
     function figure1()
@@ -518,14 +554,16 @@ function start8(opts)
 	.axes({xLabel : 'доля людей в группе',
 	       xTickFormat : fmt.percent,
 	       yTickFormat : fmt.percent,
-	       yLabel : 'доля общей суммы'})
+	       yLabel : 'доля общей суммы',
+	       xTickValues:[0,0.25,0.5,0.75,1],
+	       yTickValues:[0,0.25,0.5,0.75,1]})
 	
     figure1()
     window.setInterval(figure1,1)
   
 }
 
-start8({})
+//start8({})
 
 
 

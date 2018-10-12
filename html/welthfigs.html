@@ -30,10 +30,13 @@
 	stroke:blue;
 	stroke-opacity:0.9;
     }
-    .label {
-	font-size:8pt;
+    .lower {
+	fill-opacity:1;
     }
-    </style>
+    .hist .line {
+	stroke:blue;
+    }
+</style>
     </head>
     <body>
     <svg id='fig1' width='400' height='300'></svg>
@@ -88,12 +91,13 @@ function start1(opts)
     var s=minIter,ss=0,ds = exp(ln(maxIter/minIter)/steps)
     var bound = opts["bound"] || 0
         
-
+    var ref = Exponential(1/m)
+    var pts = new Histogram(1).fromDistribution(ref,1000).LorenzCurve;
 //	var ref = new Histogram(bound/2).fromList([50,50,50,250])
 //	var ref = new Histogram(bound/2).fromList([50,100,100,100])
 //	var ref = new Histogram(bound).fromList([50])
-	var ref = Gamma(1/alpha-1,(1/alpha-1)/m)
-	var re = new Histogram(10).fromDistribution(ref,1000).entropy
+//	var ref = Gamma(1/alpha-1,(1/alpha-1)/m)
+//	var re = new Histogram(10).fromDistribution(ref,1000).entropy
 
     function figure1()
     {
@@ -107,18 +111,18 @@ function start1(opts)
 	var ls = new Histogram(10).fromList(xs)
 	p1.cleanPaper()
 	    .histogram(ls,{'type':'PDF'})
-//	if (i > steps*0.8)
+	if (i > steps*0.9)
 //	    p1.histogram(ref,{'type':'PDF','class':'ref','kind':'stairs'})
-//	    p1.plot(ref.PDF,{'type':'PDF','class':'ref','kind':'stairs'})
+	    p1.plot(ref.PDF,{'type':'PDF','class':'ref','kind':'stairs'})
 	if(side=='entropy')
 	{
 	    es.push([ss+=s,ls.entropy])
 	    p2.cleanPaper()
 		.listPlot(es,{'joined':true,'points':false})
 		.gridLines({'y':[1-ln(1/m)]})
-//	    if (i > steps*0.8)
+//	    if (i > steps*0.9)
 		//.gridLines({'y':[ref.entropy]})
-//		p2.gridLines({'y':[re]})
+		//		p2.gridLines({'y':[re]})
 	}
 	if(side=='Lorentz')
 	{
@@ -131,6 +135,9 @@ function start1(opts)
 					   'points':true,
 					   'class':'lower'})
 		.label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+	    if (i > steps*0.9)
+	    	p2.listPlot(pts,{'points':false,'joined':true,})
+	    
 	}
 
 	xs = nest(exchange(opts),xs,s*=ds)
@@ -178,20 +185,20 @@ function start1(opts)
     window.setInterval(figure1,1,xs)
 }
 
-/*
+
 start1({'population':2000,
 	'shares':100,
-	'alpha':0.5,
-	'beta':0.2,
+	'alpha':0,
+	'beta':0,
 	'minShare':1,
 	'steps':1000,
 	'minIter':1,
-	'maxIter':100000,
+	'maxIter':1000000,
 	'bound':0,
-//	'side':'Lorentz',
-     	'side':'entropy'
+	'side':'Lorentz',
+//     	'side':'entropy'
        })
-*/
+
 
 function start3(opts)
 {
@@ -444,9 +451,9 @@ function start7(opts)
 
 function start8(opts)
 {
-    var n = opts["population"] || 50000
+    var n = opts["population"] || 1000
     var steps = opts["steps"] || 100
-    var frames = 100
+    var frames = 1
     var s=10, ds = 500/frames,i=0
    
     function figure1()
@@ -456,9 +463,10 @@ function start8(opts)
 	    s=10;
 	    i=0;
 	}
-	var ls = new Histogram(10).fromList(Uniform([1,s+=ds]).samples(n))
+//	var ls = new Histogram(10).fromDistribution(Uniform([1,s+=ds],n))
+	var ls = new Histogram(1).fromList([100])
 	p.cleanPaper()
-	    .histogram(ls,{'type':'PDF'})
+	    .histogram(ls,{'type':'PDF','kind':'needles'})
 	p2.cleanPaper()
 	    .listPlot([[0,0],[1,1]], {'filled':true,
 				      'points':false,
@@ -467,12 +475,12 @@ function start8(opts)
 	    .listPlot(ls.LorenzCurve, {'filled':true,
 				       'points':true,
 				       'class':'lower'})
-	    .label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
+//	    .label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
     }
 
-    var p = new Graphics(fig1)
+    var p = new Graphics(fig1,{'class':'hist'})
 	.xRange([0,500])
-	.yRange([0,0.025])
+	.yRange([0,1])
 	.axes({yLabel : 'доля людей в группе',
 	       xLabel : 'уровень богатства',
 	       xTickFormat : d3.format('i'),
@@ -499,7 +507,7 @@ function start8(opts)
 //start8({})
 
 // gammas
-function start9(opts)
+function gammas(opts)
 {
     var p1 = new Graphics(fig1)
 	.xRange([0,500])
@@ -508,15 +516,36 @@ function start9(opts)
 	       xLabel : 'уровень богатства',
 	       xTickFormat : d3.format('i'),
 	       yTickFormat : d3.format('i')})
-    var as =[0.1,0.25,0.5,0.75]
+    var as =[0.1,0.25,0.5,0.8]
     as.forEach(a => p1.plot(Gamma(1/a-1,(1/a-1)/100).PDF))
-    p1.label(0.1,{'at':[100,0.013]})
+    p1.label(0.1,{'at':[100,0.0125]})
 	.label(0.25,{'at':[75,0.0085]})
-	.label(0.5,{'at':[75,0.0054]})
-    
+	.label(0.5,{'at':[75,0.005]})
+	.label(0.75,{'at':[15,0.016]})
+
+    	var p2 = new Graphics(fig2,{'class':'Lorentz'})
+	    .xRange([0,1])
+	    .yRange([0,1])
+	    .listPlot([[0,0],[1,1]], {'filled':true,
+				      'points':false,
+				      'joined':true,
+				      'class':'upper'})
+	    .axes({xLabel : 'доля людей в группе',
+		   xTickFormat : fmt.percent,
+		   yTickFormat : fmt.percent,
+		   yLabel : 'доля общей суммы',
+		   xTickValues:[0,0.25,0.5,0.75,1],
+		   yTickValues:[0,0.25,0.5,0.75,1]})
+    as.forEach(a => {
+	var pts = new Histogram(10).fromDistribution(Gamma(1/a-1,(1/a-1)/100),10000).LorenzCurve;
+	p2.listPlot(pts,{'filled':true,'points':false,'joined':true,'class':'lower'})})
+    p2.label('0.1 (0.2)',{'at':[0.5,0.3],'angle':45})
+	.label('0.25 (0.3)',{'at':[0.52,0.22],'angle':45})
+    	.label('0.5 (0.5)',{'at':[0.62,0.18],'angle':45})
+        .label('0.75 (0.7)',{'at':[0.74,0.07],'angle':45})
 }
 
-start9()
+//gammas()
 
 </script>
     </body>

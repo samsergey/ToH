@@ -147,7 +147,7 @@ Graphics.prototype.axes = function (opts)
 	    .call(this.xAxis)
 	    .attr("transform", 'translate(' + xAxisPositionX + ',' + xAxisPositionY +')')
 
-	g.append('g').attr('class','label')
+	g.append('g').attr('class','axisLabel')
 	    .attr("transform", 'translate(' + xAxisLabelPositionX + ',' + xAxisLabelPositionY + ')')
 	    .append("text").attr('class',options['class'])
 	    .attr('dx',-options.xLabel.length*4)
@@ -499,12 +499,30 @@ Graphics.prototype.histogram = function(hist, opts)
 	.attr("y", d => min(this.Y(this.logY ? 1 : 0),this.Y(d.value)))
 	.attr("height", d => abs(this.Y(this.logY ? 1 : 0) - this.Y(d.value)))
 
+    if (options.kind == 'needles')
+    {
+	g.selectAll("line")
+	    .data(data)
+	    .enter().append("line").attr('class','line')
+	    .attr("x1", d => this.X(d.bin))
+	    .attr("y1", d => this.Y(this.logY ? 1 : 0))
+	    .attr("x2", d => this.X(d.bin))
+	    .attr("y2", d => this.Y(d.value))
+	
+	g.selectAll("circle")
+	    .data(data)
+	    .enter().append("circle").attr('class','point')
+	    .attr("cx", d => this.X(d.bin))
+	    .attr("cy", d => this.Y(d.value))
+	    .attr("r", d => 2)
+    }
+   
     if (options.kind == 'stairs') {
 	g.selectAll("line")
 	    .data(data)
 	    .enter().append("line")
-	    .attr("x1", d => this.X(d.bin)-bw/2)
-	    .attr("x2", d => this.X(d.bin)+bw/2)
+	    .attr("x1", d => this.X(d.bin)-0*bw/2)
+	    .attr("x2", d => this.X(d.bin)+2*bw/2)
 	    .attr("y1", d => this.Y(d.value))
 	    .attr("y2", d => this.Y(d.value))
     }

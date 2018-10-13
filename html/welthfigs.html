@@ -65,7 +65,7 @@ function exchange(opts)
 	    d = minShare + floor(data[i]*alpha)
 	    do	    {
 		j = randomInteger(data.length)()
-		df = min(d,minShare + floor(data[j]*beta))
+		df = d//min(d,minShare + floor(data[j]*beta))
 		if (bound > 0 && data[j]>=bound-df) continue
 		data[i]-=df
 		data[j]+=df
@@ -185,7 +185,7 @@ function start1(opts)
     window.setInterval(figure1,1,xs)
 }
 
-
+/*
 start1({'population':2000,
 	'shares':100,
 	'alpha':0,
@@ -198,7 +198,7 @@ start1({'population':2000,
 	'side':'Lorentz',
 //     	'side':'entropy'
        })
-
+*/
 
 function start3(opts)
 {
@@ -210,10 +210,10 @@ function start3(opts)
     
     xs = range(n).map(() => m)
     nest(exchange(opts), xs, steps)
-    ls = new Histogram(10).fromList(xs)
-    repeat(averaging,() => ls.addList(nest(exchange(opts), xs, steps)))
-    var p = new Graphics(fig1,{'class':'welth'})
-	.xRange([1,ls.maxBin])
+    ls = new Histogram(1).fromList(xs.copy().zipWith(nest(exchange(opts),xs,steps),sub))
+    repeat(averaging,() => {nest(exchange(opts), xs, steps); return ls.addList(xs.copy().zipWith(nest(exchange(opts),xs,steps),sub))})
+    p = new Graphics(fig1,{'class':'welth'})
+	.xRange([ls.minBin,ls.maxBin])
 	.yRange([0,1.05*ls.maxValue/ls.number/ls.step])
 	.axes({yLabel : 'доля людей в группе',
 	       xLabel : 'уровень богатства',
@@ -221,22 +221,22 @@ function start3(opts)
 	       yTickFormat : d3.format('i')})
 
     p.histogram(ls,{'type':'PDF'})
-    fg = Gamma().fromHistogram(ls)
-    fn = Gamma(1/alpha-1,(1/alpha-1)/100)
-    p.plot(fn.PDF).plot(fg.PDF)
+    fn = Normal().fromHistogram(ls)
+//    fn = Gamma(1/alpha-1,(1/alpha-1)/100)
+    p.plot(x => fn.PDF(x-0.5))
 
 }
 
-/*
+
 start3({'population':1000,
 	'shares':100,
-	'alpha':0.2,
+	'alpha':0,
 	'beta':0.0,
-	'minShare':0,
+	'minShare':1,
 	'steps':5000,
-	'averaging':20});
+	'averaging':200});
 
-*/
+
 /*
 gs = [0.05,0.1,0.2,0.4,0.8,0.5].map(a => {
     start3({'population':1000,

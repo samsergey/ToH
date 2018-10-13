@@ -36,10 +36,22 @@
     .hist .line {
 	stroke:blue;
     }
+    .plus {
+	fill-opacity:0.5;
+	fill:red;
+    }
+    .minus {
+	fill-opacity:0.5;
+	fill:blue;
+    }
+    .sum {
+	fill-opacity:0.5;
+	fill:orange;
+    }
 </style>
     </head>
     <body>
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='600' height='250'></svg>
     <svg id='fig2' width='300' height='300'></svg><br/>
     <svg id='fig22' width='200' height='200'></svg>
     <svg id='fig23' width='200' height='200'></svg>
@@ -227,7 +239,7 @@ function start3(opts)
 
 }
 
-
+/*
 start3({'population':1000,
 	'shares':100,
 	'alpha':0,
@@ -235,7 +247,7 @@ start3({'population':1000,
 	'minShare':1,
 	'steps':5000,
 	'averaging':200});
-
+*/
 
 /*
 gs = [0.05,0.1,0.2,0.4,0.8,0.5].map(a => {
@@ -324,6 +336,33 @@ start5({'population':1000,
 	'averaging':5})
 
 */
+function diffs() {
+    var f1 = Normal(5,1)
+    var f2 = Normal(-5,1)
+    var f3 = Normal(0,2)
+    p = new Graphics(fig1,{'class':'welth'})
+    p.options.margin.left=30
+    p.xRange([-10,10])
+	.yRange([0,0.5])
+	.axes({xLabel : 'денежный поток',
+	       yLabel : 'вероятность',
+	       xTickValues : [0],
+	       yTickValues : [],
+	       xTickFormat : d3.format('i'),
+	       yTicksFormat : d3.format('i')})
+	.plot(f1.PDF,{'class':'plus','filled':true})
+	.plot(f2.PDF,{'class':'minus','filled':true})
+	.plot(f3.PDF,{'class':'sum','filled':true})
+	.gridLines({'x':[-5,5]})
+	.label('M/n',{'at':[4.7,-0.06],'class':'axis'})
+	.label('-M/n',{'at':[-5.5,-0.06],'class':'axis'})
+	.label('прибыль',{'at':[4.2,0.15]})
+	.label('убыток',{'at':[-5.8,0.15]})
+	.label('доход =',{'at':[-0.7,0.12]})
+	.label('прибыль-убыток',{'at':[-1.6,0.08]})
+}
+diffs()
+
 
 /*
 function iterate(G)
@@ -546,6 +585,26 @@ function gammas(opts)
 }
 
 //gammas()
+
+function mix(opts)
+{
+    var x1 = Exponential(1/100).samples(1000)
+    var x2 = Exponential(1/400).samples(1000)
+    xs = x1.concat(x2)
+    ls = new Histogram(10).fromList(xs)
+    p = new Graphics(fig1,{'class':'welth'})
+	.xRange([ls.minBin,ls.maxBin])
+	.yRange([0,1.05*ls.maxValue/ls.number/ls.step])
+	.axes({yLabel : 'доля людей в группе',
+	       xLabel : 'уровень богатства',
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    p.histogram(ls,{'type':'PDF'})
+}
+
+//mix({})
+
+
 
 </script>
     </body>

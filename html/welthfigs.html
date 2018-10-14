@@ -51,7 +51,7 @@
 </style>
     </head>
     <body>
-    <svg id='fig1' width='600' height='250'></svg>
+    <svg id='fig1' width='400' height='300'></svg>
     <svg id='fig2' width='300' height='300'></svg><br/>
     <svg id='fig22' width='200' height='200'></svg>
     <svg id='fig23' width='200' height='200'></svg>
@@ -77,7 +77,7 @@ function exchange(opts)
 	    d = minShare + floor(data[i]*alpha)
 	    do	    {
 		j = randomInteger(data.length)()
-		df = d//min(d,minShare + floor(data[j]*beta))
+		df = min(d,minShare + floor(data[j]*beta))
 		if (bound > 0 && data[j]>=bound-df) continue
 		data[i]-=df
 		data[j]+=df
@@ -104,6 +104,7 @@ function start1(opts)
     var bound = opts["bound"] || 0
         
     var ref = Exponential(1/m)
+    var ref = Gamma(1/alpha-1,(1/alpha-1)/100)
     var pts = new Histogram(1).fromDistribution(ref,1000).LorenzCurve;
 //	var ref = new Histogram(bound/2).fromList([50,50,50,250])
 //	var ref = new Histogram(bound/2).fromList([50,100,100,100])
@@ -123,9 +124,9 @@ function start1(opts)
 	var ls = new Histogram(10).fromList(xs)
 	p1.cleanPaper()
 	    .histogram(ls,{'type':'PDF'})
-	if (i > steps*0.9)
+//	if (i > steps*0.9)
 //	    p1.histogram(ref,{'type':'PDF','class':'ref','kind':'stairs'})
-	    p1.plot(ref.PDF,{'type':'PDF','class':'ref','kind':'stairs'})
+//	    p1.plot(ref.PDF,{'type':'PDF','class':'ref','kind':'stairs'})
 	if(side=='entropy')
 	{
 	    es.push([ss+=s,ls.entropy])
@@ -147,8 +148,8 @@ function start1(opts)
 					   'points':true,
 					   'class':'lower'})
 		.label(d3.format('.2n')(ls.Gini),{'at':[0.25,0.75]})
-	    if (i > steps*0.9)
-	    	p2.listPlot(pts,{'points':false,'joined':true,})
+//	    if (i > steps*0.9)
+//	    	p2.listPlot(pts,{'points':false,'joined':true,})
 	    
 	}
 
@@ -196,21 +197,21 @@ function start1(opts)
     figure1()
     window.setInterval(figure1,1,xs)
 }
-
+/*
 
 start1({'population':2000,
 	'shares':100,
-	'alpha':0,
-	'beta':0,
-	'minShare':1,
+	'alpha':0.3,
+	'beta':0.1,
+	'minShare':0,
 	'steps':1000,
 	'minIter':1,
-	'maxIter':1000000,
-	'bound':150,
+	'maxIter':300000,
+	'bound':0,
 	'side':'Lorentz',
 //     	'side':'entropy'
        })
-
+*/
 
 function start3(opts)
 {
@@ -222,10 +223,11 @@ function start3(opts)
     
     xs = range(n).map(() => m)
     nest(exchange(opts), xs, steps)
-    ls = new Histogram(1).fromList(xs.copy().zipWith(nest(exchange(opts),xs,steps),sub))
-    repeat(averaging,() => {nest(exchange(opts), xs, steps); return ls.addList(xs.copy().zipWith(nest(exchange(opts),xs,steps),sub))})
+    ls = new Histogram(10).fromList(xs)
+    repeat(averaging,() => ls.addList(nest(exchange(opts), xs, steps)))
     p = new Graphics(fig1,{'class':'welth'})
 	.xRange([ls.minBin,ls.maxBin])
+	.xAxisType('log')
 	.yRange([0,1.05*ls.maxValue/ls.number/ls.step])
 	.axes({yLabel : 'доля людей в группе',
 	       xLabel : 'уровень богатства',
@@ -233,21 +235,21 @@ function start3(opts)
 	       yTickFormat : d3.format('i')})
 
     p.histogram(ls,{'type':'PDF'})
-    fn = Normal().fromHistogram(ls)
+//    fn = Normal().fromHistogram(ls)
 //    fn = Gamma(1/alpha-1,(1/alpha-1)/100)
-    p.plot(x => fn.PDF(x-0.5))
+//    p.plot(x => fn.PDF(x-0.5))
 
 }
 
-/*
+
 start3({'population':1000,
 	'shares':100,
-	'alpha':0,
-	'beta':0.0,
-	'minShare':1,
-	'steps':5000,
-	'averaging':200});
-*/
+	'alpha':0.3,
+	'beta':0.1,
+	'minShare':0,
+	'steps':10000000,
+	'averaging':1});
+
 
 /*
 gs = [0.05,0.1,0.2,0.4,0.8,0.5].map(a => {

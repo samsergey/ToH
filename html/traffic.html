@@ -28,20 +28,21 @@ var fig1 = d3.select("#fig1")
 var fig2 = d3.select("#fig2")
  
 var kmh = 1000/3600
- 
+
 var roadLength = 5000
 var safeDistance = 7
 var vmax = 60*kmh
 var amax = 100*kmh / 10
 var bmax = 100*kmh / 3
 var dt = 0.5
- 
+
+
 function Light(x,color,del)
 {
     this.x = x
     this.color = color
     this.timer = del
-    this.redPeriod = 10
+    this.redPeriod = 40
     this.greenPeriod = 40
     this.update = function()
     {
@@ -73,7 +74,7 @@ function Car(x,v,ahead)
     this.v = 0
     this.a = Gamma(50,50/amax).generator()
     this.b = bmax
-    this.vmax = Gamma(100,100/vmax).generator()
+    this.vmax = Gamma(500,500/vmax).generator()
     this.stops = 0    
     this.ahead = ahead
     var prev=0
@@ -126,7 +127,8 @@ function carManager(t)
 	if (cars.length > 1 && cars[cars.length-1].x >= roadLength)
 	{
 	    var s = cars.pop().stops
-	    h.add(s ==0 ? 0 : 1)
+	    h.add(s)
+//	    h.add(s ==0 ? 0 : 1)
 	    cars[cars.length-1].ahead = null
 	}
     }
@@ -170,9 +172,9 @@ var p2 = new Graphics(fig2,{"class":"traffic"})
     .yRange([0,1])
     .axes({})
 
-var lights = range(1,10).map(n => new Light(500*n,"green",-500/vmax*(n-1)))
-var cars = [new Car(0,10)]
-var manageCars = carManager(50)
+var lights = range(1,10).map(n => new Light(500*n,"red",-500/vmax*(n-1)*1))
+var cars = [new Car(0,40)]
+var manageCars = carManager(7)
 var h = new Histogram(1)
 window.setInterval(update,1)
  

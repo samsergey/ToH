@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .reds {
+    fill:red;
+    }
+    .greens {
+    fill:green;
+    }
+</style>
+  </head>
+    <body>
+    <svg id='fig1' width='500' height='100'></svg><br/>
+    <svg id='fig2' width='300' height='300'></svg>
+    <script>
+    
+var fig1 = d3.select("#fig1")
+var fig2 = d3.select("#fig2")
+ 
+var kmh = 1000/3600
+ 
+var roadLength = 5000
+var safeDistance = 7
+var vmax = 60*kmh
+var amax = 100*kmh / 10
+var bmax = 100*kmh / 3
+var dt = 0.5
+ 
+function Light(x,color,del)
+{
+    this.x = x
+    this.color = color
+    this.timer = del
+    this.redPeriod = 10
+    this.greenPeriod = 40
+    this.update = function()
+    {
+	if (this.color == "red")
+	{
+            this.timer+=dt
+            if (this.timer >= this.redPeriod)
+            {
+		this.timer = 0
+		this.color = "green"
+            }
+	}
+	if (this.color == "green")
+	{
+            this.timer+=dt
+            if (this.timer >= this.greenPeriod)
+            {
+		this.timer = 0
+		this.color = "red"
+            }
+	}
+	return this
+    }
+}
+ 
+function Car(x,v,ahead)
+{
+    this.x = x
+    this.v = 0
+    this.a = Gamma(50,50/amax).generator()
+    this.b = bmax
+    this.vmax = Gamma(100,100/vmax).generator()
+    this.stops = 0    
+    this.ahead = ahead
+    var prev=0
+    this.update = function()
+    {
+	var l = nearestLight(this.x)
+	var acc = this.v < this.vmax ? this.a : 0
+	
+	if (l)
+	{
+	    if (l.color == "red")
+	    {
+		var d = l.x - this.x
+		if (d < 7*safeDistance)
+		{
+		    acc = -within(0.1,this.b)(sqr(this.v)/(d+1))
+		}
+	    }
+	}
+	if (this.ahead)
+	{
+            var d = ahead.x - this.x
+            if (d < 4*safeDistance)
+            {
+		acc = - max(0.5,min (this.b, 2*sqr(ahead.v - this.v)/(d+1)))
+            }
+	}
+	this.v = within(0,this.vmax)(this.v + acc * dt)
+	this.stops += (this.v < 0.3 && prev > 0.3) ? 1 : 0
+	prev = this.v
+	this.x = this.x + this.v * dt
+	return this
+    }
+}
+ 
+function carManager(t)
+{
+    var timer = 0
+    var g = Exponential(1/t).generator
+    var p = g()
+    return () =>
+    {
+        timer+=dt
+        if (timer > p && cars[0].x > safeDistance)
+        {
+            p = g()
+            timer = 0
+            cars.unshift(new Car(0,random(1,vmax),cars[0]))
+        }
+	if (cars.length > 1 && cars[cars.length-1].x >= roadLength)
+	{
+	    var s = cars.pop().stops
+	    h.add(s ==0 ? 0 : 1)
+	    cars[cars.length-1].ahead = null
+	}
+    }
+}
+ 
+function nearestLight(x) {
+    return lights.filter(l=>l.x>x).head()
+}
+ 
+function update()
+{
+    lights.forEach(l => l.update())
+    cars.forEach(c => c.update())
+    manageCars()
+    showAnimation()
+    showHistogram() 
+}
+ 
+function showAnimation()
+{
+    p1.cleanPaper()
+    p1.listPlot(cars.map(c => [c.x,0]))
+    p1.listPlot(lights.filter(l=>l.color=="green").map(l => [l.x,2]),{"class":"greens"})
+    p1.listPlot(lights.filter(l=>l.color=="red").map(l => [l.x,1]),{"class":"reds"})
+}
+
+function showHistogram()
+{
+    p2.cleanPaper()
+    p2.histogram(h, {"type":"PDF"})
+}
+
+
+var p1 = new Graphics(fig1,{"class":"traffic"})
+    .xRange([0,roadLength])
+    .yRange([0,2])
+    .axes({yAxis:false})
+
+var p2 = new Graphics(fig2,{"class":"traffic"})
+    .xRange([0,15])
+    .yRange([0,1])
+    .axes({})
+
+var lights = range(1,10).map(n => new Light(500*n,"green",-500/vmax*(n-1)))
+var cars = [new Car(0,10)]
+var manageCars = carManager(50)
+var h = new Histogram(1)
+window.setInterval(update,1)
+ 
+</script>
+  </body>
+</html>

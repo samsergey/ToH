@@ -74,7 +74,7 @@ function Car(x,v,ahead)
     this.v = 0
     this.a = Gamma(50,50/amax).generator()
     this.b = bmax
-    this.vmax = 1.5*Gamma(2,2/1.5).generator()+vmax-1.5
+    this.vmax = 1.5*Gamma(2,2/1.5).sample+vmax-1.5
     this.stops = 0    
     this.ahead = ahead
     this.time = 0
@@ -131,7 +131,8 @@ function carManager(t)
 	    var c = cars.pop()
 //	    h.add(c.stops)
 	    //	    h.add(c.stops ==0 ? 0 : 1)
-	    h.add((c.x-500)/c.time/kmh)
+//	    h.add((c.x-500)/c.time/kmh)
+	    h.add(c.vmax/kmh)
 	    cars[cars.length-1].ahead = null
 	}
     }

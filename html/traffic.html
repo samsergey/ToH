@@ -74,12 +74,14 @@ function Car(x,v,ahead)
     this.v = 0
     this.a = Gamma(50,50/amax).generator()
     this.b = bmax
-    this.vmax = Gamma(500,500/vmax).generator()
+    this.vmax = 1.5*Gamma(2,2/1.5).generator()+vmax-1.5
     this.stops = 0    
     this.ahead = ahead
+    this.time = 0
     var prev=0
     this.update = function()
     {
+	this.time += this.x>500 ? dt : 0
 	var l = nearestLight(this.x)
 	var acc = this.v < this.vmax ? this.a : 0
 	
@@ -126,9 +128,10 @@ function carManager(t)
         }
 	if (cars.length > 1 && cars[cars.length-1].x >= roadLength)
 	{
-	    var s = cars.pop().stops
-	    h.add(s)
-//	    h.add(s ==0 ? 0 : 1)
+	    var c = cars.pop()
+//	    h.add(c.stops)
+	    //	    h.add(c.stops ==0 ? 0 : 1)
+	    h.add((c.x-500)/c.time/kmh)
 	    cars[cars.length-1].ahead = null
 	}
     }
@@ -168,15 +171,18 @@ var p1 = new Graphics(fig1,{"class":"traffic"})
     .axes({yAxis:false})
 
 var p2 = new Graphics(fig2,{"class":"traffic"})
-    .xRange([0,15])
+    .xRange([0,80])
     .yRange([0,1])
     .axes({})
 
-var lights = range(1,10).map(n => new Light(500*n,"red",-500/vmax*(n-1)*1))
+var lights = range(1,10).map(n => new Light(500*n,"red",-500/vmax*(n-1)))
+//var lights = range(1,10).map(n => new Light(500*n,"red",random()*60 ))
 var cars = [new Car(0,40)]
-var manageCars = carManager(7)
+var manageCars = carManager(5)
 var h = new Histogram(1)
 window.setInterval(update,1)
+//h.fromList(Gamma(2,2/1.5).samples(10000).map(x => (1.5*x+vmax-1.5)/kmh))
+//showHistogram()
  
 </script>
   </body>

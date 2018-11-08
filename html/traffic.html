@@ -29,12 +29,14 @@ var fig2 = d3.select("#fig2")
  
 var kmh = 1000/3600
 
-var roadLength = 5000
+var lightN = 10
+var lightD = 1000
+var roadLength = lightN*lightD
 var safeDistance = 7
 var vmax = 60*kmh
 var amax = 100*kmh / 10
 var bmax = 100*kmh / 3
-var dt = 0.5
+var dt = 1
 
 
 function Light(x,color,del)
@@ -72,37 +74,39 @@ function Car(x,v,ahead)
 {
     this.x = x
     this.v = 0
-    this.a = Gamma(50,50/amax).generator()
+    this.a = Gamma(100,100/amax).generator()
     this.b = bmax
     this.vmax = 1.5*Gamma(2,2/1.5).sample+vmax-1.5
     this.stops = 0    
     this.ahead = ahead
     this.time = 0
+    this.nearestLight = function ()
+    {
+	return nearestLight(this.x) || new Light(Infinity,"green")
+    }
     var prev=0
     this.update = function()
     {
 	this.time += this.x>500 ? dt : 0
-	var l = nearestLight(this.x)
+	const l = this.nearestLight()
 	var acc = this.v < this.vmax ? this.a : 0
 	
-	if (l)
+	if (l.color == "red")
 	{
-	    if (l.color == "red")
+	    var d = l.x - this.x
+	    if (d < 7*safeDistance)
 	    {
-		var d = l.x - this.x
-		if (d < 7*safeDistance)
-		{
-		    acc = -within(0.1,this.b)(sqr(this.v)/(d+1))
-		}
+		acc = -within(0.1,this.b)(sqr(this.v)/(d+1))
 	    }
 	}
 	if (this.ahead)
 	{
             var d = ahead.x - this.x
-            if (d < 4*safeDistance)
+            if (d < 3*safeDistance)
             {
 		acc = - max(0.5,min (this.b, 2*sqr(ahead.v - this.v)/(d+1)))
             }
+	    
 	}
 	this.v = within(0,this.vmax)(this.v + acc * dt)
 	this.stops += (this.v < 0.3 && prev > 0.3) ? 1 : 0
@@ -120,7 +124,7 @@ function carManager(t)
     return () =>
     {
         timer+=dt
-        if (timer > p && cars[0].x > safeDistance)
+        if (timer > p && lights[0].color=="green")
         {
             p = g()
             timer = 0
@@ -131,13 +135,13 @@ function carManager(t)
 	    var c = cars.pop()
 //	    h.add(c.stops)
 	    //	    h.add(c.stops ==0 ? 0 : 1)
-//	    h.add((c.x-500)/c.time/kmh)
-	    h.add(c.vmax/kmh)
+	    h.add((c.x-500)/c.time/kmh)
+//	    h.add(c.vmax/kmh)
 	    cars[cars.length-1].ahead = null
 	}
     }
 }
- 
+
 function nearestLight(x) {
     return lights.filter(l=>l.x>x).head()
 }
@@ -176,7 +180,7 @@ var p2 = new Graphics(fig2,{"class":"traffic"})
     .yRange([0,1])
     .axes({})
 
-var lights = range(1,10).map(n => new Light(500*n,"red",-500/vmax*(n-1)))
+var lights = range(0,lightN).map(n => new Light(lightD*n,"red",-lightD/vmax*(n-1)))
 //var lights = range(1,10).map(n => new Light(500*n,"red",random()*60 ))
 var cars = [new Car(0,40)]
 var manageCars = carManager(5)

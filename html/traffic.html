@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html>
+    <!DOCTYPE html>
+    <html>
     <head>
     <script src='../lib/d3.js'></script>
     <script src='../lib/analysis.js'></script>
@@ -12,13 +12,13 @@
     <link rel="stylesheet" href="../css/styles.css">
     <style>
     .reds {
-    fill:red;
+	fill:red;
     }
     .greens {
-    fill:green;
+	fill:green;
     }
 </style>
-  </head>
+    </head>
     <body>
     <svg id='fig1' width='500' height='100'></svg><br/>
     <svg id='fig2' width='300' height='300'></svg>
@@ -26,22 +26,20 @@
     
 var fig1 = d3.select("#fig1")
 var fig2 = d3.select("#fig2")
- 
-var kmh = 1000/3600
 
-var lightsN = 20
-var lightsDist = 500
-var roadLength = lightsDist*(lightsN+1)
+var kmh = 1000/3600
+var lightN = 2
+var lightD = 500
+var roadLength = lightN*lightD
 var safeDistance = 7
 var vmax = 60*kmh
 var amax = 100*kmh / 10
 var bmax = 100*kmh / 3
 var dt = 0.5
-
-
 function Light(x,color,del)
 {
     this.x = x
+    this.v = 0
     this.color = color
     this.timer = del
     this.redPeriod = 40
@@ -69,86 +67,89 @@ function Light(x,color,del)
 	return this
     }
 }
- 
-function Car(x,v,ahead)
+
+function Car(x,v,ahead,vm)
 {
     this.x = x
     this.v = 0
-    this.a = Gamma(50,50/amax).generator()
-    this.b = bmax
-    this.vmax = Gamma(500,500/vmax).generator()
-    this.stops = 0    
+    this.a = Gamma(100,100/amax).generator()
+    this.b = Gamma(100,100/bmax).generator()
+    this.vmax = vm || 1.5*Gamma(2,2/1.5).sample+vmax-1.5
     this.ahead = ahead
+    this.time = 0
+    this.nearestLight = function ()
+    {
+	return nearestLight(this.x) || new Light(Infinity,"green")
+    }
     var prev=0
     this.update = function()
     {
-	var l = nearestLight(this.x)
+	this.time += this.x>500 ? dt : 0
+	const l = this.nearestLight()
 	var acc = this.v < this.vmax ? this.a : 0
 	
-	if (l)
+	if (l.color == "red")
 	{
-	    if (l.color == "red")
+	    var d = l.x - this.x
+	    if (d < 7*safeDistance)
 	    {
-		var d = l.x - this.x
-		if (d < 7*safeDistance)
-		{
-		    acc = -within(0.1,this.b)(sqr(this.v)/(d+1))
-		}
+		acc = -within(0.1,this.b)(sqr(this.v)/(d+1))
 	    }
 	}
 	if (this.ahead)
 	{
             var d = ahead.x - this.x
-            if (d < 4*safeDistance)
+            if (d < 3*safeDistance)
             {
 		acc = - max(0.5,min (this.b, 2*sqr(ahead.v - this.v)/(d+1)))
             }
+	    
 	}
 	this.v = within(0,this.vmax)(this.v + acc * dt)
-	this.stops += (this.v < 0.3 && prev > 0.3 && this.x > lightsDist) ? 1 : 0
+	this.stops += (this.v < 0.3 && prev > 0.3) ? 1 : 0
 	prev = this.v
 	this.x = this.x + this.v * dt
 	return this
+    
     }
 }
- 
-function carManager(t)
+
+function carManager(d)
 {
     var timer = 0
-    var g = Exponential(1/t).generator
+    var g = Exponential(d/60).generator
     var p = g()
     return () =>
-    {
-        timer+=dt
-        if (timer > p && cars[0].x > safeDistance)
-        {
-            p = g()
-            timer = 0
-            cars.unshift(new Car(0,random(1,vmax),cars[0]))
-        }
-	if (cars.length > 1 && cars[cars.length-1].x >= roadLength)
 	{
-	    var s = cars.pop().stops
-	    h.add(s)
-//	    h.add(s ==0 ? 0 : 1)
-	    cars[cars.length-1].ahead = null
+            timer+=dt
+            if (timer > p && lights[0].color=="green")
+            {
+		p = g()
+		timer = 0
+		cars.push(new Car(0,random(1,vmax),cars[cars.length-1]))
+            }
+	    if (cars.length > 1 && cars[0].x >= roadLength)
+	    {
+		var c = cars.shift()
+		h.add(c.x/c.time/kmh)
+		//	    h.add(c.vmax/kmh)
+		cars[0].ahead = null
+	    }
 	}
-    }
 }
- 
 function nearestLight(x) {
     return lights.filter(l=>l.x>x).head()
 }
- 
+
 function update()
 {
-    lights.forEach(l => l.update())
+//    lights.forEach(l => l.update())
     cars.forEach(c => c.update())
     manageCars()
     showAnimation()
     showHistogram() 
 }
- 
+
 function showAnimation()
 {
     p1.cleanPaper()
@@ -163,23 +164,27 @@ function showHistogram()
     p2.histogram(h, {"type":"PDF"})
 }
 
-
 var p1 = new Graphics(fig1,{"class":"traffic"})
-    .xRange([0,roadLength])
+    .xRange([400,510])
     .yRange([0,2])
     .axes({yAxis:false})
 
 var p2 = new Graphics(fig2,{"class":"traffic"})
-    .xRange([0,15])
+    .xRange([0,80])
     .yRange([0,1])
     .axes({})
 
-var lights = range(1,lightsN).map(n => new Light(lightsDist*n,"red",-lightsDist/vmax*(n-1)*1))
-var cars = [new Car(0,40)]
-var manageCars = carManager(20)
+var lights = range(0,lightN).map(n => new Light(lightD*n,"red",-lightD/vmax*(n-1)))
+lights[0].color = "green"
+//var lights = range(1,10).map(n => new Light(500*n,"red",random()*60 ))
+var cars = [new Car(300,20*kmh,null,20*kmh)]
+cars.push(new Car(0,1*kmh,cars[0]))
+var manageCars = carManager(10)
 var h = new Histogram(1)
-window.setInterval(update,1)
- 
+window.setInterval(update,100)
+//h.fromList(Gamma(2,2/1.5).samples(10000).map(x => (1.5*x+vmax-1.5)/kmh))
+//showHistogram()
+
 </script>
-  </body>
-</html>
+    </body>
+    </html>

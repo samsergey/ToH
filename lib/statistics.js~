@@ -355,7 +355,7 @@ function DiscreteDistribution(par)
     this.support   = undefined
     this.PMF = undefined
     this.CDF       = cdf(this,x => range(0,x).sum(this.PMF))
-    this.quantile  = quantileFun(q => findRoot(this.CDF,0,x => x <= q)[0])
+    this.quantile  = quantileFun(q => bisection(this.CDF,0,1,x => x <= q)[0])
     this.mean      = undefined
     this.variance  = undefined
     this.mode      = undefined
@@ -520,6 +520,7 @@ function Binomial(n,p)
 	if (opts.p) return Binomial(round(h.mean/opts.p),opts.p) 
 	if (opts.trials) return Binomial(opts.trials,h.mean/opts.trials) 
     }
+    res.quantile  = quantileFun(q => findRoot(res.CDF,0,x => x <= q)[0])
     return res
 }
 
@@ -597,6 +598,7 @@ function Pareto(k,a)
     res.generator = () => k/pow(random(),1/a)
     res.samples   = n => d3.range(n).map(res.generator)
     res.fromHistogram = h => Pareto(h.minBin,1/h.expected(x => ln(x) - ln(h.minBin)))
+
     return res   
 }
 

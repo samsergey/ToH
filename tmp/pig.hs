@@ -43,29 +43,29 @@ processor n f = mkProgram n $
 
 err = setStatus . Just . ("Error : " ++)
 
-pop p = p $ appendCode POP $
+pop = appendCode POP $
   \case (_,x:s) -> setStack s
         _ -> err "pop expected an argument"
 
-dup p = p $ appendCode DUP $
+dup = appendCode DUP $
   \case (_,x:s) -> setStack (x:x:s)
         _ -> err "dup expected an argument"
 
-exch p = p $ appendCode EXCH $
+exch = appendCode EXCH $
   \case (_,x:y:s) -> setStack (y:x:y:s)
         _ -> err "exch expected two arguments"
 
-swap p = p $ appendCode SWAP $
+swap = appendCode SWAP $
   \case (_,x:y:s) -> setStack (y:x:s)
         _ -> err "swap expected two arguments"
 
-push x p = p $ appendCode (PUSH x) $ \(_,s) -> setStack (x:s)
+push x = appendCode (PUSH x) $ \(_,s) -> setStack (x:s)
 
 app1 n f = appendCode n $
   \case (_,x:s) -> setStack (f x:s)
         _ -> err $ "operation " ++ show n ++ " expected an argument"
 
-app2 n f p = p $ appendCode n $
+app2 n f = appendCode n $
   \case (_,x:y:s) -> setStack (f x y:s)
         _ -> err $ "operation " ++ show n ++ " expected two arguments"
 
@@ -86,22 +86,22 @@ put i = indexed (PUT i) i $
 
 get i = indexed (GET i) i $ \(m,s) -> setStack ((m ! i) : s)
 
-indexed n i f p = p $ appendCode n $ if (i < 0 || i >= memSize)
+indexed n i f = appendCode n $ if (i < 0 || i >= memSize)
                           then const $ err "index in [0,16]"
                           else f
 
-branch b1 b2 p = p $ appendCode (IF (code b1) (code b2)) $ 
+branch b1 b2 = appendCode (IF (code b1) (code b2)) $ 
   \vm -> case stack vm of
     (0:s) -> proceed b2 s vm
     (_:s) -> proceed b1 s vm
     _ -> err "branch expected an argument" vm
 
-rep body p = p $ appendCode (REPEAT (code body)) $
+rep body = appendCode (REPEAT (code body)) $
   \vm -> case stack vm of
     (n:s) -> proceed (mconcat $ replicate n body) s vm
     _ -> err "rep expected an argument" vm
 
-while test body p = p $ appendCode (WHILE (code test) (code body)) $ go 
+while test body = appendCode (WHILE (code test) (code body)) $ go 
   where
     go vm = let res = proceed test (stack vm) vm
             in case stack res of

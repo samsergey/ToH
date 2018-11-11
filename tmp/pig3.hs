@@ -4,8 +4,8 @@ ExistentialQuantification,
 TupleSections #-}
 
 import Prelude hiding (log)
-import Data.Semigroup (Max(..),stimes)
-import Data.Monoid
+import Data.Semigroup (Max(..),stimes, Semigroup(..))
+import Data.Monoid hiding ((<>))
 import Data.Vector ((//),(!),Vector)
 import qualified Data.Vector as V (replicate)
 
@@ -108,7 +108,9 @@ gt = app2 GTH (\x -> \y -> if (x < y) then 1 else 0)
 proceed p prog s = run (prog p) . setStack s
 
 rep body p = program (REP (code body)) go id
-  where go (n:s) = proceed p (stimes n body) s
+  where go (n:s) = if n >= 0
+                   then proceed p (stimes n body) s
+                   else err "rep expected positive argument."
         go _ = err "rep expected an argument."
 
 branch br1 br2 p = program (IF (code br1) (code br2)) go id
@@ -134,7 +136,7 @@ indexed c i f = programM c $ if (i < 0 || i >= memSize)
 
 ------------------------------------------------------------
 
-fact = dup <> push 2 <> lt <> branch (push 1) (dup <> dec <> fact) <> mul
+-- fact = dup <> push 2 <> lt <> branch (push 1) (dup <> dec <> fact) <> mul
 
 fact1 = push 1 <> swap <> while (dup <> push 1 <> gt) (swap <> exch <> mul <> swap <> dec) <> pop
 
@@ -146,7 +148,7 @@ fact3 = dup <> put 0 <> dup <> dec <> rep (dec <> dup <> get 0 <> mul <> put 0) 
 
 copy2 = exch <> exch
 
-gcd1 = while (copy2 <> neq) (copy2 <> lt <> branch (mempty) (swap) <> exch <> sub) <> pop
+gcd1 = while (copy2 <> neq) (copy2 <> lt <> branch mempty swap <> exch <> sub) <> pop
 
 ------------------------------------------------------------
 
@@ -181,44 +183,41 @@ infix 7 :>
 
 data Req = Int :> Int deriving (Show,Eq)
 
--- instance Eq Req where
---   (==) (a :> b) (c :> d) = (a==c) && (b==d)
-
 instance Semigroup Req where
-  n1 :> l1 <> n2 :> l2 = let a = (n1 `max` (n2 - l1 + n1) `max` n2)
-                         in a :> (a + (l1 - n1) + (l2-n2))
-
+  n1 :> l1 <> n2 :> l2 = let a = n1 `max` (n2 - l1 + n1)
+                         in a :> (a + l1 - n1 + l2 - n2)
 
 instance Monoid Req where
+  mappend = (<>)
   mempty = 0 :> 0
 
-arity = process . code
-
-process = foldMap f
+arity = arity' . code
   where
-    f =
-      \case
-        IF b1 b2 -> undefined
-        REP p -> undefined
-        WHILE t b -> undefined
-        PUT _ -> 1:>0
-        GET _ -> 0:>1
-        PUSH _ -> 0:>1
-        POP -> 1:>0
-        DUP -> 1:>2
-        SWAP -> 2:>2
-        EXCH -> 2:>3
-        INC -> 1:>1
-        DEC -> 1:>1
-        ADD -> 2:>1
-        MUL -> 2:>1
-        SUB -> 2:>1
-        DIV -> 2:>1
-        EQL -> 2:>1
-        LTH -> 2:>1
-        GTH -> 2:>1
-        NEQ -> 2:>1
-        NEG -> 1:>1
+    arity' = foldMap f
+    f = \case
+      IF b1 b2 -> 1:>0 <> let n1:>l1 = arity' b1
+                              n2:>l2 = arity' b2
+                          in n1 `max` n2 :> l1 `min` l2
+      REP p -> arity' p
+      WHILE t b -> arity' t <> 1:>0 <> arity' b
+      PUT _ -> 1:>0
+      GET _ -> 0:>1
+      PUSH _ -> 0:>1
+      POP -> 1:>0
+      DUP -> 1:>2
+      SWAP -> 2:>2
+      EXCH -> 2:>3
+      INC -> 1:>1
+      DEC -> 1:>1
+      ADD -> 2:>1
+      MUL -> 2:>1
+      SUB -> 2:>1
+      DIV -> 2:>1
+      EQL -> 2:>1
+      LTH -> 2:>1
+      GTH -> 2:>1
+      NEQ -> 2:>1
+      NEG -> 1:>1
 
 tests = mapM_ print $
   [ 1:>2 <> 2:>3 == 1:>3

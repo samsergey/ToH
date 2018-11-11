@@ -140,9 +140,9 @@ indexed c i f = programM c $ if (i < 0 || i >= memSize)
 
 fact1 = push 1 <> swap <> while (dup <> push 1 <> gt) (swap <> exch <> mul <> swap <> dec) <> pop
 
-range = rep (dup <> inc)
+range = exch <> sub <> dup<> push 0 <> gt <> branch (rep (dup <> inc)) (neg <> rep (dup <> dec))
 
-fact2 = dec <> push 2 <> swap <> range <> push 3 <> sub <> rep mul
+fact2 = inc <> push 1 <> swap <> range <> dec <> dec <> rep mul
 
 fact3 = dup <> put 0 <> dup <> dec <> rep (dec <> dup <> get 0 <> mul <> put 0) <> get 0 <> swap <> pop
 
@@ -179,9 +179,11 @@ readProg = readProg' . read
         NEG -> neg
 
 ------------------------------------------------------------
+
 infix 7 :>
 
-data Req = Int :> Int deriving (Show,Eq)
+data Req = Int :> Int
+  deriving (Show,Eq)
 
 instance Semigroup Req where
   n1 :> l1 <> n2 :> l2 = let a = n1 `max` (n2 - l1 + n1)
@@ -195,11 +197,6 @@ arity = arity' . code
   where
     arity' = foldMap f
     f = \case
-      IF b1 b2 -> 1:>0 <> let n1:>l1 = arity' b1
-                              n2:>l2 = arity' b2
-                          in n1 `max` n2 :> l1 `min` l2
-      REP p -> arity' p
-      WHILE t b -> arity' t <> 1:>0 <> arity' b
       PUT _ -> 1:>0
       GET _ -> 0:>1
       PUSH _ -> 0:>1
@@ -218,6 +215,11 @@ arity = arity' . code
       GTH -> 2:>1
       NEQ -> 2:>1
       NEG -> 1:>1
+      IF b1 b2 -> let n1:>l1 = arity' b1
+                      n2:>l2 = arity' b2
+                  in 1:>0 <> n1 `max` n2 :> l1 `min` l2
+      REP p -> 1:>0
+      WHILE t b -> arity' t <> 1:>0
 
 tests = mapM_ print $
   [ 1:>2 <> 2:>3 == 1:>3

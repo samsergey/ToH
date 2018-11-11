@@ -130,30 +130,29 @@ data Command = IF [Command] [Command]
              | EQL | LTH | GTH | NEQ
              deriving (Read, Show)
 
-interprete =
-  \case
-    IF b1 b2 -> branch (readProg b1) (readProg b2)
-    REPEAT p -> rep (readProg p)
-    WHILE t b -> while (readProg t) (readProg b)
-    PUT i -> put i
-    GET i -> get i
-    PUSH i -> push i
-    POP -> pop
-    DUP -> dup
-    SWAP -> swap
-    EXCH -> exch
-    INC -> inc
-    DEC -> dec
-    ADD -> add
-    MUL -> mul
-    SUB -> sub
-    DIV -> frac
-    EQL -> eq
-    LTH -> lt
-    GTH -> gt
-    NEQ -> neq
-
 readProg = mconcat . map interprete
+  where
+    interprete = \case
+      IF b1 b2 -> branch (readProg b1) (readProg b2)
+      REPEAT p -> rep (readProg p)
+      WHILE t b -> while (readProg t) (readProg b)
+      PUT i -> put i
+      GET i -> get i
+      PUSH i -> push i
+      POP -> pop
+      DUP -> dup
+      SWAP -> swap
+      EXCH -> exch
+      INC -> inc
+      DEC -> dec
+      ADD -> add
+      MUL -> mul
+      SUB -> sub
+      DIV -> frac
+      EQL -> eq
+      LTH -> lt
+      GTH -> gt
+      NEQ -> neq
 
 ------------------------------------------------------------
  

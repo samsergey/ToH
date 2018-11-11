@@ -2,30 +2,21 @@
 
 import Data.Semigroup (Max(..),stimes)
 import Data.Monoid
-import Data.Vector ((//),(!),Vector)
-import qualified Data.Vector as V (replicate)
 
 type Stack = [Int]
-type Memory = Vector Int
 type Processor = VM -> VM
 
-memSize = 16
-
 data VM = VM { stack :: Stack
-             , status :: Maybe String
-             , memory :: Memory }
+             , status :: Maybe String }
           deriving Show
 
-mkVM = VM mempty mempty (V.replicate memSize 0)
+mkVM = VM mempty mempty
 
 setStack :: Stack -> Processor
-setStack  x (VM _ st m) = VM x st m
+setStack  x (VM _ s) = VM x s
 
 setStatus :: Maybe String -> Processor
-setStatus st (VM s _ m) = VM s st m
-
-setMemory :: Memory -> Processor
-setMemory m (VM s st _) = VM s st m
+setStatus x (VM s _) = VM s x
 
 newtype Program = Program { getProgram :: Dual (Endo VM) }
   deriving (Semigroup, Monoid)
@@ -34,12 +25,6 @@ program :: (Stack -> Processor) -> Program
 program f = Program . Dual . Endo $
   \vm -> case status vm of
     Nothing -> (f (stack vm)) vm
-    m -> vm
-
-programM :: ((Memory, Stack) -> Processor) -> Program
-programM f = Program . Dual . Endo $
-  \vm -> case status vm of
-    Nothing -> (f (memory vm, stack vm)) vm
     m -> vm
 
 run :: Program -> Processor
@@ -109,16 +94,6 @@ while test body = program (const go)
                _:s -> go $ proceed body s res
                _ -> err "while expected an argument." vm
 
-put i = indexed i $
-    \case (m, x:s) -> setStack s . setMemory (m // [(i,x)])
-          _ -> err "put expected an argument"
-
-get i = indexed i $ \(m, s) -> setStack ((m ! i) : s)
-
-indexed i f = programM $ if (i < 0 || i >= memSize)
-                         then const $ err "index in [0,16]"
-                         else f
-
 ------------------------------------------------------------
 
 fact = dup <> push 2 <> lt <> branch (push 1) (dup <> dec <> fact) <> mul
@@ -129,7 +104,7 @@ range = rep (dup <> inc)
 
 fact2 = dec <> push 2 <> swap <> range <> push 3 <> sub <> rep mul
 
-fact3 = dup <> put 0 <> dup <> dec <> rep (dec <> dup <> get 0 <> mul <> put 0) <> get 0 <> swap <> pop
+-- -- fact3 = dup <> put 0 <> dup <> dec <> rep (dec <> dup <> get 0 <> mul <> put 0) <> get 0 <> swap <> pop
 
 copy2 = exch <> exch
 

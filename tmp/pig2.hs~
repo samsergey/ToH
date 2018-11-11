@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase, GeneralizedNewtypeDeriving #-}
 
+import Prelude hiding (log)
 import Data.Semigroup (Max(..),stimes)
 import Data.Monoid
 import Data.Vector ((//),(!),Vector)
@@ -7,25 +8,27 @@ import qualified Data.Vector as V (replicate)
 
 type Stack = [Int]
 type Memory = Vector Int
+type Log = [Stack]
 type Processor = VM -> VM
 
 memSize = 16
 
 data VM = VM { stack :: Stack
              , status :: Maybe String
-             , memory :: Memory }
+             , memory :: Memory
+             , log :: Log }
           deriving Show
 
 mkVM = VM mempty mempty (V.replicate memSize 0)
 
 setStack :: Stack -> Processor
-setStack  x (VM _ st m) = VM x st m
+setStack  x (VM _ st m l) = VM x st m l
 
 setStatus :: Maybe String -> Processor
-setStatus st (VM s _ m) = VM s st m
+setStatus st (VM s _ m l) = VM s st m l
 
 setMemory :: Memory -> Processor
-setMemory m (VM s st _) = VM s st m
+setMemory m (VM s st _ l) = VM s st m l
 
 newtype Program = Program { getProgram :: Dual (Endo VM) }
   deriving (Semigroup, Monoid)

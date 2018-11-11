@@ -24,46 +24,48 @@ mkVM = VM (V.replicate memSize 0) mempty Nothing ([[]],0,Max 0)
 ------------------------------------------------------------
 
 newtype Program = Program { getProgram :: (Dual (Endo VM), [Command]) }
-  deriving (Monoid)
+  deriving (Monoid,Semigroup)
 
 run = appEndo . getDual . fst . getProgram
 code = snd . getProgram
 mkProgram n p =  Program (Dual (Endo p), [n]) 
+proceed p s = run p . setStack s
+writeLog vm = setLog ([s], 1, Max (length s)) vm
+  where s = stack vm
 
+appendCode c p = (p, [c])
 ------------------------------------------------------------
 
 processor n f = mkProgram n $
   \vm -> case status vm of
-    Nothing -> writeLog $ f (memory vm, stack vm) vm
+    Nothing -> f (memory vm, stack vm) vm
     _ -> vm
 
-err = setStatus . Just . ("Error :" ++)
-writeLog vm = setLog ([stack vm], 1, Max (length s)) vm
-  where s = stack vm
+err = setStatus . Just . ("Error : " ++)
 
-pop = processor POP $
+pop = appendCode POP $
   \case (_,x:s) -> setStack s
         _ -> err "pop expected an argument"
 
-dup = processor DUP $
+dup = appendCode DUP $
   \case (_,x:s) -> setStack (x:x:s)
         _ -> err "dup expected an argument"
 
-exch = processor EXCH $
+exch = appendCode EXCH $
   \case (_,x:y:s) -> setStack (y:x:y:s)
         _ -> err "exch expected two arguments"
 
-swap = processor SWAP $
+swap = appendCode SWAP $
   \case (_,x:y:s) -> setStack (y:x:s)
         _ -> err "swap expected two arguments"
 
-push x = processor (PUSH x) $ \(_,s) -> setStack (x:s)
+push x = appendCode (PUSH x) $ \(_,s) -> setStack (x:s)
 
-app1 n f = processor n $
+app1 n f = appendCode n $
   \case (_,x:s) -> setStack (f x:s)
         _ -> err $ "operation " ++ show n ++ " expected an argument"
 
-app2 n f = processor n $
+app2 n f = appendCode n $
   \case (_,x:y:s) -> setStack (f x y:s)
         _ -> err $ "operation " ++ show n ++ " expected two arguments"
 
@@ -84,24 +86,22 @@ put i = indexed (PUT i) i $
 
 get i = indexed (GET i) i $ \(m,s) -> setStack ((m ! i) : s)
 
-indexed n i p = processor n $ if (i < 0 || i >= memSize)
+indexed n i f = appendCode n $ if (i < 0 || i >= memSize)
                           then const $ err "index in [0,16]"
-                          else p
+                          else f
 
-proceed p s = run p . writeLog . setStack s
-
-branch b1 b2 = mkProgram (IF (code b1) (code b2)) $ 
+branch b1 b2 = appendCode (IF (code b1) (code b2)) $ 
   \vm -> case stack vm of
     (0:s) -> proceed b2 s vm
     (_:s) -> proceed b1 s vm
     _ -> err "branch expected an argument" vm
 
-rep body = mkProgram (REPEAT (code body)) $
+rep body = appendCode (REPEAT (code body)) $
   \vm -> case stack vm of
     (n:s) -> proceed (mconcat $ replicate n body) s vm
     _ -> err "rep expected an argument" vm
 
-while test body = mkProgram (WHILE (code test) (code body)) $ go 
+while test body = appendCode (WHILE (code test) (code body)) $ go 
   where
     go vm = let res = proceed test (stack vm) vm
             in case stack res of

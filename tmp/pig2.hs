@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase, GeneralizedNewtypeDeriving, ExistentialQuantification #-}
 
-import Prelude hiding (log)
+import Prelude hiding (error, log)
 import Data.Semigroup (Max(..),stimes)
 import Data.Monoid
 import Data.Vector ((//),(!),Vector)
@@ -9,7 +9,7 @@ import qualified Data.Vector as V (replicate)
 type Stack = [Int]
 type Memory = Vector Int
 
-memSize = 16
+memSize = 8
 
 data VM a = VM { stack :: Stack
                , status :: Maybe String

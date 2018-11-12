@@ -2,6 +2,7 @@
 
 import Data.Semigroup (Max(..),stimes)
 import Data.Monoid
+import Text.Read
 
 type Stack = [Int]
 type Processor = VM -> VM
@@ -109,3 +110,28 @@ fact2 = dec <> push 2 <> swap <> range <> push 3 <> sub <> rep mul
 copy2 = exch <> exch
 
 gcd1 = while (copy2 <> neq) (copy2 <> lt <> branch (mempty) (swap) <> exch <> sub) <> pop
+
+------------------------------------------------------------
+
+calc :: String -> [Int]
+calc = interpretor . lexer
+  where
+    lexer = words
+    interpretor = foldl (flip interprete) []
+    interprete c = case c of
+      "add" -> binary $ \(x:y:s) -> x + y:s
+      "mul" -> binary $ \(x:y:s) -> x * y:s
+      "sub" -> binary $ \(x:y:s) -> y - x:s
+      "div" -> binary $ \(x:y:s) -> y `div` x:s
+      "pop" -> unary  $ \(x:s) -> s
+      "dup" -> unary  $ \(x:s) -> x:x:s
+      x -> case readMaybe x of
+        Just n -> \s -> n:s
+        Nothing -> error $ "Error: unknown command " ++ c
+      where
+        unary f s = case s of
+          x:_ -> f s
+          _ -> error $ "Error: " ++ c ++ " expected an argument."
+        binary f s = case s of
+          x:y:_ -> f s
+          _ -> error $ "Error " ++ c ++ " expected two arguments."

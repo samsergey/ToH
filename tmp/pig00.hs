@@ -1,55 +1,30 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Pig1 where
+module Pig0 where
 
-import Prelude hiding (error)
 import Data.Semigroup (Max(..),stimes, Semigroup(..))
 import Data.Monoid hiding ((<>))
-import Data.Vector ((//),(!),Vector)
-import qualified Data.Vector as V (replicate)
 
 type Stack = [Int]
-type Memory = Vector Int
 type Processor = VM -> VM
 
-memSize = 8
+data VM = VM { stack :: Stack }
+  deriving Show
 
-data VM = VM { stack :: Stack
-             , status :: Maybe String
-             , memory :: Memory }
-          deriving Show
-
-mkVM = VM mempty mempty (V.replicate memSize 0)
+mkVM = VM mempty
 
 setStack :: Stack -> Processor
-setStack  x (VM _ s m) = VM x s m
-
-setStatus :: Maybe String -> Processor
-setStatus x (VM s _ m) = VM s x m
-
-setMemory :: Memory -> Processor
-setMemory x (VM s st _) = VM s st x
+setStack  x (VM _) = VM x
 
 newtype Program = Program { getProgram :: Dual (Endo VM) }
   deriving (Semigroup, Monoid)
 
 program :: (Stack -> Processor) -> Program
 program f = Program . Dual . Endo $
-  \vm -> case status vm of
-    Nothing -> (f (stack vm)) vm
-    m -> vm
-
-programM :: ((Memory, Stack) -> Processor) -> Program
-programM f = Program . Dual . Endo $
-  \vm -> case status vm of
-    Nothing -> (f (memory vm, stack vm)) $ vm
-    m -> vm
+  \vm -> (f (stack vm)) vm
 
 run :: Program -> Processor
 run = appEndo . getDual . getProgram
-
-error :: String -> Processor
-error m = setStatus . Just $ "Error : " ++ m
 
 ------------------------------------------------------------
 
@@ -112,27 +87,17 @@ while test body = program (const go)
                _:s -> go $ proceed body s res
                _ -> error "while expected an argument." vm
 
-put i = indexed i $
-    \case (m, x:s) -> setStack s . setMemory (m // [(i,x)])
-          _ -> error "put expected an argument"
-
-get i = indexed i $ \(m, s) -> setStack ((m ! i) : s)
-
-indexed i f = programM $ if (i < 0 || i >= memSize)
-                         then const $ error "index in [0,16]"
-                         else f
-
 ------------------------------------------------------------
 
 fact = dup <> push 2 <> lt <> branch (push 1) (dup <> dec <> fact) <> mul
 
 fact1 = push 1 <> swap <> while (dup <> push 1 <> gt) (swap <> exch <> mul <> swap <> dec) <> pop
 
-range = rep (dup <> inc)
+range = exch <> sub <> rep (dup <> inc)
 
 fact2 = dec <> push 2 <> swap <> range <> push 3 <> sub <> rep mul
 
-fact3 = dup <> put 0 <> dup <> dec <> rep (dec <> dup <> get 0 <> mul <> put 0) <> get 0 <> swap <> pop
+-- -- fact3 = dup <> put 0 <> dup <> dec <> rep (dec <> dup <> get 0 <> mul <> put 0) <> get 0 <> swap <> pop
 
 copy2 = exch <> exch
 

@@ -12,15 +12,15 @@ import qualified Data.Vector as V (replicate)
 type Stack = [Int]
 type Memory = Vector Int
 
-memSize = 16
+memSize = 4
 
 data VM a = VM { stack :: Stack
                , status :: Maybe String
                , memory :: Memory
-               , log :: a }
+               , journal :: a }
             deriving Show
 
-mkVM x = VM mempty mempty (V.replicate memSize 0) x
+mkVM = VM mempty mempty (V.replicate memSize 0)
 
 setStack  x (VM _ st m l) = VM x st m l
 
@@ -28,7 +28,7 @@ setStatus st (VM s _ m l) = VM s st m l
 
 setMemory m (VM s st _ l) = VM s st m l
 
-addLog x (VM s st m l) = VM s st m (x<>l)
+addRecord x (VM s st m l) = VM s st m (x<>l)
 
 ------------------------------------------------------------
 
@@ -61,9 +61,21 @@ err m = setStatus . Just $ "Error : " ++ m
 
 exec prog = run (prog id) (mkVM Nothing)
 
-execLog fl prog = run (prog $ \vm -> addLog (fl vm) vm) (mkVM mempty)
+execLog p prog = run (prog $ \vm -> addRecord (p vm) vm) (mkVM mempty)
 
-code p = fst . getProgram $ p id
+f &&& g = \r -> (f r, g r)
+  
+logStack vm  = [stack vm]
+logStackUsed = Max . length . stack
+logSteps     = const (Sum 1)
+
+logMemoryUsed :: VM a -> Max Int
+logMemoryUsed = Max . getSum . count . memory
+  where count = foldMap (\x -> if x == 0 then 0 else 1)
+
+toCode prog = fst . getProgram $ prog id
+
+
   
 ------------------------------------------------------------
 
@@ -107,17 +119,17 @@ gt = app2 GTH (\x -> \y -> if (x < y) then 1 else 0)
 
 proceed p prog s = run (prog p) . setStack s
 
-rep body p = program (REP (code body)) go id
+rep body p = program (REP (toCode body)) go id
   where go (n:s) = if n >= 0
                    then proceed p (stimes n body) s
                    else err "rep expected positive argument."
         go _ = err "rep expected an argument."
 
-branch br1 br2 p = program (IF (code br1) (code br2)) go id
+branch br1 br2 p = program (IF (toCode br1) (toCode br2)) go id
    where go (x:s) = proceed p (if (x /= 0) then br1 else br2) s
          go _ = err "branch expected an argument."
 
-while test body p = program (WHILE (code test) (code body)) (const go) id
+while test body p = program (WHILE (toCode test) (toCode body)) (const go) id
   where go vm = let res = proceed p test (stack vm) vm
           in case (stack res) of
                0:s -> proceed p mempty s res
@@ -150,33 +162,35 @@ copy2 = exch <> exch
 
 gcd1 = while (copy2 <> neq) (copy2 <> lt <> branch mempty swap <> exch <> sub) <> pop
 
+fact21 = fromCode . read $ "[DUP,PUT 0,DUP,DEC,REP [DEC,DUP,GET 0,MUL,PUT 0],GET 0,SWAP,POP]"
+
+range1 = exch <> sub <> rep (dup <> inc)
+
 ------------------------------------------------------------
 
-readProg = readProg' . read
-  where
-    readProg' = foldMap $
-      \case
-        IF b1 b2 -> branch (readProg' b1) (readProg' b2)
-        REP p -> rep (readProg' p)
-        WHILE t b -> while (readProg' t) (readProg' b)
-        PUT i -> put i
-        GET i -> get i
-        PUSH i -> push i
-        POP -> pop
-        DUP -> dup
-        SWAP -> swap
-        EXCH -> exch
-        INC -> inc
-        DEC -> dec
-        ADD -> add
-        MUL -> mul
-        SUB -> sub
-        DIV -> frac
-        EQL -> eq
-        LTH -> lt
-        GTH -> gt
-        NEQ -> neq
-        NEG -> neg
+fromCode = foldMap $  
+  \case
+    IF b1 b2 -> branch (fromCode b1) (fromCode b2)
+    REP p -> rep (fromCode p)
+    WHILE t b -> while (fromCode t) (fromCode b)
+    PUT i -> put i
+    GET i -> get i
+    PUSH i -> push i
+    POP -> pop
+    DUP -> dup
+    SWAP -> swap
+    EXCH -> exch
+    INC -> inc
+    DEC -> dec
+    ADD -> add
+    MUL -> mul
+    SUB -> sub
+    DIV -> frac
+    EQL -> eq
+    LTH -> lt
+    GTH -> gt
+    NEQ -> neq
+    NEG -> neg
 
 ------------------------------------------------------------
 
@@ -186,40 +200,34 @@ data Req = Int :> Int
   deriving (Show,Eq)
 
 instance Semigroup Req where
-  n1 :> l1 <> n2 :> l2 = let a = n1 `max` (n2 - l1 + n1)
-                         in a :> (a + l1 - n1 + l2 - n2)
+  i1 :> o1 <> i2 :> o2 = let a = i1 `max` (i2 - o1 + i1)
+                         in a :> (a + o1 - i1 + o2 - i2)
 
 instance Monoid Req where
   mappend = (<>)
   mempty = 0 :> 0
 
-arity = arity' . code
+arity = arity' . toCode
   where
-    arity' = foldMap f
-    f = \case
-      PUT _ -> 1:>0
-      GET _ -> 0:>1
-      PUSH _ -> 0:>1
-      POP -> 1:>0
-      DUP -> 1:>2
-      SWAP -> 2:>2
-      EXCH -> 2:>3
-      INC -> 1:>1
-      DEC -> 1:>1
-      ADD -> 2:>1
-      MUL -> 2:>1
-      SUB -> 2:>1
-      DIV -> 2:>1
-      EQL -> 2:>1
-      LTH -> 2:>1
-      GTH -> 2:>1
-      NEQ -> 2:>1
-      NEG -> 1:>1
-      IF b1 b2 -> let n1:>l1 = arity' b1
-                      n2:>l2 = arity' b2
-                  in 1:>0 <> n1 `max` n2 :> l1 `min` l2
-      REP p -> 1:>0
-      WHILE t b -> arity' t <> 1:>0
+    arity' = foldMap $
+      \case
+        IF b1 b2 -> let i1:>o1 = arity' b1
+                        i2:>o2 = arity' b2
+                    in 1:>0 <> i1 `max` i2 :> o1 `min` o2
+        REP p -> 1:>0
+        WHILE t b -> arity' t <> 1:>0
+        PUT _ -> 1:>0
+        GET _ -> 0:>1
+        PUSH _ -> 0:>1
+        POP -> 1:>0
+        DUP -> 1:>2
+        SWAP -> 2:>2
+        EXCH -> 2:>3
+        INC -> 1:>1
+        DEC -> 1:>1
+        NEG -> 1:>1
+        _   -> 2:>1
+
 
 tests = mapM_ print $
   [ 1:>2 <> 2:>3 == 1:>3
@@ -241,3 +249,18 @@ tests = mapM_ print $
   , 1:>3 <> 1:>3 == 1:>5
   , 0:>1 <> 2:>1 == 1:>1
   ]
+
+------------------------------------------------------------
+
+pprint = unlines . printCode 0 . toCode
+  where
+    printCode n = foldMap f
+      where
+        f = \case
+          IF b1 b2 -> print "IF" <> indent b1 <> print ":" <> indent b2
+          REP p -> print "REP" <> indent p
+          WHILE t b -> print "WHILE" <> indent t <> indent b
+          c -> print $ show c
+
+        print x = [stimes n "  " ++ x]
+        indent = printCode (n+1)

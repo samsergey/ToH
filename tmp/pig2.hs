@@ -11,10 +11,14 @@ type Stack = [Int]
 type Memory = Vector Int
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 memSize = 4
 =======
 memSize = 8
 >>>>>>> 08385bba9d1de03cb0176ce5a1967f2544c67dd2
+=======
+memSize = 8
+>>>>>>> 2a94c97e63136307d61115c56010f6bc130ecdda
 
 data VM a = VM { stack :: Stack
                , status :: Maybe String

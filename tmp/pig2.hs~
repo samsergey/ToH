@@ -1,31 +1,40 @@
 {-# LANGUAGE LambdaCase, GeneralizedNewtypeDeriving, ExistentialQuantification #-}
 
-import Prelude hiding (log)
+import Prelude hiding (error, log)
 import Data.Semigroup (Max(..),stimes)
 import Data.Monoid
 import Data.Vector ((//),(!),Vector)
 import qualified Data.Vector as V (replicate)
+import Data.Foldable
 
 type Stack = [Int]
 type Memory = Vector Int
 
-memSize = 16
+<<<<<<< HEAD
+<<<<<<< HEAD
+memSize = 4
+=======
+memSize = 8
+>>>>>>> 08385bba9d1de03cb0176ce5a1967f2544c67dd2
+=======
+memSize = 8
+>>>>>>> 2a94c97e63136307d61115c56010f6bc130ecdda
 
 data VM a = VM { stack :: Stack
                , status :: Maybe String
                , memory :: Memory
-               , log :: a }
+               , journal :: a }
             deriving Show
 
 mkVM x = VM mempty mempty (V.replicate memSize 0) x
 
-setStack  x (VM _ st m l) = VM x st m l
+setStack  x (VM _ st m j) = VM x st m j
 
-setStatus st (VM s _ m l) = VM s st m l
+setStatus st (VM s _ m j) = VM s st m j
 
-setMemory m (VM s st _ l) = VM s st m l
+setMemory m (VM s st _ j) = VM s st m j
 
-addLog x (VM s st m l) = VM s st m (x<>l)
+addRecord x (VM s st m j) = VM s st m (x<>j)
 
 ------------------------------------------------------------
 
@@ -46,10 +55,20 @@ run = appEndo . getDual . getProgram
 
 err m = setStatus . Just $ "Error : " ++ m
 
-exec prog = run (prog id) (mkVM Nothing)
+exec prog = run (prog id) (mkVM ())
 
-execLog fl prog = run (prog $ \vm -> addLog (fl vm) vm) (mkVM mempty)
+execLog p prog = run (prog $ \vm -> addRecord (p vm) vm) (mkVM mempty)
+
+f &&& g = \r -> (f r, g r)
   
+logStack vm   = [stack vm]
+logStackUsed  = Max . length . stack
+logSteps      = const (Sum 1)
+
+logMemoryUsed :: VM a -> Max Int
+logMemoryUsed = Max . getSum . count . memory
+  where count = foldMap (\x -> if x == 0 then 0 else 1)
+
 ------------------------------------------------------------
 
 pop = program $ 

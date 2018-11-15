@@ -10,15 +10,7 @@ import Data.Foldable
 type Stack = [Int]
 type Memory = Vector Int
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 memSize = 4
-=======
-memSize = 8
->>>>>>> 08385bba9d1de03cb0176ce5a1967f2544c67dd2
-=======
-memSize = 8
->>>>>>> 2a94c97e63136307d61115c56010f6bc130ecdda
 
 data VM a = VM { stack :: Stack
                , status :: Maybe String
@@ -38,20 +30,26 @@ addRecord x (VM s st m j) = VM s st m (x<>j)
 
 ------------------------------------------------------------
 
-newtype Program a = Program { getProgram :: Dual (Endo (VM a)) }
+newtype Action a = Action { runAction :: a -> a }
+instance Semigroup (Action a) where
+  Action f <> Action g = Action (g . f)
+instance Monoid (Action a) where
+  mempty = Action id
+
+newtype Program a = Program { getProgram :: Action (VM a) }
   deriving (Semigroup, Monoid)
 
-program f p = Program . Dual . Endo $
+program f p = Program . Action $
   \vm -> case status vm of
     Nothing -> p . (f (stack vm)) $ vm
     m -> vm
 
-programM f p = Program . Dual . Endo $
+programM f p = Program . Action $
   \vm -> case status vm of
     Nothing -> p . (f (memory vm, stack vm)) $ vm
     m -> vm
 
-run = appEndo . getDual . getProgram
+run = runAction . getProgram
 
 err m = setStatus . Just $ "Error : " ++ m
 

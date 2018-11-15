@@ -6,10 +6,10 @@ TupleSections #-}
 import Prelude hiding (log)
 import Data.Semigroup (Max(..),stimes, Semigroup(..))
 import Data.Monoid hiding ((<>))
-import Data.Vector ((//),(!),Vector)
+import Data.Vector ((//), (!), Vector,  toList)
 import qualified Data.Vector as V (replicate)
-import Control.Monad
-
+import Data.List.Split
+import Data.List (inits, tails, intercalate)
 
 type Stack = [Int]
 type Memory = Vector Int
@@ -40,44 +40,57 @@ data Code = IF [Code] [Code]
           | PUT Int | GET Int
           | PUSH Int | POP | DUP | SWAP | EXCH
           | INC | DEC | NEG
-          | ADD | MUL | SUB | DIV
+          | ADD | MUL | SUB | DIV | MOD
           | EQL | LTH | GTH | NEQ
-          deriving (Read, Show)
+          deriving (Read, Show, Eq)
 
-newtype Program a = Program { getProgram :: ([Code], Dual (Endo (VM a))) }
+newtype Action a = Action { runAction :: a -> a }
+instance Semigroup (Action a) where
+  Action f <> Action g = Action (g . f)
+instance Monoid (Action a) where
+  mempty = Action id
+
+newtype Program a = Program { getProgram :: ([Code], Action (VM a)) }
   deriving (Semigroup, Monoid)
 
-program c f p = Program . ([c],) . Dual . Endo $
+type Program' j = (Code -> VM j -> VM j) -> Program j
+
+program c f p = Program . ([c],) . Action $
   \vm -> case status vm of
-    Nothing -> p . (f (stack vm)) $ vm
+    Nothing -> p c . (f (stack vm)) $ vm
     m -> vm
 
-programM c f p = Program . ([c],) . Dual . Endo $
+programM c f p = Program . ([c],) . Action $
   \vm -> case status vm of
-    Nothing -> p . (f (memory vm, stack vm)) $ vm
+    Nothing -> p c . (f (memory vm, stack vm)) $ vm
     m -> vm
 
-run = appEndo . getDual . snd . getProgram
+run = runAction . snd . getProgram
 
 err m = setStatus . Just $ "Error : " ++ m
 
-exec prog = run (prog id) (mkVM Nothing)
+nop = const id
+exec prog = run (prog nop) (mkVM Nothing)
 
-execLog p prog = run (prog $ \vm -> addRecord (p vm) vm) (mkVM mempty)
+execLog p prog = run (prog $ \c -> \vm -> addRecord (p c vm) vm) (mkVM mempty)
 
-f &&& g = \r -> (f r, g r)
-  
-logStack vm  = [stack vm]
-logStackUsed = Max . length . stack
-logSteps     = const (Sum 1)
+f &&& g = \c -> \r -> (f c r, g c r)
 
-logMemoryUsed :: VM a -> Max Int
-logMemoryUsed = Max . getSum . count . memory
-  where count = foldMap (\x -> if x == 0 then 0 else 1)
+logStack _ vm   = [stack vm]
+logStackUsed _ = Max . length . stack
+logSteps _     = const (Sum 1)
+logCode c _   = [c]
 
-toCode prog = fst . getProgram $ prog id
+logRun com vm = [pad 10 c ++ "| " ++ pad 20 s ++ "| " ++ m]
+  where c = show com
+        m = unwords $ show <$> toList (memory vm)
+        s = unwords $ show <$> stack vm
+        pad n x = take n (x ++ repeat ' ')
 
+debug :: Program' [String] -> String
+debug = unlines . reverse . journal . execLog logRun
 
+toCode prog = fst . getProgram $ prog nop
   
 ------------------------------------------------------------
 
@@ -111,6 +124,7 @@ add = app2 ADD (+)
 sub = app2 SUB (flip (-))
 mul = app2 MUL (*)
 frac = app2 DIV (flip div)
+modulo = app2 MOD (flip mod)
 neg = app1 NEG (\x -> -x)
 inc = app1 INC (\x -> x+1)
 dec = app1 DEC (\x -> x-1)
@@ -121,17 +135,17 @@ gt = app2 GTH (\x -> \y -> if (x < y) then 1 else 0)
 
 proceed p prog s = run (prog p) . setStack s
 
-rep body p = program (REP (toCode body)) go id
+rep body p = program (REP (toCode body)) go nop
   where go (n:s) = if n >= 0
                    then proceed p (stimes n body) s
                    else err "rep expected positive argument."
         go _ = err "rep expected an argument."
 
-branch br1 br2 p = program (IF (toCode br1) (toCode br2)) go id
+branch br1 br2 p = program (IF (toCode br1) (toCode br2)) go nop
    where go (x:s) = proceed p (if (x /= 0) then br1 else br2) s
          go _ = err "branch expected an argument."
 
-while test body p = program (WHILE (toCode test) (toCode body)) (const go) id
+while test body p = program (WHILE (toCode test) (toCode body)) (const go) nop
   where go vm = let res = proceed p test (stack vm) vm
           in case (stack res) of
                0:s -> proceed p mempty s res
@@ -168,6 +182,17 @@ fact21 = fromCode . read $ "[DUP,PUT 0,DUP,DEC,REP [DEC,DUP,GET 0,MUL,PUT 0],GET
 
 range1 = exch <> sub <> rep (dup <> inc)
 
+pow = swap <> put 0 <> push 1 <> put 1 <>
+      while (dup <> push 0 <> gt)
+      (
+        dup <> push 2 <> modulo <>
+        branch (dec <> get 0 <> dup <> get 1 <> mul <> put 1) (get 0) <>
+        dup <> mul <> put 0 <>
+        push 2 <> frac
+      ) <>
+      pop <> get 1
+
+
 ------------------------------------------------------------
 
 fromCode = foldMap $  
@@ -188,6 +213,7 @@ fromCode = foldMap $
     MUL -> mul
     SUB -> sub
     DIV -> frac
+    MOD -> modulo
     EQL -> eq
     LTH -> lt
     GTH -> gt
@@ -267,3 +293,43 @@ pprint = unlines . printCode 0 . toCode
         print x = [stimes n "  " ++ x]
         indent = printCode (n+1)
 
+------------------------------------------------------------
+
+memoryUse :: Program' a -> Max Int
+memoryUse = memoryUse' . toCode
+  where
+    memoryUse' = foldMap $
+      \case
+        IF b1 b2 -> memoryUse' b1 <> memoryUse' b2
+        REP p -> memoryUse' p
+        WHILE t b -> memoryUse' t <> memoryUse' b
+        PUT i -> Max (i+1)
+        GET i -> Max (i+1)
+        _ -> 0
+
+
+isReducible p = let p' = fromCode p
+                in case arity p' of
+                     0:>_ -> memoryUse p' == 0
+                     _    -> False
+
+reducible = go [] . toCode
+  where go res [] = reverse res
+        go res (p:ps) = if isReducible [p]
+                        then let (a,b) = spanBy isReducible (p:ps)
+                             in go (a:res) b
+                        else go res ps
+
+-- здесь используется моноид Last, который комбинируется,
+-- оставляя последний нетривиальный результат
+spanBy test l = case foldMap tst $ zip (inits l) (tails l) of
+                  Last Nothing -> ([],l)
+                  Last (Just x) -> x
+  where tst x = Last $ if test (fst x) then Just x else Nothing 
+
+-- здесь используется моноид Endo комбинирующийся как эндоморфизм
+reduce p = fromCode . process (reducible p) . toCode $ p
+  where
+    process = appEndo . foldMap (\x -> Endo $ x `replaceBy` shrink x)
+    shrink = toCode . foldMap push . reverse . stack . exec . fromCode
+    replaceBy x y = intercalate y . splitOn x

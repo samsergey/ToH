@@ -6,19 +6,11 @@ import Data.Monoid
 import Data.Vector ((//),(!),Vector)
 import qualified Data.Vector as V (replicate)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 type Processor = VM -> VM
 type Stack = [Int]
 type Memory = Vector Int
-=======
-memSize = 8
->>>>>>> 08385bba9d1de03cb0176ce5a1967f2544c67dd2
-=======
-memSize = 8
->>>>>>> 2a94c97e63136307d61115c56010f6bc130ecdda
 
-memSize = 8
+memSize = 4
 
 data VM = VM { stack :: Stack
              , status :: Maybe String
@@ -38,22 +30,30 @@ setMemory m (VM s st _) = VM s st m
 
 ------------------------------------------------------------
 
-newtype Program = Program { getProgram :: Dual (Endo VM) }
+newtype Action a = Action { runAction :: a -> a }
+
+instance Semigroup (Action a) where
+  Action f <> Action g = Action (g . f)
+
+instance Monoid (Action a) where
+  mempty = Action id
+  
+newtype Program = Program { getProgram :: Action VM }
   deriving (Semigroup, Monoid)
 
 program :: (Stack -> Processor) -> Program
-program f = Program . Dual . Endo $
+program f = Program . Action $
   \vm -> case status vm of
     Nothing -> f (stack vm) vm
     m -> vm
 
 programM :: ((Memory,Stack) -> Processor) -> Program
-programM f = Program . Dual . Endo $
+programM f = Program . Action $
   \vm -> case status vm of
     Nothing -> f (memory vm, stack vm) vm
     m -> vm
 
-run = appEndo . getDual . getProgram
+run = runAction . getProgram
 
 err m = setStatus . Just $ "Error : " ++ m
 

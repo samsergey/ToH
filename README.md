@@ -1,1 +1,2 @@
-# ToH
+# Theory of Happiness
+

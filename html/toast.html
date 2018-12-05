@@ -230,7 +230,19 @@ function figure4()
 	    yTickFormat : fmt.percent})
 }
 
-figure4()
+function figure5()
+{
+    p2.xRange([0,20])
+	.yRange([0,0.2])
+	.plot(Uniform([3,15]).PDF)
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+figure5()
+
+
 
     </script>
     </body>

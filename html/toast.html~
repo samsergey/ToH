@@ -10,6 +10,7 @@
     <script src='../lib/graphics.js'></script>
     <script src='../lib/signal.js'></script>
     <script src='./toast.js'></script>
+    <script src='./Butter2.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.12.0/matter.min.js"></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
@@ -62,7 +63,7 @@ var toastThickness = 4
 var zeroHeight = 50
 var tableThickness = 10
 var tableEdge = 400
-var h = zeroHeight + toastLength/2 + 1000
+var h = zeroHeight + 3*toastLength + 1000
 
 var ground = Bodies.rectangle(tableEdge, h, 2000, 2000,
 			      { isStatic: true,
@@ -130,7 +131,7 @@ newToast(toast1)
 newToast(toast2)
 
 World.add(engine.world, [table, pin, toast2, toast1, ground]);
-engine.world.gravity.scale=0.005
+engine.world.gravity.scale=0.001
 
 var res = new Histogram(1)
 var heights = []
@@ -186,6 +187,8 @@ function run(){
     Render.run(render);
 }
 
+//run()
+
 function figure1()
 {
     p2.plot(Gamma(6,10/6).PDF)
@@ -204,21 +207,30 @@ function figure2()
 	    yTickFormat : fmt.percent})
 }
 
+
 function figure3()
 {
-    p2.xRange([0,10])
-    	.listPlot(datum[0])
-	.listPlot(datum[1].drop(2))
-	.listPlot(datum[2].drop(4))
-	.listPlot(datum[3].drop(6))
-	.listPlot(datum[4].drop(8))
-	.axes({	xLabel : "размеры бутерброда (см)",
-		yLabel : "плотность вероятности"
-	      })
+    var xs = datum[0].transpose()[0]
+    var d1 = datum[0].transpose()[1]
+
+    var n = Normal(0,0.0025).generator
+    p2.xRange([0,200])
+	.listPlot(xs.map(x => x*20-14).zip(d1.map(x => 0.5*(x - 0.5)+0.5+n())))
+    .axes({ xLabel : "высота стола (в см)",
+	    yLabel : "вероятность падения маслом вниз",
+	    yTickFormat : fmt.percent})
 }
 
+function figure4()
+{
+    p2.xRange([0,50])
+	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+    .axes({ xLabel : "высота стола (в бутербродах)",
+	    yLabel : "вероятность падения маслом вниз",
+	    yTickFormat : fmt.percent})
+}
 
-figure3()
+figure4()
 
     </script>
     </body>

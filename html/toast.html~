@@ -1,0 +1,225 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='./toast.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.12.0/matter.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .reds {
+	fill:red;
+    }
+    .greens {
+	fill:green;
+    }
+    .A {
+	fill:darkred;
+	fill-opacity:0.7;
+    }
+    .B {
+	fill:blue;
+	fill-opacity:0.7;
+    }
+
+</style>
+    </head>
+    <body>
+    <svg id='fig1' width='200' height='300'></svg>
+    <svg id='fig2' width='600' height='400'></svg>
+    <span id="cnv"></span><span id="cnv"></span>
+    <script>
+    
+var fig1 = d3.select("#fig1")
+var fig2 = d3.select("#fig2")
+
+var Engine = Matter.Engine
+var Render = Matter.Render
+var World = Matter.World
+var Bodies = Matter.Bodies
+var Body = Matter.Body
+     
+var engine = Engine.create();
+ 
+var render = Render.create({
+    element: document.body,
+    engine: engine,
+    options: {
+        width: 600,
+        height: 600,
+        wireframes: false
+    }
+});
+
+var toastLength = 40
+var toastThickness = 4
+var zeroHeight = 50
+var tableThickness = 10
+var tableEdge = 400
+var h = zeroHeight + toastLength/2 + 1000
+
+var ground = Bodies.rectangle(tableEdge, h, 2000, 2000,
+			      { isStatic: true,
+				isSensor: true
+			      });
+
+var pin = Bodies.circle(
+    tableEdge/2,
+    zeroHeight+tableThickness/4,
+    tableThickness/2,
+    {
+	isStatic: true
+    });
+
+
+var table = Bodies.rectangle(
+    tableEdge-50,
+    zeroHeight+tableThickness/2,
+    100,
+    tableThickness,
+    {
+	isStatic: true,
+	angle:0.01
+    });
+
+function mkToast(w,edge,dir)
+{
+    var res = Bodies.rectangle(
+	edge/2+1,
+	zeroHeight-toastThickness/2,
+	w,
+	toastThickness,
+	{
+	    mass:1.0
+	}
+    );
+    
+    res.edge = edge
+    res.width = w
+    return res
+}
+
+var toast1 = mkToast(toastLength,tableEdge)
+var toast2 = mkToast(toastLength,tableEdge/2)
+
+var v = Exponential(1).generator
+var dx = Uniform([0.05,0.45]).generator
+var mu = Gamma(5,100/5).generator
+var a = Normal(0,0.001).generator
+var y0 = Exponential(1/10).generator
+
+function newToast(b) {
+    Body.setAngle(b,0)
+    Body.setAngularVelocity(b, a())
+    Body.setPosition(b, {x : b.edge + dx()*b.width,
+			 y : zeroHeight-toastThickness/2-2})
+    Body.setVelocity(b, {x:v(), y:0})
+
+
+    b.friction = mu()
+    b.frictionAir = 0.01
+}
+
+newToast(toast1)
+newToast(toast2)
+
+World.add(engine.world, [table, pin, toast2, toast1, ground]);
+engine.world.gravity.scale=0.005
+
+var res = new Histogram(1)
+var heights = []
+var dh = toastLength/4
+var testsN = 100
+
+Matter.Events.on(engine, 'collisionStart', function(event) {
+    var pairs = event.pairs;
+        
+    for (var i = 0, j = pairs.length; i != j; ++i) {
+        var pair = pairs[i];
+	
+        if (pair.bodyA === ground) {
+	    b = pair.bodyB
+            res.add(Math.sign(Math.cos(b.angle)))
+	    p.cleanPaper();
+	    p.histogram(res,{'type':'PDF'});
+	    newToast(b)
+	    if (tests++ > testsN)
+	    {
+		tests=0;
+		heights.push([(h-1000)/toastLength,1-res.PDF(1)])
+		res = new Histogram()
+		h+=dh
+		if ((h-1000)/toastLength > 30)
+		{
+		    console.log(heights.map(x => "["+x.toString()+"]").toString())
+		    heights = []
+		    h = zeroHeight + toastLength/2 + 1000
+		}
+		Body.setPosition(ground, {x : 500, y : h})
+		p2.cleanPaper()
+		p2.listPlot(heights)
+	    }
+	}
+    }
+});
+
+var p = new Graphics(fig1)
+    .xRange([-2,2])
+    .yRange([0,1])
+    .axes()
+
+var p2 = new Graphics(fig2,{'class':'lines'})
+    .xRange([0,30])
+    .yRange([0,1])
+
+var runner = Matter.Runner.create();
+
+function run(){
+    tests=0;
+    Matter.Runner.run(runner, engine);
+    Render.run(render);
+}
+
+function figure1()
+{
+    p2.plot(Gamma(6,10/6).PDF)
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+function figure2()
+{
+    p2.xRange([0,10])
+	.listPlot(datum[0],{'class':'A'})
+	.listPlot(datum[2],{'class':'B'})
+    .axes({ xLabel : "высота стола (в бутербродах)",
+	    yLabel : "вероятность падения маслом вниз",
+	    yTickFormat : fmt.percent})
+}
+
+function figure3()
+{
+    p2.xRange([0,10])
+    	.listPlot(datum[0])
+	.listPlot(datum[1].drop(2))
+	.listPlot(datum[2].drop(4))
+	.listPlot(datum[3].drop(6))
+	.listPlot(datum[4].drop(8))
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+	      })
+}
+
+
+figure3()
+
+    </script>
+    </body>
+    </html>

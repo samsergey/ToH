@@ -33,7 +33,7 @@
     </head>
     <body>
     <svg id='fig1' width='200' height='300'></svg>
-    <svg id='fig2' width='600' height='400'></svg>
+    <svg id='fig2' width='500' height='350'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
     
@@ -111,7 +111,7 @@ var toast2 = mkToast(toastLength,tableEdge/2)
 
 var v = Exponential(1).generator
 var dx = Uniform([0.05,0.45]).generator
-var mu = Gamma(5,100/5).generator
+var mu = Gamma(8,25).generator
 var a = Normal(0,0.001).generator
 var y0 = Exponential(1/10).generator
 
@@ -199,27 +199,30 @@ function figure1()
 
 function figure2()
 {
-    p2.xRange([0,10])
-	.listPlot(datum[0],{'class':'A'})
-	.listPlot(datum[2],{'class':'B'})
+    p2.xRange([0,14.8])
+	.listPlot(datum[0].map(([x,y])=>[x*2.5-3,y]),{'class':'A'})
+	.listPlot(datum[2].map(([x,y])=>[x*2.5-3,y]),{'class':'B'})
     .axes({ xLabel : "высота стола (в бутербродах)",
 	    yLabel : "вероятность падения маслом вниз",
 	    yTickFormat : fmt.percent})
 }
 
+//figure2()
 
 function figure3()
 {
     var xs = datum[0].transpose()[0]
     var d1 = datum[0].transpose()[1]
 
-    var n = Normal(0,0.0025).generator
+    var n = Normal(0,0.0005).generator
     p2.xRange([0,200])
-	.listPlot(xs.map(x => x*20-14).zip(d1.map(x => 0.5*(x - 0.5)+0.5+n())))
+	.listPlot(xs.map(x => x*20-14).zip(d1.map(x => 0.18*(x - 0.5)+0.51+n())))
     .axes({ xLabel : "высота стола (в см)",
 	    yLabel : "вероятность падения маслом вниз",
 	    yTickFormat : fmt.percent})
 }
+
+figure3()
 
 function figure4()
 {
@@ -240,7 +243,37 @@ function figure5()
 		})
 }
 
-figure5()
+function figure5()
+{
+    p2.xRange([0,20])
+	.yRange([0,0.2])
+	.plot(Uniform([3,15]).PDF)
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+function figure6()
+{
+    p2.xRange([0,1])
+	.yRange([0,5])
+	.plot(Gamma(8,25).PDF)
+	.axes({	xLabel : "коэффициент трения",
+		yLabel : "плотность вероятности"
+		})
+}
+
+function figure7()
+{
+    p2.xRange([0,3])
+	.yRange([0,2])
+	.plot(Exponential(1).PDF)
+	.axes({	xLabel : "начальная горизотальная скорость (м/с)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+//figure7()
 
 
 

@@ -23,17 +23,23 @@
     .A {
 	fill:darkred;
 	fill-opacity:0.7;
+	stroke:indianred;
+	stroke-opacity: 0.1;
+	stroke-width: 0.5;
     }
     .B {
 	fill:blue;
 	fill-opacity:0.7;
+	stroke:blue;
+	stroke-opacity: 0.1;
+	stroke-width: 0.5;
     }
 
 </style>
     </head>
     <body>
-    <svg id='fig1' width='200' height='300'></svg>
-    <svg id='fig2' width='500' height='350'></svg>
+    <svg id='fig1' width='0' height='0'></svg>
+    <svg id='fig2' width='500' height='400'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
     
@@ -222,7 +228,7 @@ function figure3()
 	    yTickFormat : fmt.percent})
 }
 
-figure3()
+//figure3()
 
 function figure4()
 {
@@ -275,7 +281,23 @@ function figure7()
 
 //figure7()
 
+function figure8()
+{
+    var n = 1
+    var s1 = Bernoulli(0.49).samples(40000).foldList((r,x)=>(r*n+x)/(++n))
+    n = 1
+    var s2 = Bernoulli(0.5).samples(40000).foldList((r,x)=>(r*n+x)/(++n))
+    p2.listPlot(s1,{'joined':true,'points':false,'class':'A'})
+	.listPlot(s2,{'joined':true,'points':false,'class':'B'})
+}
 
+p2.xRange([1,40000])
+    .yRange([0.45,0.55])
+    .axes({xTickValues:[10000,20000,30000,40000],
+	   xLabel : "количество испытаний",
+	   yLabel : "оценка параметра распределения Бернулли"})
+
+//repeat(20,figure8)
 
     </script>
     </body>

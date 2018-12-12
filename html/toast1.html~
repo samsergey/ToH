@@ -63,7 +63,7 @@ var toastThickness = 4
 var zeroHeight = 50
 var tableThickness = 10
 var tableEdge = 400
-var h = zeroHeight + 3*toastLength + 1000
+var h = zeroHeight + 2*toastLength + 1000
 
 var ground = Bodies.rectangle(tableEdge, h, 2000, 2000,
 			      { isStatic: true,
@@ -97,7 +97,8 @@ function mkToast(w,edge,dir)
 	w,
 	toastThickness,
 	{
-	    mass:1.0
+	    mass:1.0,
+	    frictionAir : 0.0
 	}
     );
     
@@ -127,18 +128,17 @@ function newToast(b) {
     b.frictionAir = 0.01
 }
 
-newToast(toast1)
-newToast(toast2)
-
 World.add(engine.world, [table, pin, toast2, toast1, ground]);
-engine.world.gravity.scale=0.001
+
 
 var res = new Histogram(1)
 var heights = []
 var dh = toastLength/4
 var testsN = 100
 
-Matter.Events.on(engine, 'collisionStart', function(event) {
+
+
+function restart(event) {
     var pairs = event.pairs;
         
     for (var i = 0, j = pairs.length; i != j; ++i) {
@@ -168,7 +168,20 @@ Matter.Events.on(engine, 'collisionStart', function(event) {
 	    }
 	}
     }
-});
+}
+
+function stop(event) {
+    var pairs = event.pairs;
+        
+    for (var i = 0, j = pairs.length; i != j; ++i) {
+        var pair = pairs[i];
+	
+        if (pair.bodyA === ground) {
+	    b = pair.bodyB
+            console.log(b.angle)
+	}
+    }
+}
 
 var p = new Graphics(fig1)
     .xRange([-2,2])
@@ -181,13 +194,31 @@ var p2 = new Graphics(fig2,{'class':'lines'})
 
 var runner = Matter.Runner.create();
 
-function run(){
+function runMany(){
+    engine.world.gravity.scale=0.001
+    newToast(toast1)
+    newToast(toast2)
+    Matter.Events.on(engine, 'collisionStart', restart);
     tests=0;
     Matter.Runner.run(runner, engine);
     Render.run(render);
 }
 
-//run()
+//runMany()
+
+function runOnce(){
+    Body.setPosition(toast1, {x : toast1.edge+toast1.width/4,
+			      y : zeroHeight-toastThickness/2-2})
+    Body.setPosition(toast2, {x : toast2.edge+toast1.width/4,
+			      y : zeroHeight-toastThickness/2-2})
+    engine.world.gravity.scale=0.0001
+    Matter.Events.on(engine, 'collisionStart', stop);
+    tests=0;
+    Matter.Runner.run(runner, engine);
+    Render.run(render);
+}
+
+//runOnce()
 
 function figure1()
 {
@@ -240,9 +271,36 @@ function figure5()
 		})
 }
 
-figure5()
+//figure5()
 
+function figure9()
+{
+    p2.xRange([0,50])
+	.yRange([0,1])
+	.plot(x => -Math.sign(cos(1.9*sqrt(x)))/2+0.5)
+	.gridLines({y:[0.5]})
+	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
 
+//figure9()
+
+function figure9()
+{
+    f = x => -Math.sign(cos(2.35*sqrt(x)))/2+0.5
+    p2.xRange([0,50])
+	.yRange([0,1])
+	.plot(x => range(5,10,1).map(a => f(a/10*x)).sum()/10+0.3)
+	.gridLines({y:[0.5]})
+	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+figure9()
 
     </script>
     </body>

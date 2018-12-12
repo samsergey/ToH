@@ -34,12 +34,16 @@
 	stroke-opacity:0.7;
 	stroke:indianred;
     }
+    .attr {
+	stroke:null;
+	fill:orange;
+    }
 
 </style>
     </head>
     <body>
     <svg id='fig1' width='200' height='300'></svg>
-    <svg id='fig2' width='600' height='400'></svg>
+    <svg id='fig2' width='400' height='400'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
     
@@ -341,14 +345,16 @@ function figure10(n)
 //figure10(n)
 
 function figure11() {
-    var Eq = (t,[x,y]) => [y, x*(1-x*x)+0.05*y]
-    var sol1 = ODE.solve(Eq,[0.1,0.1],[0,60.75],0.05)
-    var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,62.13],0.05)
+    var Eq = (t,[x,y]) => [y, x*(1-x*x)+0.025*y]
+    var sol1 = ODE.solve(Eq,[0.1,0.1],[0,120],0.01)
+    var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,121.2],0.01)
     pts = ODE.solution(sol2,[0,1]).reversed().concat(ODE.solution(sol1,[0,1]))
-    p2.xRange([-6,6])
-	.yRange([-6,6])
-	.listPlot(pts,{'joined':true,'points':false})
-	.axes({})
+    pts.push(pts[0])
+    p2.xRange([-3,3])
+	.yRange([-5,5])
+	.listPlot(pts,{'joined':false,'points':false,'filled':true,'class':'attr'})
+	.axes({xLabel : "отклонение",
+		yLabel : "скорость"})
 }
 
 figure11()

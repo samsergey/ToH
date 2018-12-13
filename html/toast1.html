@@ -52,8 +52,8 @@
 </style>
     </head>
     <body>
-    <svg id='fig1' width='200' height='300'></svg>
-    <svg id='fig2' width='400' height='400'></svg>
+    <svg id='fig1' width='300' height='300'></svg>
+    <svg id='fig2' width='400' height='300'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
     
@@ -371,7 +371,20 @@ function figure11() {
     
 }
 
-figure11()
+//figure11()
+
+function figure12()
+{
+    var xs = Normal(0.5,0.01).samples(10000)
+    var pts = xs.zip(xs.drop(1))
+    p.xRange([0,1]).yRange([0,2.1])
+	.plot(Uniform([0,0.5]).PDF)
+    p2.xRange([0,100]).yRange([-1,1])
+	.plot(x => range(0.5,0.9,0.5/10).map(i => sin(i/(1-i)*x)).sum()*2/10)
+	.axes({})
+}
+
+figure12()
 
 </script>
     </body>

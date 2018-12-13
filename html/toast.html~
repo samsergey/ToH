@@ -39,12 +39,17 @@
 	fill: none;
 	stroke-dasharray: 5,5;
     }
+    .pdf {
+	fill:darkorange;
+	fill-opacity:0.75;
+	stroke:darkblue;
+    }
 
 </style>
     </head>
     <body>
     <svg id='fig1' width='300' height='200'></svg>
-    <svg id='fig2' width='500' height='400'></svg>
+    <svg id='fig2' width='400' height='400'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
     
@@ -202,7 +207,7 @@ function run(){
     Render.run(render);
 }
 
-run()
+//run()
 
 function figure1()
 {
@@ -241,51 +246,52 @@ function figure3()
 
 function figure4()
 {
-    p2.xRange([0,50])
-	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+    p2.xRange([0,10])
+	.listPlot(datum[0],{'class':'A'})
+	.listPlot(datum[2],{'class':'B'})
     .axes({ xLabel : "высота стола (в бутербродах)",
 	    yLabel : "вероятность падения маслом вниз",
 	    yTickFormat : fmt.percent})
 }
 
+//figure4()
+
 function figure5()
 {
     p2.xRange([0,20])
-	.yRange([0,0.2])
-	.plot(Uniform([3,15]).PDF)
+	.yRange([0,0.15])
+	.plot(Uniform([3,15]).PDF,{'class':'pdf',
+				  'filled':true})
 	.axes({	xLabel : "размеры бутерброда (см)",
 		yLabel : "плотность вероятности"
 		})
 }
 
-function figure5()
-{
-    p2.xRange([0,20])
-	.yRange([0,0.2])
-	.plot(Uniform([3,15]).PDF)
-	.axes({	xLabel : "размеры бутерброда (см)",
-		yLabel : "плотность вероятности"
-		})
-}
+//figure5()
 
 function figure6()
 {
     p2.xRange([0,1])
 	.yRange([0,5])
-	.plot(Gamma(8,25).PDF)
+	.plot(Gamma(8,25).PDF,{'class':'pdf',
+			       'filled':true})
 	.axes({	xLabel : "коэффициент трения",
 		yLabel : "плотность вероятности"
 		})
 }
 
+
+//figure6()
+
 function figure7()
 {
     p2.xRange([0,3])
 	.yRange([0,2])
-	.plot(Exponential(1).PDF)
+	.plot(Exponential(2).PDF,{'class':'pdf',
+				  'filled':true})
 	.axes({	xLabel : "начальная горизотальная скорость (м/с)",
-		yLabel : "плотность вероятности"
-		})
+		yLabel : "плотность вероятности",
+		xTickValues: range(0,3,0.5)})
 }
 
 //figure7()
@@ -309,7 +315,7 @@ function figure8()
 
 function figure9()
 {
-    p2.xRange([0.001,2])
+    p2.xRange([0.01,2])
 	.yRange([0,50])
 	.axes({ yLabel : "угловая скорость (об/сек)",
 		xLabel : "время полёта монетки (сек)"})
@@ -319,13 +325,13 @@ function figure9()
 	.reversed()
 	.map(n => p2.plot(w(n)  ,{'filled':true,'class':'reds'})
 	     .plot(w(n-1),{'filled':true,'class':'greens'}))
-    p2.rectangle(0.5,20,0.6,20,{'cornerRadius':10,'class':'rect'})
-    p2.rectangle(0.1,2,0.8,5,{'cornerRadius':10,'class':'rect'})
+    p2.rectangle(0.5,20,0.6,20,{'cornerRadius':2,'class':'rect'})
+    //p2.rectangle(0.1,2,0.8,5,{'cornerRadius':10,'class':'rect'})
 
 }   
 
 //n == 2 v w/g = w t
-//figure9()
+figure9()
 
     </script>
     </body>

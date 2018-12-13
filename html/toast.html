@@ -320,7 +320,7 @@ function figure9()
 	.axes({ yLabel : "угловая скорость (об/сек)",
 		xLabel : "время полёта монетки (сек)"})
     var g =10
-    var w = n => t => n/t 
+    var w = n => t => n/(t * exp(-0.1*t))
     range(1,200,2)
 	.reversed()
 	.map(n => p2.plot(w(n)  ,{'filled':true,'class':'reds'})

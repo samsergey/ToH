@@ -34,9 +34,19 @@
 	stroke-opacity:0.7;
 	stroke:indianred;
     }
-    .attr {
+    .basin {
 	stroke:null;
 	fill:orange;
+    }
+
+    .attr  {
+	stroke:black;
+	fill:blue;
+    }
+
+    .repell  {
+	stroke:black;
+	fill:white;
     }
 
 </style>
@@ -346,15 +356,19 @@ function figure10(n)
 
 function figure11() {
     var Eq = (t,[x,y]) => [y, x*(1-x*x)+0.025*y]
-    var sol1 = ODE.solve(Eq,[0.1,0.1],[0,120],0.01)
-    var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,121.2],0.01)
+    var sol1 = ODE.solve(Eq,[0.1,0.1],[0,160],0.01)
+    var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,161.2],0.01)
     pts = ODE.solution(sol2,[0,1]).reversed().concat(ODE.solution(sol1,[0,1]))
     pts.push(pts[0])
     p2.xRange([-3,3])
-	.yRange([-5,5])
-	.listPlot(pts,{'joined':false,'points':false,'filled':true,'class':'attr'})
-	.axes({xLabel : "отклонение",
-		yLabel : "скорость"})
+	.yRange([-4,4])
+	.listPlot(pts,{'joined':false,'points':false,'filled':true,'class':'basin'})
+	.clipPaper()
+	.axes({xLabel : "начальное отклонение",
+	       yLabel : "начальная скорость"})
+	.listPlot([[-1,0],[1,0]],{'class':'attr'})
+    	.listPlot([[0,0]],{'class':'repell'})
+    
 }
 
 figure11()

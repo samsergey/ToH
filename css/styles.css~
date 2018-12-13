@@ -115,9 +115,12 @@
 
 /* labels */
 
-
 .label {
-    fill : navy;
+    fill : #503;
+    font-size:8pt;
+    font-family: 'Arial';
+    font-style : italic;
+
 }
 
 /* diffListPlot */

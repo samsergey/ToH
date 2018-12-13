@@ -166,7 +166,7 @@ Graphics.prototype.axes = function (opts)
 	    .call(this.yAxis)
 	    .attr("transform", 'translate('+yAxisPositionX+','+yAxisPositionY+')');
 	
-	g.append('g').attr('class', 'label')
+	g.append('g').attr('class', 'axisLabel')
 	    .attr("transform", 'translate(' + yAxisLabelPositionX + ',' + yAxisLabelPositionY + ')')
 	    .append("text").attr('class', options['class'])
 	    .attr('dx', -options.yLabel.length*4)
@@ -654,4 +654,25 @@ Graphics.prototype.plot = function (f,opts) {
 	return 1-(x12*x23 + y12*y23)/sqrt((x12*x12+y12*y12)*(x23*x23+y23*y23))
 }
 
+}
+
+Graphics.prototype.rectangle = function (x,y,w,h,opts)
+{
+    var defaults = {
+	cornerRadius:0,
+	'class'  : null,
+	'parent' : null
+        }
+
+    var options = Object.assign(defaults, opts || {})    
+
+    var parent = options.parent && d3.select(options.parent) || this.paper
+    var g = this.paper.append("rect")
+	.attr("x",this.X(x))
+	.attr("y",this.Y(y+h))
+	.attr("rx",options.cornerRadius)
+	.attr("width",this.X(x+w)-this.X(x))
+	.attr("height",this.Y(y-h) - this.Y(y))
+	.attr("class",options['class'])
+    return this
 }

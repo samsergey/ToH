@@ -193,3 +193,8 @@
     fill:red;
     stroke:white;
 }
+
+.clip {
+    fill:white;
+    stroke:none;
+}

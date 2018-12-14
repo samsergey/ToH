@@ -22,8 +22,8 @@
 	fill:green;
     }
     .A {
-	fill:darkred;
-	fill-opacity:0.7;
+	fill:orange;
+	fill-opacity:0.3;
     }
     .B {
 	fill:darkblue;
@@ -48,11 +48,15 @@
 	stroke:black;
 	fill:white;
     }
+    .quaters {
+	stroke:gray;
+	stroke-dasharray: 5,5;
+    }
 
 </style>
     </head>
     <body>
-    <svg id='fig1' width='300' height='300'></svg>
+    <svg id='fig1' width='400' height='400'></svg>
     <svg id='fig2' width='400' height='300'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
@@ -208,7 +212,6 @@ function stop(event) {
 var p = new Graphics(fig1)
     .xRange([-2,2])
     .yRange([0,1])
-    .axes()
 
 var p2 = new Graphics(fig2,{'class':'lines'})
     .xRange([0,150])
@@ -384,8 +387,30 @@ function figure12()
 	.axes({})
 }
 
-figure12()
+//figure12()
 
+function figure13()
+{
+    m = (p,a) => n => (a*n + 2*a - sqrt(a)) >= 0 ? -0.1 : (-2*a*n + sqrt(a)*n - 4*a + 4*sqrt(a) - p)/(a*n + 2*a - sqrt(a))
+    ns = range(0,6)
+    p.xRange([0,5]).yRange([0,5])
+    pp =range(0.01,0.00,-0.0025)
+    pp.map(a => p.plot(m(0.5,a),{'joined':false,'filledUp':true,'class':'A'}))
+    pp.map(a => p.plot(m(0.5,a)))
+    p.gridLines({x:ns,y:ns})
+	.label("0.25%",{'at':[4.2,4.2]})
+	.label("0.5%",{'at':[2.25,3.5]})
+	.label("0.75%",{'at':[1.4,1.6]})
+	.label("1%",{'at':[1.5,0.5]})
+	.clipPaper()
+	.axes({xTickValues:ns,
+	       yTickValues:ns,
+	       xTickFormat: fmt.int,
+	       yTickFormat: fmt.int,
+	       xLabel:'число горизонтальных складок',
+	       yLabel:'число вертикальных складок',})
+}
+figure13()
 </script>
     </body>
     </html>

@@ -40,13 +40,3 @@
 У любой меры есть такое свойство: мера пустого множества равна нулю 
 </spoiler>
 
-
-«Все делают общие выводы из одного примера. По крайней мере, я делаю именно так.» — Влад Талтош, «Исола», Стивен Браст
-
-It is as important to decide what a system is not as to decide what it is. 
-
-The only thing worse than generalizing from one example is generalizing from no examples at all.
-
-Isolate complexity as much as possible.
-
-Боб Шифлер и Джим Геттис, разработчики системы оконного интерфейса X Window System, которая используется почти на всех операционных системах семейства Linux, в своё время сформулировали несколько принципов проектирования, оказавшихся универсально полезными. Из них я чаще всего вспоминаю один:<blockquote>Хуже обобщения на одном примере может быть лишь обобщение без примера вовсе</blockquote>

@@ -15,6 +15,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.12.0/matter.min.js"></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
+    .cat .line {
+	stroke:red;
+    }
+    .bif .line  {
+	stroke:darkgreen;
+    }
+
     .reds {
 	fill:red;
     }
@@ -427,14 +434,18 @@ function figure13()
 
 function figure14()
 {
-    p2.xRange([0,10]).yRange([0,2.5])
-	.plot(x => exp(-x))
-	.plot(x => exp(x))
-    	.plot(x => 1+1/(1+exp(-2*(x-3))))
-	.label("катастрофа",{at:[1,1.6],angle:80})
-	.label("релаксация",{at:[4,0.2],angle:0})
-	.label("самоорганизация",{at:[6,1.8],angle:0})
-	.axes({})
+    p2.xRange([0,3]).yRange([0,2.5])
+	.plot(x => exp(-2*x))
+	.plot(x => exp(2*x),{'class':'cat'})
+    	.plot(x => 0.98+1/(1+exp(-4*(x-1))),{'class':'bif'})
+	.label("катастрофа",{at:[0.45,2.0],angle:0})
+	.label("релаксация",{at:[1.5,0.2],angle:0})
+	.label("бифуркация или",{at:[2,1.82],angle:0})
+	.label("самоорганизация",{at:[2,1.7],angle:0})
+	.axes({xTickValues:[1],
+	       yTickValues:[1],
+	       xLabel: "время",
+	       yLabel: "обобщённая координата процесса",})
 }
 figure14()
 

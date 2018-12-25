@@ -1,7 +1,7 @@
 function Graphics(viewport, opts)
 {
     var defaults = {
-	margin    : {left : 60, right : 20, top : 30, bottom : 60}, 
+	margin    : {left : 45, right : 20, top : 30, bottom : 60}, 
 	xRange    : 'automatic',
 	yRange    : 'automatic',
 	xAxisType : 'linear',
@@ -100,7 +100,37 @@ function Graphics(viewport, opts)
 
 var fmt = {
     'normal' : null,
-    'percent' : d3.format("." + max(0, d3.precisionFixed(0.05) - 2) + "%")
+    'percent' : d3.format("." + max(0, d3.precisionFixed(0.05) - 2) + "%"),
+    'int' : d3.format('i')
+}
+
+Graphics.prototype.clipPaper = function ()
+{
+    this.viewport.append("rect")
+	.attr("x", 0)
+	.attr("y", 0)
+	.attr("width", this.options.margin.left)
+	.attr("height", this.viewportHeight)
+	.attr("class", 'clip')
+    this.viewport.append("rect")
+	.attr("x", 0)
+	.attr("y", 0)
+	.attr("width", this.viewportWidth)
+	.attr("height", this.options.margin.top)
+	.attr("class", 'clip')
+    this.viewport.append("rect")
+	.attr("x", 0)
+	.attr("y", this.viewportHeight-this.options.margin.bottom)
+	.attr("width", this.viewportWidth)
+	.attr("height", this.options.margin.bottom)
+	.attr("class", 'clip')
+    this.viewport.append("rect")
+	.attr("x", this.viewportWidth-this.options.margin.right)
+	.attr("y", 0)
+	.attr("height", this.viewportHeight)
+	.attr("width", this.options.margin.right)
+	.attr("class", 'clip')
+    return this
 }
 
 Graphics.prototype.axes = function (opts)
@@ -209,6 +239,7 @@ Graphics.prototype.listPlot = function (d, opts)
 	'points' : true,
 	'joined' : false,
 	'filled' : false,
+	'filledUp' : false,
 	'needles' : false,
 	'pointSize' : 2,
 	'parent' : null
@@ -232,6 +263,14 @@ Graphics.prototype.listPlot = function (d, opts)
     if (options.filled)
     {
 	var area = d3.area().x(d=>this.X(d[0])).y0(this.height).y1(d => this.Y(d[1]))
+	g.append('path').attr('class','area')
+	    .attr('stroke', 'none')
+	    .attr('d', area(data));
+    }
+
+    if (options.filledUp)
+    {
+	var area = d3.area().x(d=>this.X(d[0])).y0(0).y1(d => this.Y(d[1]))
 	g.append('path').attr('class','area')
 	    .attr('stroke', 'none')
 	    .attr('d', area(data));
@@ -575,6 +614,7 @@ Graphics.prototype.plot = function (f,opts) {
 	'points' : false,
 	'joined' : true,
 	'filled' : false,
+	'filledUp' : false,
 	'pointsize' : 3,
 	'parent' : null,
 	'plotPoints' : 35,
@@ -674,5 +714,25 @@ Graphics.prototype.rectangle = function (x,y,w,h,opts)
 	.attr("width",this.X(x+w)-this.X(x))
 	.attr("height",this.Y(y-h) - this.Y(y))
 	.attr("class",options['class'])
+    return this
+}
+
+Graphics.prototype.image = function (src,x,y,w,h,opts)
+{
+    var defaults = {
+	cornerRadius:0,
+	'class'  : null,
+	'parent' : null
+        }
+
+    var options = Object.assign(defaults, opts || {})    
+    var parent = options.parent && d3.select(options.parent) || this.paper
+    var g = this.paper.append("rect")
+    this.paper.append("image")    
+	.attr('xlink:href',src)
+	.attr('x',(x || 0))
+	.attr('y',(y || 0))
+	.attr('width',w ||"100%")
+	.attr('height',h||"100%")
     return this
 }

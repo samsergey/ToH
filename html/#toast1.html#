@@ -1,0 +1,456 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <script src='./toast.js'></script>
+    <script src='./Butter2.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.12.0/matter.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .cat .line {
+	stroke:red;
+    }
+    .bif .line  {
+	stroke:darkgreen;
+    }
+
+    .reds {
+	fill:red;
+    }
+    .greens {
+	fill:green;
+    }
+    .A {
+	fill:orange;
+	fill-opacity:0.3;
+    }
+    .B {
+	fill:#444;
+	fill-opacity:0.6;
+    }
+    .line {
+	stroke-width:2;
+	stroke-opacity:0.7;
+	stroke:indianred;
+    }
+    .basin {
+	stroke:null;
+	fill:orange;
+    }
+
+    .attr  {
+	stroke:black;
+	fill:blue;
+    }
+
+    .repell  {
+	stroke:black;
+	fill:white;
+    }
+    .quaters {
+	stroke:gray;
+	stroke-dasharray: 5,5;
+    }
+
+</style>
+    </head>
+    <body>
+    <svg id='fig1' width='400' height='400'></svg>
+    <svg id='fig2' width='400' height='350'></svg>
+    <span id="cnv"></span><span id="cnv"></span>
+    <script>
+    
+var fig1 = d3.select("#fig1")
+var fig2 = d3.select("#fig2")
+
+var Engine = Matter.Engine
+var Render = Matter.Render
+var World = Matter.World
+var Bodies = Matter.Bodies
+var Body = Matter.Body
+     
+var engine = Engine.create();
+ 
+var render = Render.create({
+    element: document.body,
+    engine: engine,
+    options: {
+        width: 600,
+        height: 600,
+        wireframes: false
+    }
+});
+
+var toastLength = 40
+var toastThickness = 4
+var zeroHeight = 50
+var tableThickness = 10
+var tableEdge = 400
+var h = zeroHeight + toastLength + 1000
+
+var ground = Bodies.rectangle(tableEdge, h, 2000, 2000,
+			      { isStatic: true,
+				isSensor: true
+			      });
+
+var pin = Bodies.circle(
+    tableEdge/2,
+    zeroHeight+tableThickness/4,
+    tableThickness/2,
+    {
+	isStatic: true
+    });
+
+
+var table = Bodies.rectangle(
+    tableEdge-50,
+    zeroHeight+tableThickness/2,
+    100,
+    tableThickness,
+    {
+	isStatic: true,
+	angle:0.01
+    });
+
+function mkToast(w,edge,dir)
+{
+    var res = Bodies.rectangle(
+	edge/2+1,
+	zeroHeight-toastThickness/2,
+	w,
+	toastThickness,
+	{
+	    mass:1.0,
+	    frictionAir : 0.0
+	}
+    );
+    
+    res.edge = edge
+    res.width = w
+    return res
+}
+
+var toast1 = mkToast(toastLength,tableEdge)
+var toast2 = mkToast(toastLength,tableEdge/2)
+
+var v = Exponential(1).generator
+var dx = Uniform([0.05,0.45]).generator
+var mu = Gamma(5,100/5).generator
+var a = Normal(0,0.001).generator
+var y0 = Exponential(1/10).generator
+
+function newToast(b) {
+    Body.setAngle(b,0)
+    Body.setAngularVelocity(b, a())
+    Body.setPosition(b, {x : b.edge + dx()*b.width,
+			 y : zeroHeight-toastThickness/2-2})
+    Body.setVelocity(b, {x:0*v(), y:0})
+
+
+    b.friction = 0*mu()
+    b.frictionAir = 0.0
+}
+
+
+World.add(engine.world, [table, pin, toast2, toast1, ground]);
+
+
+var res = new Histogram(1)
+var heights = []
+var dh = toastLength
+var testsN = 50
+
+
+
+function restart(event) {
+    var pairs = event.pairs;
+        
+    for (var i = 0, j = pairs.length; i != j; ++i) {
+        var pair = pairs[i];
+	
+        if (pair.bodyA === ground) {
+	    b = pair.bodyB
+            res.add(Math.sign(Math.cos(b.angle)))
+	    p.cleanPaper();
+	    p.histogram(res,{'type':'PDF'});
+	    newToast(b)
+	    if (tests++ > testsN)
+	    {
+		tests=0;
+		heights.push([(h-1000)/toastLength,1-res.PDF(1)])
+		res = new Histogram()
+		h+=dh
+		if ((h-1000)/toastLength > 150)
+		{
+		    console.log(heights.map(x => "["+x.toString()+"]").toString())
+		    heights = []
+		    h = zeroHeight + toastLength/2 + 1000
+		}
+		Body.setPosition(ground, {x : 500, y : h})
+//		p2.cleanPaper()
+		p2.listPlot(heights)
+//		figure9(32)
+	    }
+	}
+    }
+}
+
+function stop(event) {
+    var pairs = event.pairs;
+        
+    for (var i = 0, j = pairs.length; i != j; ++i) {
+        var pair = pairs[i];
+	
+        if (pair.bodyA === ground) {
+	    b = pair.bodyB
+            console.log(b.angle)
+	}
+    }
+}
+
+var p = new Graphics(fig1)
+    .xRange([-2,2])
+    .yRange([0,1])
+
+var p2 = new Graphics(fig2,{'class':'lines'})
+    .xRange([0,150])
+    .yRange([0,1])
+/*    .axes({ xLabel : "размеры бутерброда (см)",
+	    yLabel : "плотность вероятности"
+	      })
+*/
+var runner = Matter.Runner.create();
+
+function runMany(){
+    engine.world.gravity.scale=0.001
+    newToast(toast1)
+    newToast(toast2)
+    Matter.Events.on(engine, 'collisionStart', restart);
+    tests=0;
+    Matter.Runner.run(runner, engine);
+    Render.run(render);
+}
+
+//runMany()
+
+function runOnce(){
+    Body.setPosition(toast1, {x : toast1.edge+toast1.width/4,
+			      y : zeroHeight-toastThickness/2-2})
+    Body.setPosition(toast2, {x : toast2.edge+toast1.width/4,
+			      y : zeroHeight-toastThickness/2-2})
+    engine.world.gravity.scale=0.0001
+    Matter.Events.on(engine, 'collisionStart', stop);
+    tests=0;
+    Matter.Runner.run(runner, engine);
+    Render.run(render);
+}
+
+//runOnce()
+
+function figure1()
+{
+    p2.plot(Gamma(6,10/6).PDF)
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+function figure2()
+{
+    p2.xRange([0,15])
+	.listPlot(datum[1].map(([x,y])=>[x-0.75,y]),{'class':'A'})
+	.listPlot(datum[3].map(([x,y])=>[x-0.75,y]),{'class':'B'})
+    .axes({ xLabel : "высота стола (в бутербродах)",
+	    yLabel : "вероятность падения маслом вниз",
+	    yTickFormat : fmt.percent})
+}
+
+//figure2()
+
+function figure3()
+{
+    var xs = datum[0].transpose()[0]
+    var d1 = datum[0].transpose()[1]
+
+    var n = Normal(0,0.0025).generator
+    p2.xRange([0,200])
+	.listPlot(xs.map(x => x*20-14).zip(d1.map(x => 0.5*(x - 0.5)+0.5+n())))
+    .axes({ xLabel : "высота стола (в см)",
+	    yLabel : "вероятность падения маслом вниз",
+	    yTickFormat : fmt.percent})
+}
+
+function figure4()
+{
+    p2.xRange([0,50])
+	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+    .axes({ xLabel : "высота стола (в бутербродах)",
+	    yLabel : "вероятность падения маслом вниз",
+	    yTickFormat : fmt.percent})
+}
+
+function figure5()
+{
+    p2.xRange([0,20])
+	.yRange([0,0.2])
+	.plot(Uniform([3,15]).PDF)
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+//figure5()
+
+function figure9()
+{
+    p2.xRange([0,50])
+	.yRange([0,1])
+	.plot(x => -Math.sign(cos(1.9*sqrt(x)))/2+0.5)
+	.gridLines({y:[0.5]})
+	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+	.axes({	xLabel : "размеры бутерброда (см)",
+		yLabel : "плотность вероятности"
+		})
+}
+
+//figure9()
+
+function figure9(n)
+{
+    f = x => 0.5*(1+Math.sign(cos(2.2*sqrt(x))))
+    P = x => 2*range(0.5,1,1/n).map(a => f(a/(1-a)*x)).sum()/n
+    P2 = x => max(0,min(1,6*(P(x)-0.5)+0.5))
+    plt = range(1,130,0.1).map(x => [x-1/2,P2(x)])
+    pts = range(1,130,1).map(x => [x-0.3,max(0,min(1,P2(x)+Normal(0,0.001).generator()))])
+    p2.xRange([0,130])
+	.yRange([0,1])
+	.gridLines({y:[0.5]})
+    	.listPlot(plt,{'joined':true,'points':false,'class':'line'})
+    	.listPlot(pts,{'class':"B"})
+    	.listPlot(dd,{'class':"B"})
+    //	.listPlot(pts2.map(([x,y]) => [x/2,y]))
+	.axes({	xLabel : "высота падения (в бутербродах)",
+		yLabel : "вероятность падения маслом вниз"
+		})
+}
+
+var dd=[[2.25,0.32692307692307687],[3.25,1],[4.25,1],[5.25,1],[6.25,0.9230769230769231],[7.25,0.5],[8.25,0.3653846153846154],[9.25,0.11538461538461542],[10.25,0.07692307692307687],[11.25,0.019230769230769273],[12.25,0.019230769230769273],[13.25,0.07692307692307687],[14.25,0.05769230769230771],[15.25,0.23076923076923073],[16.25,0.3846153846153846],[17.25,0.5384615384615384],[18.25,0.7307692307692308],[19.25,0.6923076923076923],[20.25,0.8846153846153846],[21.25,0.75],[22.25,0.9230769230769231],[23.25,0.9615384615384616],[24.25,0.8846153846153846],[25.25,0.8653846153846154],[26.25,0.9230769230769231],[27.25,0.9230769230769231],[28.25,0.6730769230769231],[29.25,0.7115384615384616],[30.25,0.5192307692307692],[31.25,0.5],[32.25,0.5],[33.25,0.3076923076923077],[34.25,0.2692307692307693],[35.25,0.25],[36.25,0.3076923076923077],[37.25,0.21153846153846156],[38.25,0.17307692307692313],[39.25,0.13461538461538458],[40.25,0.23076923076923073],[41.25,0.17307692307692313],[42.25,0.1923076923076923],[43.25,0.11538461538461542],[44.25,0.15384615384615385],[45.25,0.25],[46.25,0.34615384615384615],[47.25,0.3846153846153846],[48.25,0.5192307692307692],[49.25,0.5576923076923077],[50.25,0.5576923076923077],[51.25,0.4807692307692307],[52.25,0.5769230769230769],[53.25,0.5961538461538461],[54.25,0.5961538461538461],[55.25,0.7115384615384616],[56.25,0.6730769230769231],[57.25,0.7884615384615384],[58.25,0.6346153846153846],[59.25,0.6923076923076923],[60.25,0.7692307692307692],[61.25,0.8269230769230769],[62.25,0.75],[63.25,0.75],[64.25,0.75],[65.25,0.7307692307692308],[66.25,0.6346153846153846],[67.25,0.7307692307692308],[68.25,0.5769230769230769],[69.25,0.7115384615384616],[70.25,0.6346153846153846],[71.25,0.5384615384615384],[72.25,0.5192307692307692],[73.25,0.46153846153846156],[74.25,0.40384615384615385],[75.25,0.5192307692307692],[76.25,0.5],[77.25,0.34615384615384615],[78.25,0.3653846153846154],[79.25,0.34615384615384615],[80.25,0.4423076923076923],[81.25,0.28846153846153844],[82.25,0.34615384615384615],[83.25,0.32692307692307687],[84.25,0.28846153846153844],[85.25,0.3076923076923077],[86.25,0.40384615384615385],[87.25,0.32692307692307687],[88.25,0.23076923076923073],[89.25,0.23076923076923073],[90.25,0.42307692307692313],[91.25,0.42307692307692313],[92.25,0.40384615384615385],[93.25,0.42307692307692313],[94.25,0.46153846153846156],[95.25,0.34615384615384615],[96.25,0.46153846153846156],[97.25,0.3076923076923077],[98.25,0.25],[99.25,0.4423076923076923],[100.25,0.3846153846153846],[101.25,0.5],[102.25,0.5769230769230769],[103.25,0.5576923076923077],[104.25,0.5961538461538461],[105.25,0.5384615384615384],[106.25,0.5576923076923077],[107.25,0.7307692307692308],[108.25,0.6153846153846154],[109.25,0.6346153846153846],[110.25,0.6538461538461539],[111.25,0.3846153846153846],[112.25,0.6153846153846154],[113.25,0.6730769230769231],[114.25,0.5769230769230769],[115.25,0.7307692307692308],[116.25,0.5961538461538461],[117.25,0.6346153846153846],[118.25,0.5192307692307692],[119.25,0.6538461538461539],[120.25,0.6923076923076923],[121.25,0.5576923076923077],[122.25,0.6730769230769231],[123.25,0.5961538461538461],[124.25,0.5],[125.25,0.5961538461538461],[126.25,0.5576923076923077],[127.25,0.5],[128.25,0.3846153846153846]]
+
+//figure9(50000)
+
+function figure10(n)
+{
+    f = x => 0.5*(1+Math.sign(cos(2.2*sqrt(x))))
+    P = x => 2*range(0,0.5,1/n).map(a => f(a/(1-a)*x)).sum()/n
+    P2 = x => max(0,min(1,6*(P(x)-0.5)+0.5))
+    plt = range(1,10000).map(x => [x-1/2,P2(sqr(x))])
+    p2.xRange([1,1000])
+	.yRange([0,1])
+    //	.xAxisType('log')
+	.gridLines({y:[0.5]})
+    	.listPlot(plt,{'joined':true,'points':false,'class':'line'})
+	.axes({	xLabel : "высота падения (в бутербродах)",
+		yLabel : "вероятность падения маслом вниз"
+		})
+}
+
+//figure10(n)
+
+function figure11() {
+    var Eq = (t,[x,y]) => [y, x*(1-x*x)+0.025*y]
+    var sol1 = ODE.solve(Eq,[0.1,0.1],[0,160],0.01)
+    var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,161.2],0.01)
+    pts = ODE.solution(sol2,[0,1]).reversed().concat(ODE.solution(sol1,[0,1]))
+    pts.push(pts[0])
+    p2.xRange([-3,3])
+	.yRange([-4,4])
+	.listPlot(pts,{'joined':false,'points':false,'filled':true,'class':'basin'})
+	.clipPaper()
+	.axes({xLabel : "начальное отклонение",
+	       yLabel : "начальная скорость"})
+	.listPlot([[-1,0],[1,0]],{'class':'attr'})
+    	.listPlot([[0,0]],{'class':'repell'})
+    
+}
+
+//figure11()
+
+function figure12()
+{
+    var xs = Normal(0.5,0.01).samples(10000)
+    var pts = xs.zip(xs.drop(1))
+    p.xRange([0,1]).yRange([0,2.1])
+	.plot(Uniform([0,0.5]).PDF)
+    p2.xRange([0,100]).yRange([-1,1])
+	.plot(x => range(0.5,0.9,0.5/10).map(i => sin(i/(1-i)*x)).sum()*2/10)
+	.axes({})
+}
+
+//figure12()
+
+function figure13()
+{
+    m = (p,a) => n => (a*n + 2*a - sqrt(a)) >= 0 ? -0.1 : (-2*a*n + sqrt(a)*n - 4*a + 4*sqrt(a) - p)/(a*n + 2*a - sqrt(a))
+    ns = range(0,6)
+    p.xRange([0,5]).yRange([0,5])
+    pp =range(0.01,0.00,-0.0025)
+    pp.map(a => p.plot(m(0.5,a),{'joined':false,'filledUp':true,'class':'A'}))
+    pp.map(a => p.plot(m(0.5,a)))
+    p.gridLines({x:ns,y:ns})
+	.label("0.25%",{'at':[4.2,4.2]})
+	.label("0.5%",{'at':[2.25,3.5]})
+	.label("0.75%",{'at':[1.4,1.6]})
+	.label("1%",{'at':[1.5,0.5]})
+	.clipPaper()
+	.axes({xTickValues:ns,
+	       yTickValues:ns,
+	       xTickFormat: fmt.int,
+	       yTickFormat: fmt.int,
+	       xLabel:'число горизонтальных складок',
+	       yLabel:'число вертикальных складок',})
+    p2.image("figures/buter/map.jpg",0,-49)
+    var w0 = 400+24
+    var h0 = 360-25*2
+    var d = sqrt(400*300*0.005)
+    p2.xRange([0,400]).yRange([0,300])
+	.rectangle(0,0,d,h0,{'class':'B'})
+	.rectangle(w0-d,0,d,h0,{'class':'B'})
+	.rectangle(0,0,w0,d,{'class':'B'})
+	.rectangle(0,h0-d,w0,d,{'class':'B'})
+	.rectangle(w0/2-d/2,0,d,h0,{'class':'B'})
+	.rectangle(100,60,d,d,{'class':'B'})
+// <image xlink:href="/path/to/image.jpg" width="100%" height="100%" x="0" y="0" />
+
+}
+//figure13()
+
+function figure14()
+{
+    p2.xRange([0,3]).yRange([0,2.5])
+	.plot(x => exp(-2*x))
+	.plot(x => exp(2*x),{'class':'cat'})
+    	.plot(x => 0.98+1/(1+exp(-4*(x-1))),{'class':'bif'})
+	.label("катастрофа",{at:[0.45,2.0],angle:0})
+	.label("релаксация",{at:[1.5,0.2],angle:0})
+	.label("бифуркация или",{at:[2,1.82],angle:0})
+	.label("самоорганизация",{at:[2,1.7],angle:0})
+	.axes({xTickValues:[1],
+	       yTickValues:[1],
+	       xLabel: "время",
+	       yLabel: "обобщённая координата процесса"})
+}
+figure14()
+
+
+
+</script>
+    </body>
+    </html>

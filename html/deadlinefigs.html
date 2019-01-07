@@ -9,11 +9,12 @@
     <script src='../lib/statistics.js'></script>
     <script src='../lib/graphics.js'></script>
     <script src='../lib/signal.js'></script>
+    <script src='../lib/analysis.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
     .meanLine .line {
 	stroke: indianred;
-	stroke-width: 3;
+	stroke-width: 2;
 	stroke-dasharray : 0,0;
     }
 
@@ -46,7 +47,7 @@
     }
 
     .ideal .line {
-	stroke-dasharray : 2,3;
+	stroke-dasharray : 4,6;
 	stroke: blue;
     }
     .life {
@@ -67,7 +68,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='500'></svg>
+    <svg id='fig1' width='400' height='300'></svg>
     <script>
 
 var fig1 = d3.select("#fig1")
@@ -215,7 +216,7 @@ range(500).map(() => deadlineMean(365,15,10,{'empiric':true})).add(deadlineMean(
 */
 //deadline/fig6.svg
 
-
+/*
 deadlineSample(365,0,{'strategy':'exp'})
     .add(deadlineMean(365,4,5000,{'strategy':'exp','empiric':true,'class':'empiric'}))
     .add(deadlineMean(365,7,10000,{'strategy':'exp','empiric':true}))
@@ -233,7 +234,7 @@ deadlineSample(365,0,{'strategy':'exp'})
 	 .label("k = 13",{at :[0.7,0.4],angle:42})
 	 .label("k = 40",{at :[0.7,0.3],angle:40})
 	)
-
+*/
 
 function deadlineRates()
 {
@@ -284,19 +285,17 @@ function deadlineEmpiricRates(N,ms,opts)
 
 function deadlinePDF(N, opts)
 {
-    ls = new Histogram(1).fromList(d3.range(100000).map(() => deadline(N,opts).length+1))
+    ls = new Histogram(1).fromList(d3.range(1000000).map(() => deadline(N,opts).length+1))
     new Graphics(fig1,{'class':'deadline'})
-	.xRange([0,N+1])
-	.yRange([0,0.4])
+	.xRange([0,2*log(N)+1])
+	.yRange([0,0.2])
    	.histogram(ls,{'type':'PDF'})
 	.axes({yLabel : 'доля цепочек, уместившихся в срок',
 	       xLabel : 'длина цепочки',
 	       xTicks : 13,
 	       xTickFormat : d3.format('i'),
 	       yTickFormat : d3.format('i')})
-//	.gridLines({'x':[floor(Math.log2(N)),ls.mean]})
-//    	.discretePlot(k => 3*pow(2,N-k)*C(N-1,k)/pow(2,N)/N/N)
-//	.discretePlot(k=>stirling(N,k)/fact(N),{'joined':true})
+	.discretePlot(k => Poisson(H(N)-1).PMF(k-1),{'joined':true})
 }
 
 function Pm(n,k)
@@ -346,7 +345,7 @@ C = binomial
 
 //deadline/fig3.svg
 //fig1.attr('height',400)
-//deadlinePDF(10, {'strategy':'uniform'})
+deadlinePDF(100000, {'strategy':'uniform'})
 
 function deadlineCDF(opts)
 {
@@ -391,14 +390,14 @@ function deadlinePoints()
 
 function deadlineDivRate(N,k)
 {
-    ds = d3.range(k).map(x => x/k)
+    ds = d3.range(k+1).map(x => x/k)
     return x => ds.sum(d => ((x >= d && x < d+1/k) ? d+rate(N/k)(k*(x-d))/k : 0))
 }
 
 function deadlineDiv(N)
 {
     return new Graphics(fig1,{'class':'meanLine'})
-	.xRange([0,1])
+	.xRange([0,0.9999])
 	.yRange([0,1])
 	.plot(deadlineDivRate(N,1),{plotPoints:400})
     	.plot(deadlineDivRate(N,2),{plotPoints:400})
@@ -409,7 +408,7 @@ function deadlineDiv(N)
 	       'xLabel' : 'время, отпущенное на выполнение работы',
 	       'yLabel' : 'выполненная часть работ'
 	      })
-	.gridLines({'x':ds})    
+	.gridLines({'x':ds})
 	.label('квартальный отчёт',{at : [0.24,0.3], angle : 90, 'class':'gridLineLabel'})
 	.label('полугодовой',{at : [0.49,0.55], angle : 90, 'class':'gridLineLabel'})
 	.label('ещё один',{at : [0.74,0.77], angle : 90, 'class':'gridLineLabel'})

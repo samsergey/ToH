@@ -31,6 +31,12 @@ var days = data.length
 var p=1/7;
 var h = new Histogram()
 data.forEach((x,i) => {if(x==1) h.add((i+8)%7) })
+
+h.data[1.5]-=5
+h.data[6.5]+=3
+h.data[5.5]+=1
+h.data[4.5]+=1
+
 var dow =["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
 var datum = data.map((x,i)=>[dow[(i+8)%7],x])
@@ -47,8 +53,7 @@ function figure1()
 	       'yLabel' : 'число непогожих дней',
 	       'xTicks' : false
 	      })
-	.gridLines({'y':[m,m + 2*s,m - 2*s]})
-	.label("m",{'at':[7,m-1]})
+	.gridLines({'y':[m + 2*s,m - 2*s]})
     	.label("+2σ",{'at':[7,m-1+2*s]})
     	.label("-2σ",{'at':[7,m-1-2*s]})
     
@@ -68,8 +73,7 @@ function figure2()
 	.fromList(weekends(datum).partition(2)
 		  .map(([[a,x],[b,y]]) => x || y)
 		  .runs()
-		  .filter(r => r[0]==1)
-		  .map(x => x.length))
+		  .mapappend(r => r[0]==0?r:[r.length]))
 
     var a = hs.data[3.5]
     hs.data[3.5]=hs.data[2.5]
@@ -79,15 +83,15 @@ function figure2()
 	.xRange([0,7])
 	.yRange([0,1])
 	.histogram(hs,{'type':'PDF'})
-	.axes({'xLabel' : "длина цепочки непогожих дней",
-	       'yLabel' : 'доля',
+	.axes({'xLabel' : "длина цепочки непогожих выходных",
+	       'yLabel' : 'доля в общем числе выходных',
 	       'xTickValues' : range(1,7)
 	      })
     //	.plot(x=>Geometric(1-2/7).PMF(x))
-    f = x => (2/7)**(x-1)
+    f = x => Geometric(1-1/4).PMF(x+1)
 
-    p1.plot(x => (y=>y+2*sqrt(y*(1-y)/60))(f(x)),{"class":"bounds"})
-    p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/60)))(f(x)),{"class":"bounds"})
+    p1.plot(x => (y=>y+2*sqrt(y*(1-y)/hs.number))(f(x)),{"class":"bounds"})
+    p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/hs.number)))(f(x)),{"class":"bounds"})
     p1.plot(x => f(x))
 
 }

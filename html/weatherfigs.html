@@ -17,6 +17,10 @@
 	stroke : navy;
 	stroke-opacity : 0.5;
     }
+    .needles .line {
+	stroke : navy;
+	stroke-opacity : 0.5;
+    }
     </style>
     
   </head>
@@ -96,7 +100,7 @@ function figure2()
 
 }
 
-figure2()
+//figure2()
 
 function figure3()
 {
@@ -123,6 +127,30 @@ function figure3()
 }
 
 //figure3()
+
+function figure4()
+{
+    hs = new Histogram()
+	.fromList(data.splitOn(1).map(x=>x.length))
+   
+    //return hs.QQPlot(fig1,Exponential)
+    
+    var p1 = new Graphics(fig1)
+	.xRange([0,30])
+	.yRange([1,200])
+	.yAxisType('log')
+	.histogram(hs,{'type':'value','kind':'needles'})
+	.axes({'xLabel' : "премежуток между непогодой",
+	       'yLabel' : 'число промежутков',
+	       'xTickValues' : range(0,30,5),
+	       'yTickValues' : [2,5,10,25,50,100,200],
+	       'yTickFormat' : fmt.int
+	      })
+}
+
+figure4()
+
+
 
 
 

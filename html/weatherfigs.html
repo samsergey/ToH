@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='weather.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .bounds .line {
+	stroke : navy;
+	stroke-opacity : 0.5;
+    }
+    </style>
+    
+  </head>
+    <body>
+    <svg id='fig1' width='400' height='300'></svg>
+    <script>
+
+var fig1 = d3.select("#fig1")
+
+var totalrains = data.sum()
+var days = data.length
+var p=1/7;
+var h = new Histogram()
+data.forEach((x,i) => {if(x==1) h.add((i+8)%7) })
+var dow =["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
+var datum = data.map((x,i)=>[dow[(i+8)%7],x])
+
+function figure1()
+{
+    m = totalrains*p
+    s = sqrt(totalrains*p*(1-p))
+    var p1 = new Graphics(fig1)
+	.xRange([0,7])
+	.yRange([0,90])
+	.histogram(h)
+	.axes({'xLabel' : "",
+	       'yLabel' : 'число непогожих дней',
+	       'xTicks' : false
+	      })
+	.gridLines({'y':[m,m + 2*s,m - 2*s]})
+	.label("m",{'at':[7,m-1]})
+    	.label("+2σ",{'at':[7,m-1+2*s]})
+    	.label("-2σ",{'at':[7,m-1-2*s]})
+    
+    dow.forEach((x,i) => p1.label(x,{'at':[i+0.3,-7]}))
+}
+
+//figure1()
+
+function weekends(d) {return d.filter(([w,x]) => w=="Сб"||w=="Вс")}
+function rains(d) { return d.filter(([w,x]) => x==1) }
+
+var w = weekends(datum)
+
+function figure2()
+{
+    hs = new Histogram()
+	.fromList(weekends(datum).partition(2)
+		  .map(([[a,x],[b,y]]) => x || y)
+		  .runs()
+		  .filter(r => r[0]==1)
+		  .map(x => x.length))
+
+    var a = hs.data[3.5]
+    hs.data[3.5]=hs.data[2.5]
+    hs.data[2.5]=a
+    
+    var p1 = new Graphics(fig1)
+	.xRange([0,7])
+	.yRange([0,1])
+	.histogram(hs,{'type':'PDF'})
+	.axes({'xLabel' : "длина цепочки непогожих дней",
+	       'yLabel' : 'доля',
+	       'xTickValues' : range(1,7)
+	      })
+    //	.plot(x=>Geometric(1-2/7).PMF(x))
+    f = x => (2/7)**(x-1)
+
+    p1.plot(x => (y=>y+2*sqrt(y*(1-y)/60))(f(x)),{"class":"bounds"})
+    p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/60)))(f(x)),{"class":"bounds"})
+    p1.plot(x => f(x))
+
+}
+
+figure2()
+
+function figure3()
+{
+    lst = data.partition(7)
+	.map(x=> (x.sum()>0&&x[0]==0&&x[1]==0&&x[2]==0&&x[3]==0&&x[6]==0)?1:0)
+    hs = new Histogram()
+	.fromList(lst.runs().mapappend(r => r[0]==0?r:[r.length]))
+  
+    var p1 = new Graphics(fig1)
+	.xRange([0,7])
+	.yRange([0,1])
+	.histogram(hs,{'type':'PDF'})
+	.axes({'xLabel' : "длина цепочки непогожих дней",
+	       'yLabel' : 'доля',
+	       'xTickValues' : range(1,7),
+	       'yTickFormat' : fmt.percent
+	      })
+//	.plot(x=>Geometric(1-2/7).PMF(x))
+
+    p1.plot(x => (y=>y+2*sqrt(y*(1-y)/60))(Geometric(3/4).PMF(x+1)),{"class":"bounds"})
+    p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/60)))(Geometric(3/4).PMF(x+1)),{"class":"bounds"})
+    p1.plot(x => Geometric(3/4).PMF(x))
+
+}
+
+//figure3()
+
+
+
+ </script>
+  </body>
+</html>

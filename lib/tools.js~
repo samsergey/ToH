@@ -50,6 +50,10 @@ Array.prototype.tail = function() {
     return this.slice(1,this.length)
 }
 
+Array.prototype.drop = function(n) {
+    return this.slice(n,this.length)
+}
+
 Array.prototype.most = function() {
     return this.slice(0,this.length-1)
 }
@@ -235,6 +239,8 @@ Array.prototype.dot = function(v)
     this.forEach(x => res += x*v[i++])
     return res
 }
+
+
 
 function repeat(n,action)
 {

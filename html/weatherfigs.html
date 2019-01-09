@@ -111,23 +111,24 @@ function figure3()
     var p1 = new Graphics(fig1)
 	.xRange([1,7])
 	.yRange([0,1])
-	.axes({'xLabel' : "k",
-	       'yLabel' : 'функция вероятности',
+	.axes({'xLabel' : "x",
+	       'yLabel' : 'плотность вероятности',
 	       'xTickValues' : range(1,7),
 	       'yTickFormat' : fmt.normal
 	      })
-    var N=60
-    f = Geometric(1-1/4)
-    g = f => f.PMF
-    hist = () => new Histogram().fromDistribution(f,N)
+    var N=500
+    var s = 1/5
+    f = Uniform([2,5]) // Geometric(1-1/4) // Normal(4,0.5)
+    g = f => f.PDF // f.PMF
+    hist = () => new Histogram(s).fromDistribution(f,N)
     ghist = () => {
 	var h = hist()
 	p1.histogram(h,{"type":"PDF","kind":"needles"})
 //	    .gridLines({x:[h.mean]})
     }
-    repeat(1000,ghist)
-    p1.plot(x => (y=>y+2*sqrt(y*(1-y)/N))(g(f)(x)),{"class":"bounds"})
-    p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/N)))(g(f)(x)),{"class":"bounds"})
+    repeat(200,ghist)
+    p1.plot(x => (y=>y+2*sqrt(y*(1-y)/N/s))(g(f)(x)),{"class":"bounds"})
+    p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/N/s)))(g(f)(x)),{"class":"bounds"})
     p1.plot(x => g(f)(x))
 
 }

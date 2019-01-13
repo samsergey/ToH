@@ -25,11 +25,30 @@
 	fill : indianred;
 	fill-opacity : 0.2;
     }
+    .journal {
+	stroke : navy;
+	stroke-opacity : 0.5;
+	fill : blue;
+	fill-opacity : 0.2;
+    }
+    .label {
+	font-size : 90%;
+    }
+    .label .dow {
+	font-size : 50%;
+    }
+    .days circle {
+	fill : navy;
+	fill-opacity : 0.6;
+    }
+    .weekend {
+	fill : darkorange;
+    }
     </style>
     
   </head>
     <body>
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='400' height='500'></svg>
     <script>
 
 var fig1 = d3.select("#fig1")
@@ -133,7 +152,7 @@ function figure3()
 
 }
 
-figure3()
+//figure3()
 
 function figure4()
 {
@@ -156,6 +175,63 @@ function figure4()
 }
 
 //figure4()
+
+function figure5()
+{   
+    var p1 = new Graphics(fig1)
+	.xRange([0.003,0.99])
+	.yRange([0.003,1])
+	.yAxisType('log')
+	.xAxisType('log')
+    pl = p=>p1.plot(a => (1-a)*p/((1-a)*p+(1-p)*a),{'plotPoints':400,
+					  'filled':true,
+					  'class':'journal'})
+    pl(2*(1-Normal(0,1).CDF(1)))
+    pl(2*(1-Normal(0,1).CDF(2)))
+    pl(2*(1-Normal(0,1).CDF(3)))
+    pl(2*(1-Normal(0,1).CDF(4)))
+    tcks=[0.01,0.025,0.05,0.1,0.25,0.5,1]
+    p1.clipPaper()
+	.axes({'xLabel' : "доля гипотез, верных априори",
+	       'yLabel' : 'доля неверных результатов в публикациях',
+	       'xTickValues':tcks,
+	       'xTickFormat':fmt.percent,
+	       'yTickValues':tcks,
+	       'yTickFormat':fmt.percent
+	      })
+    p1.label('σ',{'at':[0.3,0.3]})
+    p1.label('2σ',{'at':[0.125,0.125]})
+    p1.label('3σ',{'at':[0.03,0.03]})
+    p1.label('4σ',{'at':[0.0056,0.0056]})
+
+}
+
+//figure5()
+
+function figure6()
+{   
+    var p1 = new Graphics(fig1,{'class':'days'})
+	.xRange([0,53])
+	.yRange([0,53])
+
+    ds = [0].concat(data)
+	.partition(365)
+	.map(y => y.partition(7))
+	.reversed()
+	.tail()
+    var dy = 11
+    repeat(5,i=>p1.rectangle(0,i*dy-6,53,2,{'class':'weekend'})
+	   .rectangle(0,i*dy+1,53,0.1,{'class':'year'})
+	   .rectangle(0,i*dy-6,53,0.1,{'class':'year'})
+	   .label(2018-i,{'at':[0,i*dy+1.5]}))
+    repeat(5,i=>repeat(7,w=>p1.label(dow[6-w],{'at':[53,i*dy-5.8+w],'class':'dow'})))
+    ds.forEach(
+	(year,y) => year.forEach(
+	    (week,w) => week.forEach(
+		(day,d) => {if(day) p1.disk(w+1/2,y*dy-d+1/2,0.4)})))
+}
+
+figure6()
 
 
 

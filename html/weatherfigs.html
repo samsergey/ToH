@@ -228,7 +228,7 @@ function figure6()
     ds.forEach(
 	(year,y) => year.forEach(
 	    (week,w) => week.forEach(
-		(day,d) => {if(day) p1.disk(w+1/2,y*dy-d+1/2,0.4)})))
+		(day,d) => {if(day) p1.disk([w+1/2,y*dy-d+1/2],0.4)})))
 }
 
 figure6()

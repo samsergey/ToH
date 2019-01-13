@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
+    <meta charset='UTF-8'/>
     <script src='../lib/d3.js'></script>
-    <script src='../lib/tools.js'></script>
     <script src='../lib/analysis.js'></script>
     <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
     <script src='../lib/matrix.js'></script>
     <script src='../lib/statistics.js'></script>
     <script src='../lib/graphics.js'></script>
@@ -18,10 +19,20 @@
 	stroke:navy;
 	stroke-dasharray:5,5;
     }
+    .inner .points {
+	stroke:none;
+	fill:#F00;
+	fill-opacity:0.075;
+    }
+    .outer .points {
+	stroke:none;
+	fill:darkgreen;
+	fill-opacity:0.1;
+    }
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='400'></svg>
+    <svg id='fig1' width='500' height='500'></svg>
     <script>
 
 
@@ -79,7 +90,7 @@ function Multispace2(m,n,s)
 }
 
 
-normalFig2()
+//normalFig2()
 
 function angle(v1,v2)
 {
@@ -175,6 +186,24 @@ function Quantiles()
 
 //Quantiles()
 
+function Normal2d()
+{
+    var n = 100
+    var xs = Normal(0,1).samples(n)
+    var ys = Normal(0,1).samples(n)
+    var pts = xs.zipWith(ys,(x,y)=>[x,y])
+    inn = pts.filter(([x,y])=>x*x+y*y<2)
+    out = pts.filter(([x,y])=>x*x+y*y>=2)
+    return new Graphics(fig1,{})
+	.xRange([-5,5])
+	.yRange([-5,5])
+	.listPlot(out,{'pointSize':1,"class":'outer'})
+	.listPlot(inn,{'pointSize':1,"class":'inner'})
+	.listPlot([[0,0],[1,1]],{'points':false,'joined':true})
+	.label("σ",{'at':[0.6,0.3]})
+}
+
+Normal2d()
 
 </script>
   </body>

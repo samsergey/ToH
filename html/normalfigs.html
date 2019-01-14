@@ -29,6 +29,9 @@
 	fill:darkgreen;
 	fill-opacity:0.1;
     }
+    .label {
+	font-size: 100%;
+    }
 </style>
   </head>
     <body>
@@ -188,7 +191,7 @@ function Quantiles()
 
 function Normal2d()
 {
-    var n = 100
+    var n = 100000
     var xs = Normal(0,1).samples(n)
     var ys = Normal(0,1).samples(n)
     var pts = xs.zipWith(ys,(x,y)=>[x,y])

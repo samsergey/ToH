@@ -67,10 +67,14 @@
 	fill-opacity:0.5;
 	stroke:black;
     }
+    .leela {
+	stroke : navy;
+	stroke-opacity:0.02;
+    }
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig1' width='500' height='500'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -776,7 +780,7 @@ var p1 = new Graphics(fig1)
     .yRange([0,0.05])
     .axes({})
 
-start1 = () => window.setInterval(leela1,1)
+window.setInterval(leela1,1)
 */
 
 function leela2()
@@ -785,8 +789,9 @@ function leela2()
     p1.cleanPaper().histogram(hs,{'type':'PDF'})
 }
 /*
+var hs = new Histogram(1)
 p1 = new Graphics(fig1)
-    .xRange([0,72])
+    .xRange([0,100])
     .yRange([0,0.05])
     .axes({})
 var step = leela()
@@ -825,14 +830,63 @@ function leela4(n,m)
 	if (cs[b]>4)
 	    res.push([cs[b],b])
     len = s => s.split(",").length
-    var res = {
+    cycles = {
+	'raw':res,
 	'total':res.map(fst).sum(),
-	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(10),
-	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(10)
+	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(20),
+	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(20)
     }
-    
+    var pts=cycles.raw.map(x => [x[0]/cycles.total,len(x[1])])
+    new Graphics(fig1)
+	.xRange([3/cycles.total,1])
+	.xAxisType('log')
+	.yRange([0,10])
+	.listPlot(pts)
+	.axes({})
 }
 
+function cell(x){
+    r = ceil(x/9)
+    c = (x-1)%9
+    return [r%2==1 ? c : 8-c, r]
+}
+
+function circ(x)
+{
+    a = x*2*pi/72
+    return [5+4*cos(a),5+4*sin(a)]
+}
+function leela5(n,how)
+{
+    how = how || cell
+    pts=nestList(leela(),1,n)
+    new Graphics(fig1,{'class':'leela'})
+	.xRange([0,10])
+	.yRange([0,10])
+	.listPlot(pts.map(how),{'joined':true})
+    
+}
+function leela6(n,m,how)
+{
+    how = how||circ
+    var res = [], cs = nest(leela3(n),{},m)
+    for(var b in cs)
+	if (cs[b]>4)
+	    res.push([cs[b],b])
+    len = s => s.split(",").length
+    cycles = {
+	'raw':res,
+	'total':res.map(fst).sum(),
+	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(2),
+	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(20)
+    }
+    var pts=cycles.frequent.map(c => c[1].split(",").map(Number))
+    var p = new Graphics(fig1,{'class':'leela'})
+	.xRange([0,10])
+	.yRange([0,10])
+
+    pts.forEach(ps=> p.listPlot(ps.close().map(how),{'joined':true}))
+}
 </script>
   </body>
 </html>

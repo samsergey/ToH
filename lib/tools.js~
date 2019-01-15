@@ -20,6 +20,17 @@ function nestList(f,x,n)
     return res.reverse()
 }
 
+function nestWhileList(f,x,test,n)
+{
+    res = [x]
+    for(var i = 0; i < n; i++) {
+	res.unshift(f(res[0]))
+	if (!test(res[0]))
+	    return res.reverse() 
+    }
+    return res.reverse()
+}
+
 
 function fixedPoint(f,x,n,compare,eq) {
     if (n == 0) return x
@@ -54,12 +65,20 @@ Array.prototype.drop = function(n) {
     return this.slice(n,this.length)
 }
 
+Array.prototype.take = function(n) {
+    return this.slice(0,n)
+}
+
 Array.prototype.most = function() {
     return this.slice(0,this.length-1)
 }
 
 Array.prototype.last = function() {
     return this.slice(this.length-1,this.length)[0]
+}
+
+Array.prototype.rotate = function() {
+    return [this.last()].concat(this.most())
 }
 
 
@@ -78,6 +97,11 @@ Array.prototype.sorted = function(order) {
 
 var ascending = (x,y) => Number(x) - Number(y)
 var descending = (x,y) => y - x
+var on = f => g => (x,y) => g(f(x),f(y))
+var fst = x => x[0]
+var snd = x => x[1]
+var length = x => x.length
+
 
 Array.prototype.sum = function(f)
 {
@@ -245,7 +269,7 @@ Array.prototype.dot = function(v)
 function repeat(n,action)
 {
     for(var i = 0; i < n; i++)
-	action()
+	action(i)
 }
 
 function transpose(a) {
@@ -273,4 +297,50 @@ Array.prototype.EMA = function(alpha)
 }
 
 
+Array.prototype.partition = function(n)
+{
+    var res = []
+    for(var i = 0; i < this.length; i+=n)
+    {
+	res.push([])
+	for(var j = 0; j < n; j++)
+	    if (i+j<this.length)
+		res[i/n].push(this[i+j])
+    }
+    return res
+}
+
+Array.prototype.runs = function()
+{
+    if (this.length==0) return []
+    if (this.length==1) return [this]
+    var x = this[0]
+    var res = [[x]]
+    for(var i = 0; i < this.length; i++)
+    {
+	if (this[i] == x)
+	    res[0].push(x)
+	else
+	    res.unshift([x = this[i]])
+    }
+    return res.reversed()
+}
+
+Array.prototype.splitBy = function(p)
+{    
+    var res = [[]]
+    for(var i = 0; i < this.length; i++)
+    {
+	if (!p(this[i]))
+	    res[0].push(this[i])
+	else
+	    res.unshift([])
+    }
+    return res.reversed()
+}
+
+Array.prototype.splitOn = function(el)
+{
+    return this.splitBy(x => x == el)
+}
 

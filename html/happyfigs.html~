@@ -2,6 +2,7 @@
 <html>
     <head>
     <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
     <script src='../lib/functions.js'></script>
     <script src='../lib/tools.js'></script>
     <script src='../lib/matrix.js'></script>
@@ -13,11 +14,12 @@
     .life .A .line {
 	stroke : navy;
 	stroke-opacity : 0.5;
-	stroke-width : 1;
+	stroke-width : 1.5;
         }
     .life .B .line {
 	stroke : indianred;
 	stroke-width : 2;
+	stroke-width : 1.5;
         }
     .gridLines {
 	stroke : blue;
@@ -28,10 +30,12 @@
 	stroke-width:0;
     }
     .above {
-	stroke: #E74C3C;
+	stroke: none;
+	fill: #E74C3C;
     }
     .below {
-	stroke: #2471A3;
+	stroke: none;
+	fill: #2471A3;
     }
     .zero {
 	stroke: black;
@@ -63,10 +67,13 @@
 	fill-opacity:0.5;
 	stroke:black;
     }
+    .leela {
+	stroke-opacity:0.2;
+    }
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig1' width='500' height='500'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -277,7 +284,7 @@ function happyDecayHist2(opts)
     	//.gridLines({x:[h.mean]})
 }
 
-happyDecayHist2({})
+//happyDecayHist2({})
 
 function happyDecayQQ(opts)
 {
@@ -610,7 +617,247 @@ var h = happyEMADist({years:1000, mu:1/60, lambda:1/7})
 h.QQPlot(Exponential)
 */
 
+function happyMarkov(opts)
+{
+    var N = 100
+	lambda = opts.lambda || 2/7,
+	P = opts.P || [[0.8,0.2],[0.2,0.8]]
 
+    var life = nestList(s => Bernoulli(P[s][0]).generator(),0,N).map(x => x*2-1)
+    var good = life.map((x,i) => [i,x]).filter(([i,x])=>x>0).map(([i,x])=>[i,0])
+    var bad = life.map((x,i) => [i,x]).filter(([i,x])=>x<0).map(([i,x])=>[i,0])
+
+    return new Graphics(fig1)
+	.yRange([-1,1])
+	.xRange([0,N])
+	.listPlot(good,{'class':'above',
+			'points' : true,
+			'joined' : false})
+	.listPlot(bad,{'class':'below',
+		       'points' : true,
+			'joined' : false})
+    
+}
+
+//happyMarkov({})
+
+function happyMarkovHist(opts)
+{
+    var N = (opts.years || 10)*365,
+	lambda = opts.lambda || 2/7,
+	p = opts.p || 0.75,
+	p2 = opts.p2 || p,
+	P = [[p,1-p],[1-p2,p2]]
+
+    var life = nestList(s => Bernoulli(P[s][0]).generator(),0,N)
+    h = new Histogram().fromList(life.differences(1).positions(x => x != 0).differences(1))
+    f = Geometric().fromHistogram(h)
+    return new Graphics(fig1)
+	.histogram(h)
+	.plot(x => f.PDF(x)*h.number)
+	.axes({xLabel : 'длительность периодов в жизни',
+	       yLabel : 'количество периодов',
+	       xTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+}
+
+//happyMarkovHist({p:0.9,p2:0.6})
+
+function queueProcess()
+{
+    var g = PoissonProcess(1/2)
+    var q1 = range(100).map(g).accumsum()
+    var q2 = range(100).map(g).accumsum()
+    return new Graphics(fig1,{'class':'life'})
+	.xRange([1,100])
+	.yRange([0,30])
+	.listPlot(q1,{'class':'A','points':false,'joined':true})
+	.listPlot(q2,{'class':'B','points':false,'joined':true})
+    	.axes({xLabel : 'время',
+	       yLabel : 'перемещение очереди (шаги)',
+	       xTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+}
+
+//queueProcess()
+
+function queueHist()
+{
+    var g = PoissonProcess(1/5)
+    var q1 = range(10000).map(g).accumsum()
+    var q2 = range(10000).map(g).accumsum()
+    var d = q1.zipWith(q2,(x,y) => x-y).differences(1).positions(x => x != 0).differences(1)
+    var h = new Histogram().fromList(d)
+    f = Geometric().fromHistogram(h)
+    return new Graphics(fig1)
+	.histogram(h)
+	.plot(x => f.PDF(x)*h.number)
+	.axes({xLabel : 'время',
+	       yLabel : 'перемещение очереди (шаги)',
+	       xTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    
+}
+
+function queueLor()
+{
+    var g = PoissonProcess(1/1)
+    var q1 = range(10000).map(g).accumsum()
+    var q2 = range(10000).map(g).accumsum()
+    var d = q1.zipWith(q2,(x,y) => x-y).differences(1).positions(x => x != 0).differences(1)
+    var h = new Histogram().fromList(d)
+    return new Graphics(fig1)
+	.listPlot(h.LorenzCurve)
+	.axes({xLabel : 'время',
+	       yLabel : 'перемещение очереди (шаги)',
+	       xTicks : 5,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : d3.format('i')})
+    
+}
+
+
+//queueLor()
+/*
+d = Geometric(0.15).samples(10000)
+var h = new Histogram().fromList(d)
+new Graphics(fig1)
+    h.QQPlot(Geometric)
+*/
+
+function leela()
+{
+    var jumps = {
+	10:23,
+	16:4,
+	61:3,
+	20:32,
+	22:60,
+	24:7,
+	27:41,
+	28:50,
+	29:6,
+	37:66,
+	45:67,
+	46:62,
+	52:35,
+	54:68,
+	55:2,
+	61:3,
+	63:13,
+	72:51,
+	68:1,
+    }
+    var m
+    function move() {return randomInteger(6)()+1}
+    function step(s)
+    {
+	if (jumps[s]) return jumps[s]	
+	m = move()
+	if (m == 6) m += move()
+	if (s > 60) m = min(m,72-s)
+	return s+=m
+    }
+    return step
+}
+
+
+function leela1()
+{
+    var step = leela()
+    hs.add(nestWhileList(step,1,s=>s!=68,200).length)
+    p1.cleanPaper().histogram(hs,{'type':'PDF'})
+}
+
+/*
+var hs = new Histogram(1)
+var p1 = new Graphics(fig1)
+    .xRange([0,200])
+    .yRange([0,0.05])
+    .axes({})
+
+window.setInterval(leela1,1)
+*/
+
+function leela2()
+{
+    hs.add(s=step(s))
+    p1.cleanPaper().histogram(hs,{'type':'PDF'})
+}
+/*
+var hs = new Histogram(1)
+p1 = new Graphics(fig1)
+    .xRange([0,100])
+    .yRange([0,0.05])
+    .axes({})
+var step = leela()
+var s=1
+window.setInterval(leela2,1)
+*/
+
+function leela3(n)
+{
+    n = min(n, 200)
+    return cycles => {
+	var step = leela()
+	var run = nestList(step,1,n)
+	var rots = nestList(l => l.rotate(),run,n-1).tail()
+	var ls = rots.map(r => run.zipWith(r,(x,y)=>x==y?[1,x]:0))
+	    .mapappend(x=>x)
+	    .splitOn(0)
+	    .filter(x => x.length>3)
+	    .map(x=>x.map(snd).toString())
+	ls.forEach(c => addTo(cycles, c.toString()))
+	return cycles
+    }
+}
+
+function addTo(c,x)
+{
+    if (c[x])
+	c[x]++
+    else
+	c[x]=1
+}
+function leela4(n,m)
+{
+    var res = [], cs = nest(leela3(n),{},m)
+    for(var b in cs)
+	if (cs[b]>4)
+	    res.push([cs[b],b])
+    len = s => s.split(",").length
+    cycles = {
+	'raw':res,
+	'total':res.map(fst).sum(),
+	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(20),
+	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(20)
+    }
+    var pts=cycles.raw.map(x => [x[0]/cycles.total,len(x[1])])
+    new Graphics(fig1)
+	.xRange([3/cycles.total,1])
+	.xAxisType('log')
+	.yRange([0,10])
+	.listPlot(pts)
+	.axes({})
+}
+
+function cell(x){
+    r = ceil(x/9)
+    c = (x-1)%9
+    return [r%2==1 ? c : 8-c, r]
+}
+function leela5(n)
+{
+    pts=nestList(leela(),1,n)
+    new Graphics(fig1,{'class':'leela'})
+	.xRange([0,10])
+	.yRange([0,10])
+	.listPlot(pts.map(cell),{'joined':true})
+    
+}
 </script>
   </body>
 </html>

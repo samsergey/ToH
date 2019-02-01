@@ -1,0 +1,99 @@
+
+function readableDuration(seconds) {
+    sec = Math.floor( seconds );    
+    min = Math.floor( sec / 60 );
+    min = min >= 10 ? min : '0' + min;    
+    sec = Math.floor( sec % 60 );
+    sec = sec >= 10 ? sec : '0' + sec;    
+    return min + ':' + sec;
+}
+
+function initAudio () {
+	$('audio').each(function () {
+		var audio = document.getElementById($(this).attr('id'));
+		
+		audio.ontimeupdate = function() {
+			// Calculate the slider value
+			
+			$(this).parent().find('.duration').html(readableDuration(audio.currentTime)+' / '+readableDuration(audio.duration))
+			
+			$(this).parent().find('.seek-bar').attr('max',audio.duration);
+						
+			// Update the slider value
+			$(this).parent().find('.seek-bar').val(audio.currentTime);					
+			
+		};
+		
+		audio.onvolumechange = function() {
+			// Update the slider value
+			$(this).parent().find('.volume-bar').val(audio.volume);			
+		};
+		
+		
+	});
+}
+
+function pauseAllAudio () {
+	$( "audio" ).each(function( index ) {
+		var audio = document.getElementById($(this).attr('id'));
+		audio.pause();
+	});	
+}
+
+function doPlayPause (obj) {
+	var audio_id = $(obj).parent().parent().find('audio').attr('id');
+	var audio = document.getElementById(audio_id);
+	
+	if ($(obj).hasClass('play')) {
+		$(obj).removeClass('play').addClass('pause');
+		audio.play();	
+	} else {
+		$(obj).removeClass('pause').addClass('play');			
+		audio.pause();
+	}
+		
+
+}
+
+function doAudio (obj) {
+	var audio_id = $(obj).parent().parent().find('audio').attr('id');
+	var audio = document.getElementById(audio_id);
+	
+	if ($(obj).hasClass('sound')) {
+		$(obj).removeClass('sound').addClass('mute');
+		audio.muted = true;	
+	} else {
+		$(obj).removeClass('mute').addClass('sound');			
+		audio.muted = false;
+	}			
+
+}
+
+function doSeekBar (obj) {
+	var audio_id = $(obj).parent().parent().find('audio').attr('id');
+	var audio = document.getElementById(audio_id);
+	
+	// Calculate the new time
+	
+	//var time = audio.duration * (obj.value / 100);
+	
+	// Update the video time
+	console.log(obj.value);
+	audio.currentTime = obj.value;	
+}
+
+function doAudioBar (obj) {
+	var audio_id = $(obj).parent().parent().find('audio').attr('id');
+	var audio = document.getElementById(audio_id);
+	audio.volume = obj.value;
+}
+
+function doMobilePlayer () {
+	if ($('audio').length) {
+		if ($(window).width() <= 667) {
+			$('audio').attr('controls',true)	
+		} else {
+			$('audio').removeAttr('controls')		
+		}
+	}
+}

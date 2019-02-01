@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+
 module Main where
 
 (\\) :: [Int] -> [Int] -> [Int]
@@ -53,5 +54,6 @@ primesq = 2 : sieve 3 (singleton 4 2)
     sieve x q
         | x < minKey q = x : sieve (x + 1) (insert (x * x) x q)
         | otherwise = sieve (x + 1) (adjust x q)
+
 
 main = print $ primesq !! 100000

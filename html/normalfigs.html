@@ -122,7 +122,7 @@ function angleHist(m,n)
 
 function angleDistPDF(m)
 {
-    return a => (a >= 180) ? 0 : 1/Math.sqrt(Math.PI)*gamma(m/2)/gamma((m-1)/2)*Math.pow(Math.sin(a/180*Math.PI),m-2)
+    return a => (a >= 180) ? angleDistPDF(m)(a-180) : 1/180*Math.PI/Math.sqrt(Math.PI)*gamma(m/2)/gamma((m-1)/2)*Math.pow(Math.sin(a/180*Math.PI),m-2)
 }
 
 function angleDistCDF(m)
@@ -206,7 +206,7 @@ function Normal2d()
 	.label("σ",{'at':[0.6,0.3]})
 }
 
-Normal2d()
+//Normal2d()
 
 </script>
   </body>

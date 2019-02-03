@@ -779,28 +779,29 @@ function leela()
 
 function matrix()
 {
-    var step = leela(),n = 10000
+    var step = leela(),n = 100
     function joins(c)
     {
 	return new Histogram().fromList(range(0,n).map(() => step(c)))
     }
     hs = range(1,73).map(joins)
-    var m = hs.map(h => range(1,73).map(x => h.data[x+0.5]/n||0))
+    leelaMatrix = hs.map(h => range(1,73).map(x => h.data[x+0.5]/n||0))
     p1 = new Graphics(fig1,{'class':'matrix'})
 	.xRange([1,73])
 	.yRange([1,73])
 	.axes({xLabel:"",yLabel:""})
+    m = mpow(leelaMatrix,4)
+    pmax = m.map(r => r.max()).max()
     function drawCell(x,y,c)
     {
 	if (c > 0)
-	    p1.rectangle(x+1,72-y,1,1,{'opacity':sqrt(c)})
+	    p1.rectangle(y+1,x+1,1,1,{'opacity':sqrt(c/pmax)})
     }
-    m.forEach((r,y) => r.forEach((c,x) => drawCell(x,y,c)))
-    
+    m.forEach((r,y) => r.forEach((c,x) => drawCell(x,y,c)))  
 }
 
-//matrix()
-
+matrix()
+//var ps = vmul(mpow(leelaMatrix,1000),[1].repeat(72))
 // распределение длительности игры
 function leela1()
 {

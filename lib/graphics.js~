@@ -521,15 +521,16 @@ Graphics.prototype.histogram = function(hist, opts)
 	this.yRange([this.logY ? value(hist.antimode) : 0,
 		     options.type == 'CDF' ? 1 : value(hist.mode)])
 	
-    data = []
+    var data = []
 
     var bw = options.barWidth * (this.logX ? 1 : this.X(hist.step)-this.X(0))
 
-    for(var b in hist.data)
+    hist.bins.forEach(b => {
 	if (!(this.logX && (b <= 0)))
-	    data.push({'bin' : Number(b)-options.barWidth*hist.step/2, 'value' : value(Number(b))})
+	    data.push({'bin' : Number(b)-options.barWidth*hist.step/2, 'value' : value(Number(b))})})
 
     if (options.kind == 'bars')
+    {
 	g.selectAll("bar")
 	.data(data)
 	.enter().append("rect")
@@ -537,12 +538,12 @@ Graphics.prototype.histogram = function(hist, opts)
 	.attr("width", bw)
 	.attr("y", d => min(this.Y(this.logY ? 1 : 0),this.Y(d.value)))
 	.attr("height", d => abs(this.Y(this.logY ? 1 : 0) - this.Y(d.value)))
-
-    if (options.kind == 'needles')
+    }
+    else if (options.kind == 'needles')
     {
 	g.selectAll("line")
 	    .data(data)
-	    .enter().append("line").attr('class','line')
+	    .enter().append("line").attr('class','needles')
 	    .attr("x1", d => this.X(d.bin))
 	    .attr("y1", d => this.Y(this.logY ? 1 : 0))
 	    .attr("x2", d => this.X(d.bin))
@@ -551,15 +552,15 @@ Graphics.prototype.histogram = function(hist, opts)
 	g.selectAll("circle")
 	    .data(data)
 	    .enter().append("circle").attr('class','point')
-	    .attr("cx", d => this.X(d.bin))
+	    .attr("cx", d => this.X(d.bin)+bw*Math.random())
 	    .attr("cy", d => this.Y(d.value))
 	    .attr("r", d => 2)
     }
    
-    if (options.kind == 'stairs') {
+    else if (options.kind == 'stairs') {
 	g.selectAll("line")
 	    .data(data)
-	    .enter().append("line")
+	    .enter().append("line").attr('class','stairs')
 	    .attr("x1", d => this.X(d.bin)-0*bw/2)
 	    .attr("x2", d => this.X(d.bin)+2*bw/2)
 	    .attr("y1", d => this.Y(d.value))
@@ -716,6 +717,31 @@ Graphics.prototype.rectangle = function (x,y,w,h,opts)
 	.attr("class",options['class'])
     return this
 }
+
+Graphics.prototype.disc = function ([x,y],r,opts)
+{
+    var defaults = {
+	'class'  : null,
+	'parent' : null
+        }
+
+    var options = Object.assign(defaults, opts || {})    
+
+    var parent = options.parent && d3.select(options.parent) || this.paper
+    var g = this.paper.append('circle')
+	.attr("cx",this.X(x))
+	.attr("cy",this.Y(y))
+	.attr("r",this.X(r))
+    if (options['class'])
+	g.attr("class",options['class'])
+    return this
+}
+
+Graphics.prototype.line = function ([x1,y1],[x2,y2],opts)
+{
+    return this
+}
+
 
 Graphics.prototype.image = function (src,x,y,w,h,opts)
 {

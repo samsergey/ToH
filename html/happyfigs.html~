@@ -68,7 +68,8 @@
 	stroke:black;
     }
     .leela {
-	stroke-opacity:0.2;
+	stroke : navy;
+	stroke-opacity:0.02;
     }
 </style>
   </head>
@@ -849,14 +850,42 @@ function cell(x){
     c = (x-1)%9
     return [r%2==1 ? c : 8-c, r]
 }
-function leela5(n)
+
+function circ(x)
 {
+    a = x*2*pi/72
+    return [5+4*cos(a),5+4*sin(a)]
+}
+function leela5(n,how)
+{
+    how = how || cell
     pts=nestList(leela(),1,n)
     new Graphics(fig1,{'class':'leela'})
 	.xRange([0,10])
 	.yRange([0,10])
-	.listPlot(pts.map(cell),{'joined':true})
+	.listPlot(pts.map(how),{'joined':true})
     
+}
+function leela6(n,m,how)
+{
+    how = how||circ
+    var res = [], cs = nest(leela3(n),{},m)
+    for(var b in cs)
+	if (cs[b]>4)
+	    res.push([cs[b],b])
+    len = s => s.split(",").length
+    cycles = {
+	'raw':res,
+	'total':res.map(fst).sum(),
+	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(2),
+	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(20)
+    }
+    var pts=cycles.frequent.map(c => c[1].split(",").map(Number))
+    var p = new Graphics(fig1,{'class':'leela'})
+	.xRange([0,10])
+	.yRange([0,10])
+
+    pts.forEach(ps=> p.listPlot(ps.close().map(how),{'joined':true}))
 }
 </script>
   </body>

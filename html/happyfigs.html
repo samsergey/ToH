@@ -9,6 +9,7 @@
     <script src='../lib/statistics.js'></script>
     <script src='../lib/graphics.js'></script>
     <script src='../lib/signal.js'></script>
+    <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
     .life .A .line {
@@ -72,7 +73,7 @@
 	stroke-opacity:0.01;
 	stroke-width:0.3;
     }
-    .matrix {
+    .matrixPlot .positives {
 	fill:navy;
     }
     .cycles .bar {
@@ -93,7 +94,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='400' height='500'></svg>
+    <svg id='fig1' width='500' height='500'></svg>
     <svg id='fig2' width='500' height='500'></svg>
     <script>
     
@@ -787,30 +788,14 @@ function leela()
     return step
 }
 
-function matrix()
+function showMatrix()
 {
-    var step = leela(),n = 100
-    function joins(c)
-    {
-	return new Histogram().fromList(range(0,n).map(() => step(c)))
-    }
-    hs = range(1,73).map(joins)
-    leelaMatrix = hs.map(h => range(1,73).map(x => h.data[x+0.5]/n||0))
-    p1 = new Graphics(fig1,{'class':'matrix'})
-	.xRange([1,73])
-	.yRange([1,73])
+    p1 = new Graphics(fig1)
 	.axes({xLabel:"",yLabel:""})
-    m = mpow(leelaMatrix,4)
-    pmax = m.map(r => r.max()).max()
-    function drawCell(x,y,c)
-    {
-	if (c > 0)
-	    p1.rectangle(y+1,x+1,1,1,{'opacity':sqrt(c/pmax)})
-    }
-    m.forEach((r,y) => r.forEach((c,x) => drawCell(x,y,c)))  
+    	.matrixPlot(mpow(leelaMatrix,1))
 }
 
-//matrix()
+//showMatrix()
 //var ps = vmul(mpow(leelaMatrix,1000),[1].repeat(72))
 // распределение длительности игры
 function leela1()
@@ -958,39 +943,23 @@ function leela6(n,m,how)
 
 //leela6(200,1000,cell)
 
-function circhist()
-{
-    h = new Histogram(1).fromList(Gamma(13,0.6)
-				  .samples(1000)
-				  .map(x => Math.round(x) % 24)
-				 )
-    new Graphics(fig1)
-	.xRange([0,24])
-	.yRange([0,0.1])
-	.histogram(h,{'type':'PDF'})
-	.axes({xLabel:"время суток (час)",
-	       yLabel:"частота обращения в полицию"})
-	.gridLines({x:[h.mean]})
-	.label("среднее арифметическое",{at:[h.mean-1/2,40],angle:90})
+    function v(c) {
+	var res = [0].repeat(72)
+	res[c]=1
+	return res
+    }
 
-    var p = new Graphics(fig2)
-	.xRange([-0.1,0.1])
-	.yRange([-0.1,0.1])
-	.polarPlot(a => h.PDF(((a)/(2*pi)*24+12) % 24),
-		   {'class':"angular",
-		    'plotPoints':400,
-		    'domain':[0,2*pi]})
-    var a = 0.1
-    range(0,a+a/10,a/10)
-	.map(r => p.polarPlot(x=>r,{'class':'polarMesh'}))
-    range(0,2*pi,pi/12)
-	.map(phi => p.line([[0,0],[a*sin(phi),a*cos(phi)]],{'class':'polarMesh'}))
-        
-    range(1,25)
-	.map(x => p.label(x,{'at':[1.09*a*cos(-x/12*pi+pi/2+pi/24),1.05*a*sin(-x/12*pi+pi/2+pi/24)]}))
-    
+
+function leeteration(n)
+{
+    mm = range(0,71).mapappend(c => nestList(x => vmul(leelaMatrix.transpose(),x),v(c),n))
+    p1 = new Graphics(fig1)
+	.xRange([1,72*(1+n)])
+	.yRange([1,72*(1+n)])
+	.axes({xLabel:"",yLabel:""})
+    	.matrixPlot(mm)
 }
-circhist()
+leeteration(4)
 </script>
   </body>
 </html>

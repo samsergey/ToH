@@ -198,3 +198,11 @@
     fill:white;
     stroke:none;
 }
+
+.matrixPlot .negatives {
+    fill : navy;
+}
+
+.matrixPlot .positives {
+    fill : indianred;
+}

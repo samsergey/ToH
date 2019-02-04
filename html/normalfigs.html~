@@ -29,6 +29,19 @@
 	fill:darkgreen;
 	fill-opacity:0.1;
     }
+    .label {
+	font-size: 100%;
+    }
+    .polarMesh {
+	stroke: gray;
+	stroke-width:0.5;
+    }
+    .wrapped {
+	stroke: indianred;
+	stroke-width:2;
+	fill:orange;
+	fill-opacity:0.2;
+    }
 </style>
   </head>
     <body>
@@ -119,12 +132,17 @@ function angleHist(m,n)
 
 function angleDistPDF(m)
 {
-    return a => (a >= 180) ? 0 : 1/Math.sqrt(Math.PI)*gamma(m/2)/gamma((m-1)/2)*Math.pow(Math.sin(a/180*Math.PI),m-2)
+    var A = gamma(m/2)/gamma((m-1)/2)/sqrt(pi) 
+    return a => {
+	if (a < 0) return angleDistPDF(m)(-a)
+	if (a >= 180) return angleDistPDF(m)(a-180)
+	return deg2rad(A*Math.pow(Math.sin(deg2rad(a)),m-2))
+    }
 }
 
 function angleDistCDF(m)
 {
-    return a => integrate(angleDistPDF(m),[0,a])/180*Math.PI
+    return a => integrate(angleDistPDF(m),[0,a])
 }
 
 function draw(m,n)
@@ -175,20 +193,22 @@ function draw3()
 
 function Quantiles()
 {
-    new Graphics(fig1)
+    p = new Graphics(fig1)
 	.xRange([2,11])
 	.yAxisType('log')
-	.discretePlot(m => angleDistCDF(m)(15),[2,11])
+	.yRange([1e-7,1e-1])
+	.discretePlot(m => angleDistCDF(m)(15),[2,12])
     	.axes({xLabel:'размерность пространства',
 	       yLabel:'доля сонаправленных векторов',
-	       yTickFormat:fmt.normal})
+	       yTicks: false})
+    range(1,7).forEach(n => p.label(10+sup(-n),{'at':[1,0.1**n]}).line([[2,0.1**n],[1.9,0.1**n]]))
 }
 
 //Quantiles()
 
 function Normal2d()
 {
-    var n = 100
+    var n = 100000
     var xs = Normal(0,1).samples(n)
     var ys = Normal(0,1).samples(n)
     var pts = xs.zipWith(ys,(x,y)=>[x,y])
@@ -203,8 +223,38 @@ function Normal2d()
 	.label("σ",{'at':[0.6,0.3]})
 }
 
-Normal2d()
+//Normal2d()
 
+function Cycling(distr,opts)
+{
+    opts = opts || {}
+    var N = opts['winding'] || 10
+    var a = opts['rmax'] || 0.26
+    var  p = new Graphics(fig1)
+	.xRange([-a,a])
+    	.yRange([-a,a])
+    range(0,a+a/10,a/10)
+	.map(r => p.polarPlot(x=>r,{'class':'polarMesh'}))
+    range(0,2*pi,pi/20)
+	.map(phi => p.line([[0,0],[a*sin(phi),a*cos(phi)]],{'class':'polarMesh'}))
+        
+//    p.polarPlot(distr.PDF,{ 'domain':[-10*pi,10*pi],
+//			    'plotPoints' : 3600})
+    p.polarPlot(cycling(distr,N),{ 'class':'wrapped',
+		    'plotPoints' : 360,
+		    'domain':[-pi,pi],
+		    'filled':true})
+    range(0,360,45)
+	.map(x => p.label(x+"°",{'at':[1.09*a*cos(deg2rad(x))-0.015,1.05*a*sin(deg2rad(x))-0.004]}))
+}
+
+
+
+//Cycling(Normal(0,6),{'rmax':0.19})
+//Cycling(Exponential(1/6),{'winding':10})
+//var gam = 2
+//Cycling({'PDF': x => 1/(pi*gam)/(1+(x/gam)**2)},{'winding':1000,'rmax':0.25})
+//Cycling(Pareto(1,1/10),{'winding':100})
 </script>
   </body>
 </html>

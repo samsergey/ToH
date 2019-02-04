@@ -624,7 +624,7 @@ function Uniform([a,b])
 	domain : [a,b] || [0,1]
     })
     res.support   = [a,b]
-    res.PDF = pdf(res,x => 1)
+    res.PDF = pdf(res,x => 1/(b-a))
     res.CDF = cdf(res,d3.scaleLinear().range([0,1]).domain([a,b]))
     res.quantile  = quantileFun(d3.scaleLinear().range([a,b]).domain([0,1]))
     res.mean      = (b + a)/2
@@ -752,3 +752,8 @@ function randomInteger(n)
 }
 
 
+function cycling(distr,N)
+{
+    var N = N || 100
+    return x => range(-N,N).sum(k=>distr.PDF(x+2*pi*k),0)
+}

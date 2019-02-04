@@ -82,13 +82,23 @@
     .cycles .label {
 	font-family:times;
     }
+    .polarMesh {
+	stroke: gray;
+	stroke-width:0.5;
+    }
+    .angular .line {
+	fill:darkorange;
+	stroke:red
+    }
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='500'></svg>
+    <svg id='fig1' width='400' height='500'></svg>
+    <svg id='fig2' width='500' height='500'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
+var fig2 = d3.select("#fig2")
 
 function PoissonSamples()
 {
@@ -800,7 +810,7 @@ function matrix()
     m.forEach((r,y) => r.forEach((c,x) => drawCell(x,y,c)))  
 }
 
-matrix()
+//matrix()
 //var ps = vmul(mpow(leelaMatrix,1000),[1].repeat(72))
 // распределение длительности игры
 function leela1()
@@ -947,6 +957,40 @@ function leela6(n,m,how)
 }
 
 //leela6(200,1000,cell)
+
+function circhist()
+{
+    h = new Histogram(1).fromList(Gamma(13,0.6)
+				  .samples(1000)
+				  .map(x => Math.round(x) % 24)
+				 )
+    new Graphics(fig1)
+	.xRange([0,24])
+	.yRange([0,0.1])
+	.histogram(h,{'type':'PDF'})
+	.axes({xLabel:"время суток (час)",
+	       yLabel:"частота обращения в полицию"})
+	.gridLines({x:[h.mean]})
+	.label("среднее арифметическое",{at:[h.mean-1/2,40],angle:90})
+
+    var p = new Graphics(fig2)
+	.xRange([-0.1,0.1])
+	.yRange([-0.1,0.1])
+	.polarPlot(a => h.PDF(((a)/(2*pi)*24+12) % 24),
+		   {'class':"angular",
+		    'plotPoints':400,
+		    'domain':[0,2*pi]})
+    var a = 0.1
+    range(0,a+a/10,a/10)
+	.map(r => p.polarPlot(x=>r,{'class':'polarMesh'}))
+    range(0,2*pi,pi/12)
+	.map(phi => p.line([[0,0],[a*sin(phi),a*cos(phi)]],{'class':'polarMesh'}))
+        
+    range(1,25)
+	.map(x => p.label(x,{'at':[1.09*a*cos(-x/12*pi+pi/2+pi/24),1.05*a*sin(-x/12*pi+pi/2+pi/24)]}))
+    
+}
+circhist()
 </script>
   </body>
 </html>

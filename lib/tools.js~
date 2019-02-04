@@ -81,6 +81,10 @@ Array.prototype.rotate = function() {
     return [this.last()].concat(this.most())
 }
 
+Array.prototype.close = function() {
+    return this.concat([this[0]])
+}
+
 
 Array.prototype.mapappend = function(f) {
     var res = []
@@ -103,10 +107,10 @@ var snd = x => x[1]
 var length = x => x.length
 
 
-Array.prototype.sum = function(f)
+Array.prototype.sum = function(f,s0)
 {
     var ff = f || (x => x)
-    return this.reduce((res,x) => res + ff(x),0)
+    return this.reduce((res,x) => res + ff(x),s0===null?0:s0)
 }
 
 Array.prototype.reversed = function()
@@ -264,6 +268,10 @@ Array.prototype.dot = function(v)
     return res
 }
 
+Array.prototype.max = function()
+{
+    return this.reduce((res,x) => max(res,x))
+}
 
 
 function repeat(n,action)

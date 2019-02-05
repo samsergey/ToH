@@ -53,7 +53,7 @@ function inv(M){
     // (c) Add 2 rows
     
     //if the matrix isn't square: exit (error)
-    if(M.length !== M[0].length){console.error("inv : matrix is non square");}
+    if(M.length !== M[0].length){return;}
     
     //create the identity matrix (I), and a copy (C) of the original
     var i=0, ii=0, j=0, dim=M.length, e=0, t=0;
@@ -100,7 +100,7 @@ function inv(M){
             //get the new diagonal
             e = C[i][i];
             //if it's still 0, not invertable (error)
-            if(e==0){console.error("inv : matrix is not invertable")}
+            if(e==0){return}
         }
         
         // Scale this row down by e (so we have a 1 on the diagonal)
@@ -129,7 +129,7 @@ function inv(M){
             }
         }
     }
-
+    
     //we've done all operations, C should be the identity
     //matrix I should be the inverse:
     return I;

@@ -73,9 +73,13 @@
 	stroke-opacity:0.01;
 	stroke-width:0.3;
     }
+    .matrixPlot .zeros {
+	fill:gray;
+    }
     .matrixPlot .positives {
 	fill:navy;
     }
+
     .cycles .bar {
 	fill:darkred;
 	fill-opacity: 0.7;
@@ -94,7 +98,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='500'></svg>
+    <svg id='fig1' width='500' height='300'></svg>
     <svg id='fig2' width='500' height='500'></svg>
     <script>
     
@@ -788,11 +792,13 @@ function leela()
     return step
 }
 
+const cells = range(0,71)
+
 function showMatrix()
 {
     p1 = new Graphics(fig1)
-	.axes({xLabel:"",yLabel:""})
-    	.matrixPlot(mpow(leelaMatrix,1))
+    	.matrixPlot(mpow(leelaMatrix,5))
+    	.axes({xLabel:"",yLabel:"",xTicks:10})
 }
 
 //showMatrix()
@@ -801,12 +807,12 @@ function showMatrix()
 function leela1()
 {
     var step = leela()
-    hs.add(nestWhileList(step,1,s=>s!=68,250).length)
+    hs.add(nestWhileList(step,1,s=>s!=68,200).length)
     p1.cleanPaper().histogram(hs,{'type':'PDF'})
 }
 /*
 var f = Exponential(1/54)
-var hs = new Histogram(5)
+var hs = new Histogram(10)
 var p1 = new Graphics(fig1)
     .xRange([0,250])
     .yRange([0,0.025])
@@ -842,19 +848,15 @@ function game(n)
     return nestWhileList(leela(),1,s=>s!=68,n||200)
 }
 
-function leela3(n)
+function collectCycles(n)
 {
-    n = min(n, 300)
     return cycles => {
-	var step = leela()
-	var run = game(n)
-	var rots = nestList(l => l.rotate(),run.tail(),n-2).tail()
-	var ls = rots.map(r => run.zipWith(r,(x,y)=>x==y?[1,x]:0))
-	    .mapappend(x=>x)
+	recurrence(game(n),id)
+	    .mapappend(id)
 	    .splitOn(0)
-	    .filter(x => x.length>3)
-	    .map(x=>x.map(snd).toString())
-	ls.forEach(c => addTo(cycles, c.toString()))
+	    .filter(x => x.length>=4)
+	    .map(x=>x.toString())
+	    .forEach(c => addTo(cycles, c))
 	return cycles
     }
 }
@@ -868,20 +870,20 @@ function addTo(c,x)
 }
 function leela4(n,m)
 {
-    var res = [], cs = nest(leela3(n),{},m)
+    var res = [], cs = nest(collectCycles(n),{},m)
     for(var b in cs)
-	if (cs[b]>50)
+	if (cs[b]>10)
 	    res.push([cs[b],b])
     len = s => s.split(",").length
     cycles = {
 	'raw':res,
 	'total':res.map(fst).sum(),
-	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(10),
-	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(10)
+	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(5),
+	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(5)
     }
     var N = cycles.total
     var p1 = new Graphics(fig1,{'class':'cycles'})
-	.xRange([0,0.5])
+	.xRange([0,0.1])
 	.yRange([0,10])
 	.axes({xLabel:"вероятность цикла в партии",
 	       xTicks : 5,
@@ -889,12 +891,12 @@ function leela4(n,m)
 	       yAxis : false})
     cycles.frequent
 	.forEach(([f,c],i) =>
-		 p1.rectangle(0,9-i+0.1,f/m,0.8,{'class':'bar'})
-		 .label(c.replace(/,/g,'→'),{'at':[f/m+0.01,9-i+0.4]}))
+		 p1.rectangle(0,9-i+0.1,f/m/2,0.8,{'class':'bar'})
+		 .label(c.replace(/,/g,'→'),{'at':[f/m/2+0.01,9-i+0.4]}))
 
 }
 
-//leela4(300,2000)
+leela4(300,10000)
 
 function cell(x){
     r = ceil(x/9)
@@ -919,47 +921,70 @@ function leela5(n,how)
 }
 //leela5(100000,circ)
 
-function leela6(n,m,how)
-{
-    how = how||circ
-    var res = [], cs = nest(leela3(n),{},m)
-    for(var b in cs)
-	if (cs[b]>20)
-	    res.push([cs[b],b])
-    len = s => s.split(",").length
-    cycles = {
-	'raw':res,
-	'total':res.map(fst).sum(),
-	'frequent':res.sorted((x,y)=>Number(y[0]) - Number(x[0])).take(10),
-	'longest':res.sorted((x,y)=>len(y[1]) - len(x[1])).take(10)
-    }
-    var pts=cycles.frequent.map(c => c[1].split(",").map(Number))
-    var p = new Graphics(fig1,{'class':'leela'})
-	.xRange([0,10])
-	.yRange([0,10])
 
-    pts.forEach(ps=> p.listPlot(ps.close().map(how),{'joined':true}))
+function v(c) {
+    var res = [0].repeat(72)
+    res[c]=1
+    return res
 }
-
-//leela6(200,1000,cell)
-
-    function v(c) {
-	var res = [0].repeat(72)
-	res[c]=1
-	return res
-    }
 
 
 function leeteration(n)
 {
-    mm = range(0,71).mapappend(c => nestList(x => vmul(leelaMatrix.transpose(),x),v(c),n))
+    mm = cells.mapappend(c => nestList(x => vmul(leelaMatrix.transpose(),x),v(c),n))
     p1 = new Graphics(fig1)
 	.xRange([1,72*(1+n)])
 	.yRange([1,72*(1+n)])
 	.axes({xLabel:"",yLabel:""})
     	.matrixPlot(mm)
 }
-leeteration(4)
+//leeteration(4)
+
+function prob(ch)
+{
+    return ch.zip(ch.tail()).reduce((res,[i,j]) => res*leelaMatrix[i][j],cellFreqs[ch[0]])
+}
+
+function findChains(chs) {
+    return chs
+	.filter(ch => ch.head() != 67)
+	.flatMap(ch => cells.map(j => ch.concat([j])))
+	.filter(ch => ch.last() != 67)
+	.sorted((x,y) => prob(y)-prob(x))
+	.take(30)
+}
+
+function recurrence(lst,out)
+{
+    var out = out || (a => 1)
+    function dist(a,b)
+    {
+	return a==b ? out(a) : 0
+    }
+    var res = [], rot = lst.copy()
+    lst.tail().forEach(() => {
+	rot.push(rot[0])
+	rot.shift()
+	res.push(lst.zipWith(rot,dist))
+    })
+    return res
+}
+
+function recPlot(n,s)
+{
+    var g = nestList(leela(),1,n)
+    new Graphics(fig1)
+	.matrixPlot(recurrence(g))
+}
+
+function times()
+{
+    var h = new Histogram().fromMap(mpow(leelaMatrix,100)[0].map(x=>1/x))
+    new Graphics(fig1)
+	.histogram(h)
+	.axes({})
+}
+//times()
 </script>
   </body>
 </html>

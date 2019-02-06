@@ -906,9 +906,7 @@ function prob(ch)
 }
 
 function findChains(chs) {
-    return best(20,chs
-		.filter(ch => ch.last() != 67)
-		.mapappend(ch => cells.skip(68).map(j => ch.concat([j]))))
+    return best(100,chs.mapappend(ch => cells.skip(1).map(j => ch.concat([j]))))
 }
 
 function best(n,chs) {
@@ -1004,20 +1002,21 @@ function leela4()
 
 function leela41()
 {
-    h = new Histogram(0.01)
+    h = new Histogram(0.025)
 	.fromList(chains.map(x=>x[1]*40))
     var p1 = new Graphics(fig1,{'class':'cycles'})
 	.xRange([0,0.3])
-	.yRange([0.99,1000])
+	.yRange([1,10000])
 	.yAxisType('log')
-	.histogram(h,{'kind':'stairs'})
 	.histogram(h,{'kind':'bars'})
-	.axes({xLabel:"вероятность цепочки в партии",
+	.axes({xLabel:"вероятность встретить цепочку в партии",
 	       yLabel:"количество цепочек",
 	       xTicks : 5,
 	       xTickFormat : fmt.percent,
 	       yTicks:false})
-    var tks=[0,1,2,3]
+    for(var b in h.data)
+	p1.label
+    var tks=[0,1,2,3,4]
     function pow10(n)
     {
 	if (n ==0) return "1"

@@ -22,6 +22,11 @@
 	stroke-width : 2;
 	stroke-width : 1.5;
         }
+    .life .B1 .line {
+	stroke : indianred;
+	stroke-width : 2;
+	stroke-opacity : 0.7;
+        }
     .gridLines {
 	stroke : blue;
 	stroke-opacity:0.25;
@@ -103,7 +108,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='400' height='400'></svg>
+    <svg id='fig1' width='500' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -696,22 +701,37 @@ function happyMarkovHist(opts)
 
 function queueProcess()
 {
-    var g = PoissonProcess(1/2)
-    var q1 = range(100).map(g).accumsum()
-    var q2 = range(100).map(g).accumsum()
-    return new Graphics(fig1,{'class':'life'})
-	.xRange([1,100])
-	.yRange([0,30])
+    p1.cleanPaper()
 	.listPlot(q1,{'class':'A','points':false,'joined':true})
 	.listPlot(q2,{'class':'B','points':false,'joined':true})
-    	.axes({xLabel : 'время',
-	       yLabel : 'перемещение очереди (шаги)',
-	       xTicks : 5,
-	       xTickFormat : d3.format('i'),
-	       yTickFormat : d3.format('i')})
+
 }
 
-//queueProcess()
+var g = PoissonProcess(1/2)
+var q1 = range(100).map(g).accumsum().map((x,i)=>[i,x])
+var q2 = range(100).map(g).accumsum().map((x,i)=>[i,x])
+var p1 = new Graphics(fig1,{'class':'life'}).cleanPaper()
+    .xRange([1,100])
+    .yRange([0,30])
+    .axes({xLabel : 'время',
+	   yLabel : 'перемещение очереди (шаги)',
+	   xTicks : 5,
+	   xTickFormat : d3.format('i'),
+	   yTickFormat : d3.format('i')})
+    .gridLines({y:[20]})
+
+function readKey(e)
+{
+    console.log(e.keyCode)
+    if (e.keyCode==37) q1 = q1.map(([i,x])=>[i-1,x])
+    if (e.keyCode==39) q1 = q1.map(([i,x])=>[i+1,x])
+    if (e.keyCode==40) q1 = q1.map(([i,x])=>[i,x-1])
+    if (e.keyCode==38) q1 = q1.map(([i,x])=>[i,x+1])
+    queueProcess()
+}
+queueProcess()
+window.addEventListener("keydown",readKey,true)
+
 
 function queueHist()
 {
@@ -800,9 +820,10 @@ const cells = range(0,72)
 function showMatrix()
 {
     p1 = new Graphics(fig1)
-    	.matrixPlot(mmul(leelaId,leelaMatrix))
+    	.matrixPlot(leelaMatrix)
 	.yAxisType('inverted')
     	.axes({xLabel:"",yLabel:"",xTicks:10})
+	.rectangle(1,69,1,-1,{'fill':'red'})
 }
 
 function game(n)
@@ -822,7 +843,7 @@ function leela1()
 {
     var step = leela()
     hs.add(game(400).length)
-    p1.cleanPaper()//.histogram(hs,{'type':'PDF'})
+    p1.cleanPaper().histogram(hs,{'type':'PDF'})
 	.listPlot(ts,{'joined':true,'points':false})
 }
 
@@ -831,14 +852,11 @@ function timing()
 {
     var m = Id(72)
     return nestList(() => {m = mmul(leelaMatrix,m); return m[0][67]},0,250)
-    new Graphics(fig1)
-	.listPlot(ts,{'joined':true,'points':false})
 }
 /*
 ts = timing()
 
-var f = Exponential(1/54)
-var hs = new Histogram(6)
+var hs = new Histogram(1)
 var p1 = new Graphics(fig1)
     .xRange([0,250])
     .yRange([0,0.03])
@@ -848,27 +866,22 @@ var p1 = new Graphics(fig1)
 	   yTicks:3})
 
 window.setInterval(leela1,1)
-*/
 
-function leela2()
+*/
+function leela2(n)
 {
-    hs.add(s=step(s))
-    p1.cleanPaper().histogram(hs,{'type':'PDF'})
+    hs = new Histogram(1).fromList(infiniteGame(n))
+    new Graphics(fig1)
+	.xRange([1,73])
+	.yRange([0,0.05])
+	.axes({xLabel:"номер клетки",
+	       yLabel:"вероятность",
+	       yTickFormat:fmt.percent,
+	       yTicks:5}).histogram(hs,{'type':'PDF'})
+	.listPlot(invariant.map((x,i)=>[i+3/2,x]))
 }
 
-var hs = new Histogram(1)
-p1 = new Graphics(fig1)
-    .xRange([1,73])
-    .yRange([0,0.05])
-    .axes({xLabel:"номер клетки",
-	   yLabel:"вероятность",
-	   yTickFormat:fmt.percent,
-	   yTicks:5})
-var step = leela()
-var s=1
-window.setInterval(leela2,1)
-
-
+//leela2(100000)
 
 function cell(x){
     r = ceil(x/9)

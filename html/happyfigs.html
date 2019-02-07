@@ -108,7 +108,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig1' width='400' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -704,16 +704,15 @@ function queueProcess()
     p1.cleanPaper()
 	.listPlot(q1,{'class':'A','points':false,'joined':true})
 	.listPlot(q2,{'class':'B','points':false,'joined':true})
-
 }
 
-var g = PoissonProcess(1/2)
-var q1 = range(100).map(g).accumsum().map((x,i)=>[i,x])
-var q2 = range(100).map(g).accumsum().map((x,i)=>[i,x])
+var g = PoissonProcess(1/25)
+var q1 = range(500).map(g).accumsum().map((x,i)=>[i/10,x])
+var q2 = range(500).map(g).accumsum().map((x,i)=>[i/10,x])
 var p1 = new Graphics(fig1,{'class':'life'}).cleanPaper()
-    .xRange([1,100])
-    .yRange([0,30])
-    .axes({xLabel : 'время',
+    .xRange([1,50])
+    .yRange([0,20])
+    .axes({xLabel : 'время (мин)',
 	   yLabel : 'перемещение очереди (шаги)',
 	   xTicks : 5,
 	   xTickFormat : d3.format('i'),

@@ -86,6 +86,7 @@
     }
     .cycles .label {
 	font-family:times;
+	font-size:90%;
     }
     .polarMesh {
 	stroke: gray;
@@ -102,7 +103,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='400' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -799,7 +800,7 @@ const cells = range(0,72)
 function showMatrix()
 {
     p1 = new Graphics(fig1)
-    	.matrixPlot(leelaId)
+    	.matrixPlot(mmul(leelaId,leelaMatrix))
 	.yAxisType('inverted')
     	.axes({xLabel:"",yLabel:"",xTicks:10})
 }
@@ -814,7 +815,6 @@ function infiniteGame(n)
     return nestList(leela(),1,n)
 }
 
-
 //showMatrix()
 //var ps = vmul(mpow(leelaMatrix,1000),[1].repeat(72))
 // распределение длительности игры
@@ -822,14 +822,26 @@ function leela1()
 {
     var step = leela()
     hs.add(game(400).length)
-    p1.cleanPaper().histogram(hs,{'type':'PDF'})
+    p1.cleanPaper()//.histogram(hs,{'type':'PDF'})
+	.listPlot(ts,{'joined':true,'points':false})
+}
+
+
+function timing()
+{
+    var m = Id(72)
+    return nestList(() => {m = mmul(leelaMatrix,m); return m[0][67]},0,250)
+    new Graphics(fig1)
+	.listPlot(ts,{'joined':true,'points':false})
 }
 /*
+ts = timing()
+
 var f = Exponential(1/54)
-var hs = new Histogram(1)
+var hs = new Histogram(6)
 var p1 = new Graphics(fig1)
     .xRange([0,250])
-    .yRange([0,0.025])
+    .yRange([0,0.03])
     .axes({xLabel:"длительнось партии в шагах",
 	   yLabel:"распределение вероятности",
 	   yTickFormat:fmt.percent,
@@ -843,7 +855,7 @@ function leela2()
     hs.add(s=step(s))
     p1.cleanPaper().histogram(hs,{'type':'PDF'})
 }
-/*
+
 var hs = new Histogram(1)
 p1 = new Graphics(fig1)
     .xRange([1,73])
@@ -855,7 +867,7 @@ p1 = new Graphics(fig1)
 var step = leela()
 var s=1
 window.setInterval(leela2,1)
-*/
+
 
 
 function cell(x){
@@ -944,14 +956,14 @@ function times()
 	.axes({})
 }
 //times()
-
+/*
 var chains = [4,5,6].mapappend(
     n=>cells.mapappend(
 	x=>nest(findChains,[[x]].transpose(),n-1).map(
 	    c => [c,prob(c)])))
     .filter(p => p[1]>0.0001)
     .sorted((x,y)=>y[1]-x[1])
-
+*/
 function collectChains()
 {
     s = leela()(s)
@@ -984,9 +996,9 @@ window.setInterval(collectChains,1)
 function leela4()
 {
     var p1 = new Graphics(fig1,{'class':'cycles'})
-	.xRange([0,0.3])
+	.xRange([0,0.5])
 	.yRange([0,10])
-	.axes({xLabel:"вероятность цикла в партии",
+	.axes({xLabel:"вероятность встретить цепочку в партии",
 	       xTicks : 5,
 	       xTickFormat : fmt.percent,
 	       yAxis : false})
@@ -995,7 +1007,7 @@ function leela4()
 		 p1.rectangle(0,9-i+0.1,f*41,0.8,
 			      {'class':'bar'})
 		 .label(c.map(x=>x+1).toString().replace(/,/g,'→'),
-			{'at':[f*41+0.05,9-i+0.4]}))
+			{'at':[f*41+0.025,9-i+0.4]}))
 }
 
 //leela4()
@@ -1014,8 +1026,6 @@ function leela41()
 	       xTicks : 5,
 	       xTickFormat : fmt.percent,
 	       yTicks:false})
-    for(var b in h.data)
-	p1.label
     var tks=[0,1,2,3,4]
     function pow10(n)
     {
@@ -1027,7 +1037,8 @@ function leela41()
 		.line([[-0.005,10**n],[0,10**n]]))
 }
 
-leela41()
+//leela41()
+
 
 
 </script>

@@ -108,7 +108,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig1' width='400' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -698,22 +698,21 @@ function happyMarkovHist(opts)
 }
 
 //happyMarkovHist({p:0.9,p2:0.6})
-
+/*
 function queueProcess()
 {
     p1.cleanPaper()
 	.listPlot(q1,{'class':'A','points':false,'joined':true})
 	.listPlot(q2,{'class':'B','points':false,'joined':true})
-
 }
 
-var g = PoissonProcess(1/2)
-var q1 = range(100).map(g).accumsum().map((x,i)=>[i,x])
-var q2 = range(100).map(g).accumsum().map((x,i)=>[i,x])
+var g = PoissonProcess(1/25)
+var q1 = range(500).map(g).accumsum().map((x,i)=>[i/10,x])
+var q2 = range(500).map(g).accumsum().map((x,i)=>[i/10,x])
 var p1 = new Graphics(fig1,{'class':'life'}).cleanPaper()
-    .xRange([1,100])
-    .yRange([0,30])
-    .axes({xLabel : 'время',
+    .xRange([1,50])
+    .yRange([0,20])
+    .axes({xLabel : 'время (мин)',
 	   yLabel : 'перемещение очереди (шаги)',
 	   xTicks : 5,
 	   xTickFormat : d3.format('i'),
@@ -729,9 +728,9 @@ function readKey(e)
     if (e.keyCode==38) q1 = q1.map(([i,x])=>[i,x+1])
     queueProcess()
 }
-queueProcess()
-window.addEventListener("keydown",readKey,true)
-
+//queueProcess()
+//window.addEventListener("keydown",readKey,true)
+*/
 
 function queueHist()
 {
@@ -777,6 +776,83 @@ var h = new Histogram().fromList(d)
 new Graphics(fig1)
     h.QQPlot(Geometric)
 */
+
+function MM1(l,m,h)
+{
+    var q = []
+    var pin = PoissonProcess(l)
+    var pout = PoissonProcess(m)
+    return () => {
+	q = q.map(x => x+1)
+	if (pin()==1)
+	    q.unshift(-1)
+	if (q.length > 0 && pout()==1)
+	{
+	    h.add(q.pop())
+	}
+	return q.length
+    }
+}
+
+function MG1(l,g)
+{
+    var q = []
+    var pin = PoissonProcess(l)
+    var pout = GeneralProcess(g)
+    return () => {
+	if (pin()==1)
+	    q.unshift(0)
+	if (q.length > 0 && pout()==1)
+	{
+	    h.add(q.pop())
+	    q = q.map(x => x+1)
+	}
+	return q.length
+    }
+}
+
+function q1(l,m)
+{
+    h = new Histogram()
+    var r = l/m
+    var gen = MM1(l,m,h)
+    var d = range(100000).map(gen)
+    w = d.splitBy(x => x==0)
+	.filter(x=>x.length>0)
+	.map(x => x.length)
+    hw = new Histogram().fromList(w)
+    new Graphics(fig1)
+	.xRange([1,40])
+	.histogram(hw,{'type':'PDF'})
+//	.plot(Exponential(m-l).PDF)
+	.plot(t=>1/(t*sqrt(r))*exp(-(l+m)*t)*BesselI1(2*t*sqrt(l*m)))
+	.axes({})
+}
+//q1(l=1/2,m=1/1.5)
+
+function q2(l,a,b,h)
+{
+    var gen = MG1(l,Gamma(a,b))
+    var d = range(100000).map(gen)
+    w = d.splitBy(x => x==0)
+	.filter(x=>x.length>0)
+	.map(x => x.length)
+    hw=hw.addList(w)
+    //return
+    new Graphics(fig1)
+	.xRange([0,20])
+	.yRange([0,0.1])
+	.plot(Gamma(m*m/v,m/v).PDF)
+	.plot(Exponential(1).PDF)
+	.gridLines({x:[Gamma(m*m/v,m/v).mean,Exponential(1).mean]})
+//	.histogram(hw,{'type':'PDF'})
+	.axes({})
+}
+var m = 0.5, v=16, h = new Histogram(), hw = new Histogram() 
+//repeat(100,()=>q2(1,m*m/v,m/v))
+
+
+////////////////////////////////////////////////////////////
 
 function leela()
 {
@@ -1051,6 +1127,7 @@ function leela41()
 }
 
 //leela41()
+
 
 
 

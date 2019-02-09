@@ -108,7 +108,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='400' height='400'></svg>
+    <svg id='fig1' width='500' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -838,20 +838,26 @@ function q2(l,a,b,h)
 	.filter(x=>x.length>0)
 	.map(x => x.length)
     hw=hw.addList(w)
-    //return
-    new Graphics(fig1)
-	.xRange([0,20])
-	.yRange([0,0.1])
-	.plot(Gamma(m*m/v,m/v).PDF)
-	.plot(Exponential(1).PDF)
-	.gridLines({x:[Gamma(m*m/v,m/v).mean,Exponential(1).mean]})
+    return
+    new Graphics(fig1,{'class':'life'})
+	.xRange([0.01,6])
+	.yRange([0,1])
+	.plot(x=>Gamma(m*m/v,m/v).PDF(x)+0.01,{'class':'A','plotPoints':400})
+	.plot(Exponential(l).PDF,{'class':'B'})
+	.line([[0.5,0],[0.5,Gamma(m*m/v,m/v).PDF(0.5)+0.01]],{'class':'A'})
+	.line([[1,0],[1,1/exp(1)]],{'class':'B'})
 //	.histogram(hw,{'type':'PDF'})
-	.axes({})
+	.axes({xLabel:"периоды времени",
+	      yLabel:"плотность вероятности"})
 }
-var m = 0.5, v=16, h = new Histogram(), hw = new Histogram() 
-//repeat(100,()=>q2(1,m*m/v,m/v))
+var m = 0.5, v=16, h = new Histogram(), hw = new Histogram()
+//var m = 0.5, v=2, h = new Histogram(), hw = new Histogram() 
+//repeat(10,()=>q2(1,m*m/v,m/v))
 
-
+function q3()
+{
+    
+}
 ////////////////////////////////////////////////////////////
 
 function leela()

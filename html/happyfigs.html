@@ -48,11 +48,21 @@
     }
     .year {
 	stroke: blue;
-	fill: blue;
+	stroke-opacity:0.75;
+    }
+    .myear {
+	stroke: blue;
+	stroke-opacity:0.75;
+	stroke-dasharray:5,5;
     }
     .month {
-	stroke: indianred;
-	fill: indianred;
+	stroke: darkred;
+	stroke-opacity:0.75;
+    }
+    .mmonth {
+	stroke: darkred;
+	stroke-opacity:0.75;
+	stroke-dasharray:5,5;
     }
     .week {
 	stroke: darkgreen;
@@ -796,15 +806,20 @@ function queueTimes(l,m)
 
 function queueTimes2(l,m,s)
 {
+    var f = x=>toGamma(1/m,s/m/m).PDF(x+0.5)+0.2/x
     new Graphics(fig1)
-	.xRange([0.001,1])
-	.yRange([0,10])
-	.plot(Exponential(l).PDF,{'class':'year'})
-	.plot(x=>toGamma(1/m,s/m/m).PDF(x+0.5)+0.2/x,{'class':'week'})
-	.axes({})
+	.xRange([0.001,30])
+	.yRange([0,0.2])
+	.plot(x=>Exponential(l).PDF(x),{'class':'year'})
+	.plot(x=>f(x),{'class':'month'})
+	.axes({xLabel: "периоды времени (минуты)",
+	       yLabel: "плотность вероятности",
+	       yTicks: 5})
+	.line([[1/l,0],[1/l,Exponential(l).PDF(1/l)]],{'class':'myear'})
+	.line([[1/m,0],[1/m,f(1/m)]],{'class':'mmonth'})
 }
 
-queueTimes2(10,15,4)
+//queueTimes2(10/60,15/60,9)
 
 function queueTimes3(l,m,s)
 {

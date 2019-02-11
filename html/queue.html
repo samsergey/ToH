@@ -1,77 +1,248 @@
+<!DOCTYPE html>
 <html>
-    <canvas id='paper' width=600 height=500  style='border:dotted black 1px;'></canvas>
-    <br/>
-    <p id='output'></p>
+    <head>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='leela.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .life .A .line {
+	stroke : navy;
+	stroke-opacity : 0.5;
+	stroke-width : 1.5;
+        }
+    .life .B .line {
+	stroke : indianred;
+	stroke-width : 2;
+	stroke-width : 1.5;
+        }
+    .life .B1 .line {
+	stroke : indianred;
+	stroke-width : 2;
+	stroke-opacity : 0.7;
+        }
+    .gridLines {
+	stroke : blue;
+	stroke-opacity:0.25;
+    }
+    .deadline .label {
+	fill-opacity:1;
+	stroke-width:0;
+    }
+    .above {
+	stroke: none;
+	fill: #E74C3C;
+    }
+    .below {
+	stroke: none;
+	fill: #2471A3;
+    }
+    .zero {
+	stroke: black;
+    }
+    .year {
+	stroke: blue;
+	stroke-opacity:0.75;
+    }
+    .myear {
+	stroke: blue;
+	stroke-opacity:0.75;
+	stroke-dasharray:5,5;
+    }
+    .month {
+	stroke: darkred;
+	stroke-opacity:0.75;
+    }
+    .mmonth {
+	stroke: darkred;
+	stroke-opacity:0.75;
+	stroke-dasharray:5,5;
+    }
+    .week {
+	stroke: darkgreen;
+	fill: darkgreen;
+    }
+    .samples  {
+	fill:#B00;
+	stroke:white;
+	stroke-opacity:0.5;
+    }
+    .halve1  {
+	fill:pink;
+	fill-opacity:0.5;
+	stroke:black;
+    }
+    .halve2  {
+	fill:palegreen;
+	fill-opacity:0.5;
+	stroke:black;
+    }
+    .leela {
+	stroke : navy;
+	stroke-opacity:0.01;
+	stroke-width:0.3;
+    }
+    .matrixPlot .zeros {
+	fill:gray;
+    }
+    .matrixPlot .positives {
+	fill:navy;
+    }
+
+    .cycles .bar {
+	fill:darkred;
+	fill-opacity: 0.7;
+    }
+    .cycles .label {
+	font-family:times;
+	font-size:90%;
+    }
+    .polarMesh {
+	stroke: gray;
+	stroke-width:0.5;
+    }
+    .angular .line {
+	fill:darkorange;
+	stroke:red;
+    }
+    .stairs {
+	stroke:darkorange;
+	stroke-width:5;
+    }
+    .queue {
+	fill:navy;
+	fill-opacity:0.5;
+    }
+</style>
+  </head>
+    <body>
+    <svg id='fig1' width='500' height='300'></svg>
     <script>
+    
+var fig1 = d3.select("#fig1")
 
-var ctx = paper.getContext('2d');
-var w = 600, h=500;
 
-function PoissonProcess(lambda)
+function MG1(T,l,g)
 {
-    var p = 1, e = Math.exp(-lambda);
-    return () => {
-	p *= Math.random();
-	if (p < e)
-	{
-	    p = 1;
-	    return 1;
-	}
-	else
-	    return 0;
+    var t = 0, w = 0, q = [], res = []
+    var out = g.generator
+    var newComer = Exponential(l).generator
+    while (t<T) {
+	t += newComer() 
+	while (q.length > 0 && q[0] < t)
+	    res.push([q.shift(), q.length])
+	res.push([t, q.length])
+	q.push((q.last() || t) + out())
     }
+    return res
 }
 
-function GaussRandom(m,s)
+function runQueue(d,W,B)
 {
-    var x = 2*Math.random()-1;
-    return () => {
-	var y,w;
-	do {
-	    y = 2*Math.random()-1;
-	    w = x*x + y*y;
-	} while (w >= 1)
-	x = y;
-	return m + s * x * Math.sqrt(-2*Math.log(w)/w);
-    }
+    var q = [], t0 = 0
+    d.forEach(([t,n])=>{
+	q = q.map(x => x+(t-t0))
+	if (q.length == 0 && n > 0) b = t
+	if (q.length > 0 && n == 0) { B.add(t-b); b = 0; }
+	if (n > q.length) q.unshift(0)
+	if (q.length>0 && n < q.length) W.add(q.pop())
+	t0 = t
+    })
 }
 
-function showLists(l1, l2){
-    for(var i = 1; i<l1.length;i ++)
-    {
-	var x1 = l1[i], x2 = l2[i];
-	ctx.beginPath();
-	ctx.strokeStyle = x1-x2 > 0? 'red' : 'blue';
-	ctx.moveTo(i, h/2);
-	ctx.lineTo(i, h/2-(x1 - x2));
-	ctx.stroke();
-    };
-}
+const MM1 = (T,l,m) => MG1(T,l,Exponential(m))
 
-var p = PoissonProcess(1)
-function next(x)
+function queueExample(q)
 {
-    return x + p()
+    new Graphics(fig1)
+	.listStairsPlot(q,{'filled':true,
+			   'joined':false,
+			   'class':'queue'})
+	.axes({xLabel:"время (часы)",
+	       yTicks:5,
+	       yLabel:"длина очереди"})
 }
 
-var x1 = [0,0]
-var x2 = [0,0]
+//queueExample(MM1(8,10,15))
+//queueExample(MG1(8,10,toGamma(1/15,4/15/15)))
 
-function step() {
-    x1.unshift(next(x1[0]));
-    if (x1.length > w) x1.pop();
-    x2.unshift(next(x2[0]));
-    if (x2.length > w) x2.pop();
-    clean()
-    showLists(x1.map(x => x*5),x2.map(x => x*5));
+function queueStat(q)
+{
+    W = new Histogram(0.01)
+    B = new Histogram(0.01)
+    repeat(10,()=>runQueue(q,W,B))
 }
 
-function clean() {
-    ctx.clearRect(0,0,w,h);
+//queueStat(MM1(100,10,15))
+//queueStat(MG1(1000,10,toGamma(1/15,4/15/15)))
+
+function toGamma(m,v)
+{
+    return Gamma(m*m/v,m/v)
 }
 
-window.setInterval(step,0)
+function queueTimes(l,m)
+{
+    var ws=[],bs=[],r=l/m
+    var W,B
+    range(-1,1,0.25).forEach(
+	x => {
+	    v = 10**x/m/m
+	    W = new Histogram(0.1)
+	    B = new Histogram(0.1)
+	    repeat(50,()=>runQueue(MG1(100,l,toGamma(1/m,v)),W,B))
+	    ws.push([sqrt(10**x), W.mean/B.mean])
+	    console.log(x)	    
+	})
+    new Graphics(fig1)
+	.listPlot(ws)
+	.axes({xLabel:"относительная вариация"})
+	.gridLines({y:[1]})
+}
 
+//queueTimes(10,15)
 
-  </script>
+function queueTimes2(l,m,s)
+{
+    var f = x=>toGamma(1/m,s/m/m).PDF(x+0.5)+0.2/x
+    new Graphics(fig1)
+	.xRange([0.001,30])
+	.yRange([0,0.2])
+	.plot(x=>Exponential(l).PDF(x),{'class':'year'})
+	.plot(x=>f(x),{'class':'month'})
+	.axes({xLabel: "периоды времени (минуты)",
+	       yLabel: "плотность вероятности",
+	       yTicks: 5})
+	.line([[1/l,0],[1/l,Exponential(l).PDF(1/l)]],{'class':'myear'})
+	.line([[1/m,0],[1/m,f(1/m)]],{'class':'mmonth'})
+}
+
+//queueTimes2(10/60,15/60,9)
+
+function queueTimes3(l,m,s)
+{
+    var r=l/m
+    var W,B
+    v = s/m/m
+    W = new Histogram(0.1)
+    B = new Histogram(0.1)
+    repeat(100,()=>runQueue(MG1(100,l,toGamma(1/m,v)),W,B))
+
+    new Graphics(fig1)
+	.xRange([0,5])
+	.yRange([0,2])
+	.histogram(W,{'type':'PDF'})
+	.histogram(B,{'type':'PDF','class':'queue'})
+	.axes({})
+    
+}
+//queueTimes3(10,15,2)
+    </script>
+  </body>
 </html>

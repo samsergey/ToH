@@ -123,7 +123,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig1' width='600' height='200'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -154,8 +154,8 @@ function queueExample(q)
 }
 
 //queueExample(MM1(10,15).runTime(10))
-//queueExample(DD1(1,2).runTime(10))
-//queueExample(MG1(10,toGamma(1/15,4/15/15)).runTime(8))
+//queueExample(MD1(10,12).runTime(10))
+queueExample(MG1(10,toGamma(1/15,9/15/15)).runTime(10))
 
 function queueStat(q)
 {
@@ -192,7 +192,7 @@ function queueTimes(l,m)
 	.gridLines({y:[1]})
 }
 
-queueTimes(10,15)
+//queueTimes(10,15)
 
 function queueTimes2(l,m,s)
 {

@@ -169,7 +169,7 @@ function queueExample(q)
 	       yLabel:"длина очереди"})
 }
 
-//queueExample(MM1(10,15).runToTime(10))
+//queueExample(MM1(10,15,0.1).runToTime(10))
 //queueExample(MD1(10,13).runToTime(10))
 //queueExample(MG1(10,toGamma(1/15,9/15/15)).runToTime(10))
 
@@ -179,6 +179,52 @@ function queueStat(q)
     B = new Histogram(0.01)
     repeat(10,()=>runQueue(q,W,B))
 }
+
+function errors()
+{
+    var l = 10, m = 20
+    w = x => (m+l*(x**3-1))/(m-l)**2
+    var r = range(0,1.01,0.01)
+	.map(e => {
+	    W = new Histogram(0.01)
+	    queueStat(MM1(l,m,e).samples(1000));
+	    console.log(e)
+	    return [e,W.mean/w(0)]
+	})
+    new Graphics(fig1)
+	.yRange([0,w(1)/w(0)+1/2])
+	.xRange([0,1])
+	.listPlot(r)
+	.plot(e => w(e)/w(0))
+	.gridLines({y:[w(1)/w(0)]})
+	.axes({xLabel:"доля внеочерендников",
+	       xTickFormat : fmt.percent,
+	       xTicks:5,
+	       yTicks:false,
+	       yLabel:"время ожидания"})
+}
+errors()
+
+function errors2()
+{
+    var l = 10, m = 15
+    var r = range(11,30,1)
+	.map(m => {
+	    W = new Histogram(0.01)
+	    queueStat(MM1(l,m,1).samples(10000));
+	    console.log(m)
+	    return [m/(m-l)**2,W.mean]
+	})
+    new Graphics(fig1)
+	.yRange([0,20])
+	.xRange([0,20])
+	.listPlot(r.map(([x,y])=>[1/x,1/y]))
+	.plot(m => m)
+	.axes({xLabel:"доля внеочередников",
+	       yTicks:5,
+	       yLabel:"время ожидания"})
+}
+//errors2()
 
 //queueStat(MM1(10/60,15/60).samples(10000))
 //queueStat(MG1(10,toGamma(1/15,9/15/15)).samples(10000))
@@ -208,7 +254,7 @@ function queueTimes(l,m)
 	.gridLines({y:[1]})
 }
 
-queueTimes(10,15)
+//queueTimes(10,15)
 
 function queueTimes2(l,m,s)
 {

@@ -116,6 +116,7 @@
 	stroke-width:5;
     }
     .queue {
+	stroke:navy;
 	fill:navy;
 	fill-opacity:0.5;
     }
@@ -127,21 +128,6 @@
     
 var fig1 = d3.select("#fig1")
 
-
-function MG1(T,l,g)
-{
-    var t = 0, w = 0, q = [], res = []
-    var out = g.generator
-    var newComer = Exponential(l).generator
-    while (t<T) {
-	t += newComer() 
-	while (q.length > 0 && q[0] < t)
-	    res.push([q.shift(), q.length])
-	res.push([t, q.length])
-	q.push((q.last() || t) + out())
-    }
-    return res
-}
 
 function runQueue(d,W,B)
 {
@@ -156,8 +142,6 @@ function runQueue(d,W,B)
     })
 }
 
-const MM1 = (T,l,m) => MG1(T,l,Exponential(m))
-
 function queueExample(q)
 {
     new Graphics(fig1)
@@ -169,8 +153,9 @@ function queueExample(q)
 	       yLabel:"длина очереди"})
 }
 
-//queueExample(MM1(8,10,15))
-//queueExample(MG1(8,10,toGamma(1/15,4/15/15)))
+//queueExample(MM1(10,15).runTime(10))
+//queueExample(DD1(1,2).runTime(10))
+//queueExample(MG1(10,toGamma(1/15,4/15/15)).runTime(8))
 
 function queueStat(q)
 {
@@ -179,8 +164,8 @@ function queueStat(q)
     repeat(10,()=>runQueue(q,W,B))
 }
 
-//queueStat(MM1(100,10,15))
-//queueStat(MG1(1000,10,toGamma(1/15,4/15/15)))
+//queueStat(MM1(10,15).samples(10000))
+//queueStat(MG1(10,toGamma(1/15,9/15/15)).samples(10000))
 
 function toGamma(m,v)
 {
@@ -196,17 +181,18 @@ function queueTimes(l,m)
 	    v = 10**x/m/m
 	    W = new Histogram(0.1)
 	    B = new Histogram(0.1)
-	    repeat(50,()=>runQueue(MG1(100,l,toGamma(1/m,v)),W,B))
+	    runQueue(MG1(l,toGamma(1/m,v)).samples(100000),W,B)
 	    ws.push([sqrt(10**x), W.mean/B.mean])
 	    console.log(x)	    
 	})
     new Graphics(fig1)
 	.listPlot(ws)
 	.axes({xLabel:"относительная вариация"})
+	.plot(x => ((r+l*m*x*x/m/m)/(2*(m-l))+1/m)*(m-l))
 	.gridLines({y:[1]})
 }
 
-//queueTimes(10,15)
+queueTimes(10,15)
 
 function queueTimes2(l,m,s)
 {
@@ -232,7 +218,7 @@ function queueTimes3(l,m,s)
     v = s/m/m
     W = new Histogram(0.1)
     B = new Histogram(0.1)
-    repeat(100,()=>runQueue(MG1(100,l,toGamma(1/m,v)),W,B))
+    runQueue(MG1(l,toGamma(1/m,v)).samples(1000),W,B)
 
     new Graphics(fig1)
 	.xRange([0,5])

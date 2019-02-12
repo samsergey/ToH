@@ -123,27 +123,11 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='600' height='200'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
 
-
-function insideQueue()
-{
-    q1=PoissonProcess(50/60).runToVal(20).map(([t,x])=>[t,20-x])
-    q2=PoissonProcess(50/60).runToVal(20).map(([t,x])=>[t,20-x])
-    new Graphics(fig1)
-	.xRange([0,max(q1.last()[0],q2.last()[0])])
-	.yRange([0,20])
-	.listStairsPlot(q1,{'class':'year'})
-    	.listStairsPlot(q2,{'class':'week'})
-	.axes({xLabel:"время (минуты)",
-	       yTicks:5,
-	       yLabel:"длина очереди"})
-}
-
-//insideQueue()
 
 function runQueue(d,W,B)
 {
@@ -169,9 +153,9 @@ function queueExample(q)
 	       yLabel:"длина очереди"})
 }
 
-//queueExample(MM1(10,15).runToTime(10))
-//queueExample(MD1(10,13).runToTime(10))
-//queueExample(MG1(10,toGamma(1/15,9/15/15)).runToTime(10))
+//queueExample(MM1(10,15).runTime(10))
+//queueExample(MD1(10,12).runTime(10))
+queueExample(MG1(10,toGamma(1/15,9/15/15)).runTime(10))
 
 function queueStat(q)
 {
@@ -180,12 +164,8 @@ function queueStat(q)
     repeat(10,()=>runQueue(q,W,B))
 }
 
-//queueStat(MM1(10/60,15/60).samples(10000))
+//queueStat(MM1(10,15).samples(10000))
 //queueStat(MG1(10,toGamma(1/15,9/15/15)).samples(10000))
-
-const Waiting = (l,m,x) => ((l/m+l*m*x*x/m/m)/(2*(m-l))+1/m)
-
-const WaitingDL = (l,m,x) => l/m*(x^2 - 1)/2 + 1
 
 function toGamma(m,v)
 {
@@ -195,20 +175,24 @@ function toGamma(m,v)
 function queueTimes(l,m)
 {
     var ws=[],bs=[],r=l/m
+    var W,B
+    range(-1,1,0.25).forEach(
+	x => {
+	    v = 10**x/m/m
+	    W = new Histogram(0.1)
+	    B = new Histogram(0.1)
+	    runQueue(MG1(l,toGamma(1/m,v)).samples(100000),W,B)
+	    ws.push([sqrt(10**x), W.mean/B.mean])
+	    console.log(x)	    
+	})
     new Graphics(fig1)
-	.xRange([0,2])
-    	.yRange([0,1.5])
-	.plot(x => 1+r/2*(x-1))
-	.axes({xLabel:"относительная вариация",
-	       yLabel:"отношение B/W",
-	       yTickValues : [0],
-	       xTickValues:[0,1],
-	       xTickFormat:fmt.int,
-	       yTickFormat:fmt.int})
+	.listPlot(ws)
+	.axes({xLabel:"относительная вариация"})
+	.plot(x => ((r+l*m*x*x/m/m)/(2*(m-l))+1/m)*(m-l))
 	.gridLines({y:[1]})
 }
 
-queueTimes(10,15)
+//queueTimes(10,15)
 
 function queueTimes2(l,m,s)
 {

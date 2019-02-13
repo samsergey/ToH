@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+    <meta charset="UTF8">
     <script src='../lib/d3.js'></script>
     <script src='../lib/analysis.js'></script>
     <script src='../lib/functions.js'></script>
@@ -182,12 +183,12 @@ function queueStat(q)
 
 function errors()
 {
-    var l = 10, m = 20
+    var l = 10, m = 15
     w = x => (m+l*(x**3-1))/(m-l)**2
-    var r = range(0,1.01,0.01)
+    var r = range(0,1.1,0.1)
 	.map(e => {
 	    W = new Histogram(0.01)
-	    queueStat(MM1(l,m,e).samples(1000));
+	    queueStat(MM1(l,m,e).samples(100000));
 	    console.log(e)
 	    return [e,W.mean/w(0)]
 	})
@@ -203,7 +204,7 @@ function errors()
 	       yTicks:false,
 	       yLabel:"время ожидания"})
 }
-errors()
+//errors()
 
 function errors2()
 {
@@ -225,6 +226,35 @@ function errors2()
 	       yLabel:"время ожидания"})
 }
 //errors2()
+
+function errors3()
+{
+    var l = 10, m = 15
+    w = x => (m+l*(x**3.5-1))/(m-l)**2
+    var r = range(0,1.01,0.01)
+	.map(e => {
+	    W = new Histogram(0.01)
+	    B = new Histogram(0.01)
+	    queueStat(MM1(l,m,e).samples(100000));
+	    console.log(e)
+	    return [e,W.mean,B.mean]
+	})
+    new Graphics(fig1)
+	.yRange([0,40])
+	.xRange([0,1])
+	.listPlot(r.map(([e,w,b])=>[e,w*60]),{'class':'above'})
+    	.listPlot(r.map(([e,w,b])=>[e,b*60]))
+//	.plot(e => w(e),{'class':'myear'})
+	.gridLines({y:[w(1)*60]})
+	.axes({xLabel:"доля внеочередников",
+	       xTickFormat : fmt.percent,
+	       xTicks:5,
+	       yTicks:5,
+	       yLabel:"время (минуты)"})
+	.label("W",{at:[0.7,28]})
+    	.label("B",{at:[0.7,8]})
+}
+errors3()
 
 //queueStat(MM1(10/60,15/60).samples(10000))
 //queueStat(MG1(10,toGamma(1/15,9/15/15)).samples(10000))

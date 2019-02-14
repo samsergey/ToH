@@ -124,7 +124,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='500' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -146,118 +146,56 @@ function insideQueue()
 
 //insideQueue()
 
-function runQueue(d,W,B)
+function runQueue(d)
 {
-    var q = [], t0 = 0
-    d.forEach(([t,n])=>{
-	q = q.map(x => x+(t-t0))
-	if (q.length == 0 && n > 0) b = t
-	if (q.length > 0 && n == 0) { B.add(t-b); b = 0; }
-	if (n > q.length) q.unshift(0)
-	if (q.length>0 && n < q.length) W.add(q.pop())
-	t0 = t
+    var W = new Histogram(0.05)
+    var B = new Histogram(0.05)
+    var fst, t0 = 0, prevn = 0,i=0
+    d.forEach(([t,q])=>{
+	var n = q.length
+	if (n == 1 && prevn == 0) b = t
+	if (n == 0 && prevn == 1) { B.add(t-b); b = 0; }
+	if (n > 0 && q[0].n>i) {i = q[0].n; W.add(q[0].o-q[0].i)}
+	prevn = n
     })
+    return [W,B]
 }
 
-function queueExample(q)
+function showQueue(d)
 {
-    new Graphics(fig1)
-	.listStairsPlot(q,{'filled':true,
-			   'joined':false,
-			   'class':'queue'})
+    var p = new Graphics(fig1)
+	.xRange([0,d.last()[0]])
+	.yRange([0,10])
 	.axes({xLabel:"время (часы)",
 	       yTicks:5,
 	       yLabel:"длина очереди"})
+    var col = n => ['orange','navy','navy','navy'][n % 4]
+    for(i=0; i<d.length-1; i++)
+    {
+	t1 = d[i][0]
+	t2 = d[i+1][0]
+	d[i][1].forEach((c,j) => p.rectangle(t1,j,t2-t1,1,{'opacity':2*(c.o-c.i)}))
+    }
 }
 
-//queueExample(MM1(10,15,0.1).runToTime(10))
-//queueExample(MD1(10,13).runToTime(10))
-//queueExample(MG1(10,toGamma(1/15,9/15/15)).runToTime(10))
+//showQueue(MM1(10,14,0).runToTime(10))
+//showQueue(MM1(10,15,1).runToTime(10))
+//showQueue(MD1(10,13).runToTime(10))
+//showQueue(MG1(10,toGamma(1/15,4/15/15)).runToTime(10))
 
-function queueStat(q)
+function blat()
 {
-    W = new Histogram(0.01)
-    B = new Histogram(0.01)
-    repeat(10,()=>runQueue(q,W,B))
-}
-
-function errors()
-{
-    var l = 10, m = 15
-    w = x => (m+l*(x**3-1))/(m-l)**2
-    var r = range(0,1.1,0.1)
-	.map(e => {
-	    W = new Histogram(0.01)
-	    queueStat(MM1(l,m,e).samples(100000));
-	    console.log(e)
-	    return [e,W.mean/w(0)]
-	})
+    var w,b
+    pts= range(0,1.1,0.1).map(e => {
+	console.log(e)
+	return [e,runQueue(MM1(10,15,e).samples(10000))[0].mean]
+    })
     new Graphics(fig1)
-	.yRange([0,w(1)/w(0)+1/2])
-	.xRange([0,1])
-	.listPlot(r)
-	.plot(e => w(e)/w(0))
-	.gridLines({y:[w(1)/w(0)]})
-	.axes({xLabel:"доля внеочерендников",
-	       xTickFormat : fmt.percent,
-	       xTicks:5,
-	       yTicks:false,
-	       yLabel:"время ожидания"})
+	.yRange([0,0.4])
+	.listPlot(pts)
+	.axes({})
 }
-//errors()
-
-function errors2()
-{
-    var l = 10, m = 15
-    var r = range(11,30,1)
-	.map(m => {
-	    W = new Histogram(0.01)
-	    queueStat(MM1(l,m,1).samples(10000));
-	    console.log(m)
-	    return [m/(m-l)**2,W.mean]
-	})
-    new Graphics(fig1)
-	.yRange([0,20])
-	.xRange([0,20])
-	.listPlot(r.map(([x,y])=>[1/x,1/y]))
-	.plot(m => m)
-	.axes({xLabel:"доля внеочередников",
-	       yTicks:5,
-	       yLabel:"время ожидания"})
-}
-//errors2()
-
-function errors3()
-{
-    var l = 10, m = 15
-    w = x => (m+l*(x**3.5-1))/(m-l)**2
-    var r = range(0,1.01,0.01)
-	.map(e => {
-	    W = new Histogram(0.01)
-	    B = new Histogram(0.01)
-	    queueStat(MM1(l,m,e).samples(100000));
-	    console.log(e)
-	    return [e,W.mean,B.mean]
-	})
-    new Graphics(fig1)
-	.yRange([0,40])
-	.xRange([0,1])
-	.listPlot(r.map(([e,w,b])=>[e,w*60]),{'class':'above'})
-    	.listPlot(r.map(([e,w,b])=>[e,b*60]))
-//	.plot(e => w(e),{'class':'myear'})
-	.gridLines({y:[w(1)*60]})
-	.axes({xLabel:"доля внеочередников",
-	       xTickFormat : fmt.percent,
-	       xTicks:5,
-	       yTicks:5,
-	       yLabel:"время (минуты)"})
-	.label("W",{at:[0.7,28]})
-    	.label("B",{at:[0.7,8]})
-}
-errors3()
-
-//queueStat(MM1(10/60,15/60).samples(10000))
-//queueStat(MG1(10,toGamma(1/15,9/15/15)).samples(10000))
+//blat()
 
 const Waiting = (l,m,x) => ((l/m+l*m*x*x/m/m)/(2*(m-l))+1/m)
 
@@ -305,22 +243,14 @@ function queueTimes2(l,m,s)
 
 function queueTimes3(l,m,s)
 {
-    var r=l/m
-    var W,B
-    v = s/m/m
-    W = new Histogram(0.1)
-    B = new Histogram(0.1)
-    runQueue(MG1(l,toGamma(1/m,v)).samples(1000),W,B)
+    [w,b] = runQueue(MG1(l,toGamma(1/m,s/m/m),0.5).samples(10000))
 
     new Graphics(fig1)
-	.xRange([0,5])
-	.yRange([0,2])
-	.histogram(W,{'type':'PDF'})
-	.histogram(B,{'type':'PDF','class':'queue'})
+	.histogram(w,{'type':'PDF'})
 	.axes({})
     
 }
-//queueTimes3(10,15,2)
+//queueTimes3(10,12,1)
     </script>
   </body>
 </html>

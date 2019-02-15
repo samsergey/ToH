@@ -795,42 +795,54 @@ function randomInteger(n)
     return () => floor(random()*n)
 }
 
-
 function cycling(distr,N)
 {
     var N = N || 100
     return x => range(-N,N).sum(k=>distr.PDF(x+2*pi*k),0)
 }
 
+function Client(i,o,n)
+{
+    this.i = i
+    this.o = o
+    this.n = n
+}
+
+Client.prototype.add = function (o) {
+    this.o += o
+    return this
+}
+    
 function GG1(gi,go,e)
 {
-    this.t = 0
-    this.q = []
+    var t = 0, q = [], n = 1
     var out = go.generator
     var newComer = gi.generator
     var newt = newComer()
-    err = e ? Bernoulli(1-e).generator : () => false
+    impatient = e ? Bernoulli(1-e).generator : () => false
     this.next = function () {
-	while (this.q.length > 0 && this.q[0] < this.t+newt)
-	    return [this.q.shift(), this.q.length]
-	this.t += newt
-	if (this.q.length==0)
-	    this.q.push(this.t + out())
-	else if (err())
+	while (q.length > 0 && q[0].o < t+newt)
+	    return [q.shift().o, q.copy()]
+	t += newt
+	var o = out()
+	if (q.length==0)
+	    q.push(new Client(t,t + o,n++))
+	else if (impatient())
 	{
-	    dt = out()
-	    t0 = this.q[0]
-	    this.q = this.q.map(x=>x+dt)
-	    this.q.unshift(t0+dt)
+	    var fst = q.shift()
+	    for(var i = 0; i<q.length; i++)
+		q[i].o=q[i].o+o
+	    q.unshift(new Client(t, fst.o+o, n++))
+	    q.unshift(fst)
 	}
 	else
-	    this.q.push(this.q.last() + out())
+	    q.push(new Client(t,q.last().o + o,n++))
 	newt = newComer()
-	return [this.t, this.q.length]
+	return [t, q.copy()]
     }
     this.reset = function () {
-	this.t = 0
-	this.q = []
+	t = 0
+	q = []
 	return this
     }
     this.samples = function (n) {
@@ -840,13 +852,13 @@ function GG1(gi,go,e)
     }
     this.runToTime = function (T) {
 	var res = []
-	while (this.t<T)
+	while (t<T)
 	    res.push(this.next())
 	return res
     }
     this.runToVal = function (N) {
 	var res = []
-	while (this.q.length<N)
+	while (q.length<N)
 	    res.push(this.next())
 	return res
     }

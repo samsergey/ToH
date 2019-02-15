@@ -117,8 +117,7 @@
 	stroke-width:5;
     }
     .queue {
-	fill:navy;
-	fill-opacity:0.5;
+	stroke-width:0.5;
     }
 </style>
   </head>
@@ -164,21 +163,24 @@ function showQueue(d)
 {
     var p = new Graphics(fig1)
 	.xRange([0,d.last()[0]])
-	.yRange([0,20])
+	.yRange([0,40])
 	.axes({xLabel:"время (часы)",
 	       yTicks:5,
 	       yLabel:"длина очереди"})
-    var col = n => n % 7==0?'orange':'navy'
+    var col = n => n % 10 == 0 ? 'blue' : 'orange'
     for(i=0; i<d.length-1; i++)
     {
 	t1 = d[i][0]
 	t2 = d[i+1][0]
-	d[i][1].forEach((c,j) => p.rectangle(t1,j,t2-t1,1,{'class':'queue'}))
+	d[i][1].forEach((c,j) => p.rectangle(t1,j,t2-t1,1
+					     ,{'fill':col(c.n),
+					       'class':'queue',
+					       'stroke':col(c.n)}))
     }
 }
 
-showQueue(MM1(10,12,0).runToTime(10))
-//showQueue(MM1(10,15,1).runToTime(10))
+//showQueue(MM1(10,11,0).samples(1000))
+showQueue(MM1(10,15,1).runToTime(10))
 //showQueue(MD1(10,13).runToTime(10))
 //showQueue(MG1(10,toGamma(1/15,9/15/15)).runToTime(10))
 

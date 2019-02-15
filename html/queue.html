@@ -117,7 +117,6 @@
 	stroke-width:5;
     }
     .queue {
-	stroke:navy;
 	fill:navy;
 	fill-opacity:0.5;
     }
@@ -165,34 +164,37 @@ function showQueue(d)
 {
     var p = new Graphics(fig1)
 	.xRange([0,d.last()[0]])
-	.yRange([0,10])
+	.yRange([0,20])
 	.axes({xLabel:"время (часы)",
 	       yTicks:5,
 	       yLabel:"длина очереди"})
-    var col = n => ['orange','navy','navy','navy'][n % 4]
+    var col = n => n % 7==0?'orange':'navy'
     for(i=0; i<d.length-1; i++)
     {
 	t1 = d[i][0]
 	t2 = d[i+1][0]
-	d[i][1].forEach((c,j) => p.rectangle(t1,j,t2-t1,1,{'opacity':2*(c.o-c.i)}))
+	d[i][1].forEach((c,j) => p.rectangle(t1,j,t2-t1,1,{'class':'queue'}))
     }
 }
 
-//showQueue(MM1(10,14,0).runToTime(10))
+showQueue(MM1(10,12,0).runToTime(10))
 //showQueue(MM1(10,15,1).runToTime(10))
 //showQueue(MD1(10,13).runToTime(10))
-//showQueue(MG1(10,toGamma(1/15,4/15/15)).runToTime(10))
+//showQueue(MG1(10,toGamma(1/15,9/15/15)).runToTime(10))
 
 function blat()
 {
-    var w,b
-    pts= range(0,1.1,0.1).map(e => {
+    var w,b,l=10,m=15,r=l/m
+/*    pts= range(0,0.6,0.1).map(e => {
 	console.log(e)
-	return [e,runQueue(MM1(10,15,e).samples(10000))[0].mean]
-    })
+	return [e,runQueue(MM1(l,m,e).samples(100000))[0].mean]
+    })*/
     new Graphics(fig1)
-	.yRange([0,0.4])
-	.listPlot(pts)
+	.yRange([0,1/m/(1-r)/(1-r)])
+	.xRange([0,1])
+	.plot(p => (1-p)/m/(1-(1-p)*r) + p/m/(1-(1-p)*r)/(1-p*r-(1-p)*r))
+    	.plot(p => 1/m/(1-p*r)/(1-p*r-(1-p)*r))
+	//.listPlot(pts)
 	.axes({})
 }
 //blat()
@@ -243,7 +245,7 @@ function queueTimes2(l,m,s)
 
 function queueTimes3(l,m,s)
 {
-    [w,b] = runQueue(MG1(l,toGamma(1/m,s/m/m),0.5).samples(10000))
+    [w,b] = runQueue(MG1(l,toGamma(1/m,s/m/m),0).samples(10000))
 
     new Graphics(fig1)
 	.histogram(w,{'type':'PDF'})

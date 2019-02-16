@@ -119,10 +119,21 @@
     .queue {
 	stroke-width:0.5;
     }
+    .vip {
+	stroke:orange;
+    }
+    .label {
+	font-size:80%;
+    }
+    .lower2 {
+	fill:blue;
+	fill-opacity:0.6;
+	stroke:navy;
+    }
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='400'></svg>
+    <svg id='fig1' width='400' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -146,8 +157,8 @@ function insideQueue()
 
 function runQueue(d)
 {
-    var W = new Histogram(0.05)
-    var B = new Histogram(0.05)
+    var W = new Histogram(0.01)
+    var B = new Histogram(0.01)
     d.forEach(([t,q,io])=>{
 	var n = q.length
 	if (n == 1 && io==1) b = t
@@ -180,29 +191,69 @@ function showQueue(d)
     }
 }
 
-//showQueue(MM1(10,11,0).runToTime(10))
-//showQueue(MM1(10,11,1).runToTime(10))
-//showQueue(MD1(10,15).runToTime(10))
-//showQueue(MG1(10,toGamma(1/15,5/15/15)).runToTime(10))
+//showQueue(MM1(10,12,0).runToTime(10))
+//showQueue(MM1(10,12,1).runToTime(10))
+//showQueue(MD1(10,12).runToTime(10))
+//showQueue(MG1(10,toGamma(1/12,5/12/12)).runToTime(10))
 
-function blat()
+function blat1()
 {
-    var w,b,l=10,m=15,r=l/m
-    pts= range(0,1.05,0.05).map(e => {
-	console.log(e)
-	r=runQueue(MM1(l,m,e).samples(100000))
-	return [e,r[0].mean,r[0].stdev]
-    })
+    var w,b,l=30/60,m=34/60,r=l/m
     new Graphics(fig1)
-	.yRange([0,0.5])
+	.yRange([0,140])
 	.xRange([0,1])
-//	.plot(p => (1-p)/m/(1-(1-p)*r) + p/m/(1-(1-p)*r)/(1-p*r-(1-p)*r))
-//    	.plot(p => 1/m/(1-p*r)/(1-p*r-(1-p)*r))
-	.listPlot(pts.map(x=>[x[0],x[1]]))
-	.listPlot(pts.map(x=>[x[0],x[2]]))
+	.plot(e => 1/(m-e*l),{'class':'vip'})
+    	.plot(e => m/(m-e*l)/(m - l))
+	.gridLines({y:[15]})
+	.axes({xLabel:"доля VIP-клиентов",
+	       xTickFormat : fmt.percent,
+	       yTicks : 5,
+	       yLabel:"среднее время ожидания (мин)"})
+	.label("обычные клиенты",{at:[0.7,20]})
+    	.label("VIP",{at:[0.7,5]})
+}
+blat1()
+
+function blat2()
+{
+    [w,b] = runQueue(MM1(30,34,1).samples(100000))
+    new Graphics(fig1)
+	.xRange([0,2])
+	.histogram(w,{'type':'PDF'})
+	.plot(Exponential(1/w.mean).PDF)
 	.axes({})
 }
-blat()
+//blat2()
+
+function blat3()
+{
+    [w,b] = runQueue(MM1(30,34,1).samples(100000))
+    lexp = new Histogram(0.01).fromDistribution(Exponential(1/w.mean),1000).LorenzCurve
+    lstack = w.LorenzCurve
+    new Graphics(fig1,{'class':'Lorentz'})
+	.xRange([0,1])
+    	.yRange([0,1])
+    	.listPlot([[0,0],[1,1]], {'filled':true,
+				  'points':false,
+				  'joined':true,
+				  'class':'upper'})
+	.listPlot(lexp, {'filled':true,
+			 'points':false,
+			 'joined':true,
+			 'class':'lower'})
+	.listPlot(lstack, {'filled':true,
+			   'points':false,
+			   'joined':true,
+			   'class':'lower2'})
+	.axes({xLabel : 'доля клиентов очереди',
+	       xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       yLabel : 'доля времени работы очереди',
+	       xTickValues:[0,0.25,0.5,0.75,1],
+	       yTickValues:[0,0.25,0.5,0.75,1]})
+
+}
+//blat3()
 
 const Waiting = (l,m,x) => ((l/m+l*m*x*x/m/m)/(2*(m-l))+1/m)
 

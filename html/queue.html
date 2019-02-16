@@ -122,7 +122,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='300'></svg>
+    <svg id='fig1' width='500' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -148,12 +148,11 @@ function runQueue(d)
 {
     var W = new Histogram(0.05)
     var B = new Histogram(0.05)
-    var fst, t0 = 0, prevn = 0,i=0
-    d.forEach(([t,q])=>{
+    d.forEach(([t,q,io])=>{
 	var n = q.length
-	if (n == 1 && prevn == 0) b = t
-	if (n == 0 && prevn == 1) { B.add(t-b); b = 0; }
-	if (n > 0 && q[0].n>i) {i = q[0].n; W.add(q[0].o-q[0].i)}
+	if (n == 1 && io==1) b = t
+	if (n == 0 && io==-1) { B.add(t-b); b = 0; }
+	if (io) W.add(io)
 	prevn = n
     })
     return [W,B]
@@ -163,43 +162,47 @@ function showQueue(d)
 {
     var p = new Graphics(fig1)
 	.xRange([0,d.last()[0]])
-	.yRange([0,40])
+	.yRange([0,20])
 	.axes({xLabel:"время (часы)",
 	       yTicks:5,
 	       yLabel:"длина очереди"})
-    var col = n => n % 10 == 0 ? 'blue' : 'orange'
+    var col = n => n % 7 == 0 ? 'blue' : 'orange'
     for(i=0; i<d.length-1; i++)
     {
 	t1 = d[i][0]
 	t2 = d[i+1][0]
-	d[i][1].forEach((c,j) => p.rectangle(t1,j,t2-t1,1
-					     ,{'fill':col(c.n),
-					       'class':'queue',
-					       'stroke':col(c.n)}))
+	d[i][1].forEach((c,j) => {
+	    p.rectangle(t1*1.0,j,max(0.01,t2-t1),1
+			,{'fill':col(cN(c)),
+			  'class':'queue',
+			  'stroke':col(cN(c))})
+	})
     }
 }
 
-//showQueue(MM1(10,11,0).samples(1000))
-showQueue(MM1(10,15,1).runToTime(10))
-//showQueue(MD1(10,13).runToTime(10))
-//showQueue(MG1(10,toGamma(1/15,9/15/15)).runToTime(10))
+//showQueue(MM1(10,11,0).runToTime(10))
+//showQueue(MM1(10,11,1).runToTime(10))
+//showQueue(MD1(10,15).runToTime(10))
+//showQueue(MG1(10,toGamma(1/15,5/15/15)).runToTime(10))
 
 function blat()
 {
     var w,b,l=10,m=15,r=l/m
-/*    pts= range(0,0.6,0.1).map(e => {
+    pts= range(0,1.05,0.05).map(e => {
 	console.log(e)
-	return [e,runQueue(MM1(l,m,e).samples(100000))[0].mean]
-    })*/
+	r=runQueue(MM1(l,m,e).samples(100000))
+	return [e,r[0].mean,r[0].stdev]
+    })
     new Graphics(fig1)
-	.yRange([0,1/m/(1-r)/(1-r)])
+	.yRange([0,0.5])
 	.xRange([0,1])
-	.plot(p => (1-p)/m/(1-(1-p)*r) + p/m/(1-(1-p)*r)/(1-p*r-(1-p)*r))
-    	.plot(p => 1/m/(1-p*r)/(1-p*r-(1-p)*r))
-	//.listPlot(pts)
+//	.plot(p => (1-p)/m/(1-(1-p)*r) + p/m/(1-(1-p)*r)/(1-p*r-(1-p)*r))
+//    	.plot(p => 1/m/(1-p*r)/(1-p*r-(1-p)*r))
+	.listPlot(pts.map(x=>[x[0],x[1]]))
+	.listPlot(pts.map(x=>[x[0],x[2]]))
 	.axes({})
 }
-//blat()
+blat()
 
 const Waiting = (l,m,x) => ((l/m+l*m*x*x/m/m)/(2*(m-l))+1/m)
 

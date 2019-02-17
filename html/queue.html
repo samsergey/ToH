@@ -240,8 +240,10 @@ function blat2()
 	.line([[16.7,0],[16.7,f(16.7)+0.003]],{'class':'mvip'})
 	.axes({xLabel:"время ожидания, мин",
 	       yLabel:"плотность вероятности"})
+	.label("FIFO",{'at':[20,0.03]})
+    	.label("FILO",{'at':[6,0.1]})
 }
-//blat2()
+blat2()
 
 function blat22()
 {

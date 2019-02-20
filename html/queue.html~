@@ -131,8 +131,8 @@
 </style>
   </head>
     <body>
-<!--    <svg id='fig1' width='700' height='250'></svg>-->
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='700' height='250'></svg>
+<!--    <svg id='fig1' width='400' height='300'></svg>-->
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -195,6 +195,7 @@ function showQueue(d,T)
     }
 }
 
+//showQueue(MM1(10,11).runToTime(8),8)
 //showQueue(MM1(30,34,0).runToTime(8),8)
 //showQueue(MM1(30,34,1).runToTime(8),8)
 //showQueue(MD1(30,34).runToTime(10))
@@ -339,8 +340,8 @@ function queueTimes3(l,m,s)
 
 function Little()
 {
-    [w,b,l]=runQueue(MM1(30,60).samples(100000),0.05)
-    rho=30/60
+    [w,b,l]=runQueue(MM1(15,32).samples(1000000),0.05)
+    rho=15/16
     new Graphics(fig1)
 	.histogram(l,{'class':'queueL','type':'PDF'})
 	.plot(Geometric0(1-rho).PMF)

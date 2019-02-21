@@ -120,8 +120,8 @@
 	stroke:darkorange;
 	stroke-dasharray:5,5;
     }    }
-    .label {
-	font-size:80%;
+    .Lorentz .label {
+	font-size:90%;
     }
     .lower2 {
 	fill:blue;
@@ -131,12 +131,24 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='700' height='250'></svg>
-<!--    <svg id='fig1' width='400' height='300'></svg>-->
+<!--    <svg id='fig1' width='700' height='250'></svg>-->
+   <svg id='fig1' width='400' height='400'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
 
+
+function Skellam() {
+    p = (m, k) => exp(-2*m)*BesselI(k,2*m)
+    var p = new Graphics(fig1)
+	.xRange([-10,10])
+    	.yRange([0,0.5])
+	.listPlot(range(-10,11).map(k => [k,p(1,abs(k))]))
+    	.listPlot(range(-10,11).map(k => [k,p(2,abs(k))]))
+        .listPlot(range(-10,11).map(k => [k,p(10,abs(k))]))
+	.axes({})
+}
+Skellam()
 
 function insideQueue()
 {
@@ -256,7 +268,7 @@ function blat22()
 function blat3()
 {
     [w,b] = runQueue(MM1(30,34,1).samples(100000))
-    lexp = new Histogram(0.01).fromDistribution(Exponential(1/w.mean),1000).LorenzCurve
+    lexp = new Histogram(0.01).fromDistribution(Exponential(1/w.mean),100000).LorenzCurve
     lstack = w.LorenzCurve
     new Graphics(fig1,{'class':'Lorentz'})
 	.xRange([0,1])
@@ -280,6 +292,8 @@ function blat3()
 	       xTickValues:[0,0.25,0.5,0.75,1],
 	       yTickValues:[0,0.25,0.5,0.75,1]})
 
+	.label("FIFO",{'at':[0.75,0.3]})
+    	.label("FILO",{'at':[0.85,0.1]})
 }
 //blat3()
 
@@ -340,7 +354,7 @@ function queueTimes3(l,m,s)
 
 function Little()
 {
-    [w,b,l]=runQueue(MM1(15,32).samples(1000000),0.05)
+    [w,b,l]=runQueue(MM1(15,16).samples(1000000),0.05)
     rho=15/16
     new Graphics(fig1)
 	.histogram(l,{'class':'queueL','type':'PDF'})
@@ -348,8 +362,13 @@ function Little()
 //	.histogram(w,{'class':'queueW','type':'PDF'})
 	.axes({})
 }
-Little()
+//Little()
 
+
+function C(c,r) {
+    return 1/(1+(1-r)*(fact(c)/pow(c*r,c))*range(0,c).sum(k=>pow(c*r,k)/fact(k)))
+}
+var r = 15/16
     </script>
   </body>
 </html>

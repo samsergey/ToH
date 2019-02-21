@@ -132,11 +132,24 @@
   </head>
     <body>
 <!--    <svg id='fig1' width='700' height='250'></svg>-->
-   <svg id='fig1' width='400' height='400'></svg>
+   <svg id='fig1' width='400' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
 
+
+function Skellam() {
+    p = (m, k) => exp(-2*m)*BesselI(k,2*m)
+    var p = new Graphics(fig1)
+	.xRange([-15,15])
+    	.yRange([0,0.1])
+    	.listPlot(range(-15,16).map(k => [k,p(10,abs(k))]),{'needles':true})
+	.axes({xLabel:"разница в шагах за минуту",
+	       yLabel:"вероятность",
+	       xTicks:5,
+	       yTickFormat:fmt.percent})
+}
+Skellam()
 
 function insideQueue()
 {
@@ -283,7 +296,7 @@ function blat3()
 	.label("FIFO",{'at':[0.75,0.3]})
     	.label("FILO",{'at':[0.85,0.1]})
 }
-blat3()
+//blat3()
 
 const Waiting = (l,m,x) => ((l/m+l*m*x*x/m/m)/(2*(m-l))+1/m)
 

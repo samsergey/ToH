@@ -132,7 +132,7 @@
   </head>
     <body>
 <!--    <svg id='fig1' width='700' height='250'></svg>-->
-   <svg id='fig1' width='400' height='400'></svg>
+   <svg id='fig1' width='400' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -141,12 +141,13 @@ var fig1 = d3.select("#fig1")
 function Skellam() {
     p = (m, k) => exp(-2*m)*BesselI(k,2*m)
     var p = new Graphics(fig1)
-	.xRange([-10,10])
-    	.yRange([0,0.5])
-	.listPlot(range(-10,11).map(k => [k,p(1,abs(k))]))
-    	.listPlot(range(-10,11).map(k => [k,p(2,abs(k))]))
-        .listPlot(range(-10,11).map(k => [k,p(10,abs(k))]))
-	.axes({})
+	.xRange([-15,15])
+    	.yRange([0,0.1])
+    	.listPlot(range(-15,16).map(k => [k,p(10,abs(k))]),{'needles':true})
+	.axes({xLabel:"разница в шагах за минуту",
+	       yLabel:"вероятность",
+	       xTicks:5,
+	       yTickFormat:fmt.percent})
 }
 Skellam()
 

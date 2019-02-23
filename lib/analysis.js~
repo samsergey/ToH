@@ -1,7 +1,13 @@
-function almostEqual(a,b)
+var epsilon = 1e-8
+
+function derivative(f) {
+    var dx = 1e-5
+    return x => (f(x+dx)-f(x-dx))/(2*dx)
+}
+
+function almostEqual(a,b,eps)
 {
-    m = abs(a + b)
-    return m < epsilon*epsilon || abs(b - b) < epsilon*m 
+    return abs(b - a) < (eps || epsilon)*abs(a + b)
 }
 
 function newton(f,df,x0,d)
@@ -41,16 +47,16 @@ function findRoot(f,x0,cond,eps,d)
 }
 
 var Integration = {
-    xs : [-1/3*sqrt(5 + 2*sqrt(10/7)),
-	  -1/3*sqrt(5 - 2*sqrt(10/7)),
+    xs : [-1/3*Math.sqrt(5 + 2*Math.sqrt(10/7)),
+	  -1/3*Math.sqrt(5 - 2*Math.sqrt(10/7)),
 	  0,
-	  1/3*sqrt(5 - 2*sqrt(10/7)),
-	  1/3*sqrt(5 + 2*sqrt(10/7))],
-    ws : [(322-13*sqrt(70))/900,
-	  (322+13*sqrt(70))/900,
+	  1/3*Math.sqrt(5 - 2*Math.sqrt(10/7)),
+	  1/3*Math.sqrt(5 + 2*Math.sqrt(10/7))],
+    ws : [(322-13*Math.sqrt(70))/900,
+	  (322+13*Math.sqrt(70))/900,
 	  128/225,
-	  (322+13*sqrt(70))/900,
-	  (322-13*sqrt(70))/900]
+	  (322+13*Math.sqrt(70))/900,
+	  (322-13*Math.sqrt(70))/900]
 }
 
 function gaussIntegrate(f,[a,b])
@@ -68,6 +74,6 @@ function integrate(f,[a,b],d,eps,i0)
     var il = gaussIntegrate(f,[a,c])
     var ir = gaussIntegrate(f,[c,b])
     var i1 = ir + il 
-    if (d > 50) return i1
-    return almostEqual(i0,i1) ? i1 : integrate(f,[a,c],d+1,eps,il) + integrate(f,[c,b],d+1,eps,ir)
+    if (d > 10) return i1
+    return almostEqual(i0,i1,eps) ? i1 : integrate(f,[a,c],d+1,eps,il) + integrate(f,[c,b],d+1,eps,ir)
 }

@@ -131,8 +131,8 @@
 </style>
   </head>
     <body>
-<svg id='fig1' width='700' height='250'></svg>
-<!--       <svg id='fig1' width='400' height='300'></svg>-->
+<!--       <svg id='fig1' width='700' height='250'></svg>-->
+<svg id='fig1' width='400' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -208,7 +208,7 @@ function showQueue(d,T)
     }
 }
 
-showQueue(MM1(15,30).runToTime(15),15)
+//showQueue(MM1(15,30).runToTime(15),15)
 //showQueue(MM1(30,34,0).runToTime(8),8)
 //showQueue(MM1(30,34,1).runToTime(8),8)
 //showQueue(MD1(30,34).runToTime(10))
@@ -378,6 +378,8 @@ function C(c,r) {
     return 1/(1+(1-r)*(fact(c)/pow(c*r,c))*range(0,c).sum(k=>pow(c*r,k)/fact(k)))
 }
 var r = 15/16
+
+
     </script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-    <meta charset="UTF8">
+    <meta charset="UTF-8">
     <script src='../lib/d3.js'></script>
     <script src='../lib/analysis.js'></script>
     <script src='../lib/functions.js'></script>
@@ -131,8 +131,8 @@
 </style>
   </head>
     <body>
-<!--    <svg id='fig1' width='700' height='250'></svg>-->
-   <svg id='fig1' width='400' height='300'></svg>
+<!--       <svg id='fig1' width='700' height='250'></svg>-->
+<svg id='fig1' width='400' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -149,7 +149,7 @@ function Skellam() {
 	       xTicks:5,
 	       yTickFormat:fmt.percent})
 }
-Skellam()
+//Skellam()
 
 function insideQueue()
 {
@@ -191,7 +191,7 @@ function showQueue(d,T)
     var p = new Graphics(fig1)
 	.xRange([0,T||d.last()[0]])
 	.yRange([0,30])
-	.axes({xLabel:"время, часы",
+	.axes({xLabel:"время, дни",
 	       yTicks:5,
 	       yLabel:"длина очереди"})
     var col = n => n % 7 == 0 ? 'blue' : 'orange'
@@ -208,7 +208,7 @@ function showQueue(d,T)
     }
 }
 
-//showQueue(MM1(10,11).runToTime(8),8)
+//showQueue(MM1(15,30).runToTime(15),15)
 //showQueue(MM1(30,34,0).runToTime(8),8)
 //showQueue(MM1(30,34,1).runToTime(8),8)
 //showQueue(MD1(30,34).runToTime(10))
@@ -353,15 +353,25 @@ function queueTimes3(l,m,s)
 }
 //queueTimes3(10,12,1)
 
+var dd =[[0.5,0.176048],[0.594604,0.159214],[0.707107,0.143746],[0.840896,0.129545],[1.,0.11652],[1.18921,0.104582],[1.41421,0.0936527],[1.68179,0.0836543],[2.,0.0745172],[2.37841,0.0661763],[2.82843,0.0585716],[3.36359,0.0516478],[4.,0.0453542],[4.75683,0.0396441],[5.65685,0.0344749],[6.72717,0.0298075],[8.,0.0256059],[9.51366,0.0218373],[11.3137,0.0184715],[13.4543,0.0154807],[16.,0.012839],[19.0273,0.0105223]]
+
 function Little()
 {
-    [w,b,l]=runQueue(MM1(15,16).samples(1000000),0.05)
-    rho=15/16
-    new Graphics(fig1)
-	.histogram(l,{'class':'queueL','type':'PDF'})
-	.plot(Geometric0(1-rho).PMF)
-//	.histogram(w,{'class':'queueW','type':'PDF'})
-	.axes({})
+   
+    cdf = t => 1-integrate(Busy(15,16),[0,t],{'maxDivisions':20})
+    var p = new Graphics(fig1)
+	.xRange([0.5,19])
+	.xAxisType('log')
+	.yRange([0,0.2])
+        .listLinePlot(dd)
+	.gridLines({y:range(0.05,0.25,0.05)})
+	.axes({xTickValues:[0.5,1,2,4,8,16],
+	       xTickFormat:fmt.int,
+	       yTickFormat:fmt.percent,
+	       xLabel:"время занятости, дни",
+	       yLabel:"вероятность",
+	       yTicks:5
+	      })
 }
 //Little()
 
@@ -370,6 +380,17 @@ function C(c,r) {
     return 1/(1+(1-r)*(fact(c)/pow(c*r,c))*range(0,c).sum(k=>pow(c*r,k)/fact(k)))
 }
 var r = 15/16
+
+pts = [[5,0],[6,2],[8,0]]
+new Graphics(fig1)
+    .xRange([0,20])
+    .yRange([0,6])
+    .plot(x=>listIntegralInterpolation(pts)(x))
+//    .plot(listIntegralInterpolationInv(pts))
+    .listLinePlot(pts.map(fst).zip(pts.map(snd).accumsum().tail()))
+    .listPlot(pts)
+    .axes({})
+
     </script>
   </body>
 </html>

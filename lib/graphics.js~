@@ -114,7 +114,8 @@ var fmt = {
     'normal' : null,
     'percent' : d3.format("." + max(0, d3.precisionFixed(0.05) - 2) + "%"),
     'int' : d3.format('i'),
-    'pow10' : n => "10"+sup(floor(log10(n)))
+    'pow10' : n => "10"+sup(floor(log10(n))),
+    'h:mm' : t=>`${floor(t/60)}:${t%60==0?"00":t%60}`
 }
 
 Graphics.prototype.clipPaper = function ()
@@ -158,8 +159,8 @@ Graphics.prototype.axes = function (opts)
 	xTickFormat : null,
 	yTickFormat : null,
 	'class'     : null,
-	xTickValues : null,
-	yTickValues : null,
+	xTickValues : 'automatic',
+	yTickValues : 'automatic',
 	yAxesReversed : false
     }
     var options = Object.assign(defaults, opts || {})    
@@ -183,7 +184,7 @@ Graphics.prototype.axes = function (opts)
 	this.xAxis = d3.axisBottom()
 	    .scale(this.X)
 	    .tickFormat(options.xTickFormat)
-	if (options.xTickValues == null)
+	if (options.xTickValues == 'automatic')
 	    this.xAxis = this.xAxis.ticks(options.xTicks)
 	else
 	    this.xAxis = this.xAxis.tickValues(options.xTickValues)
@@ -202,7 +203,7 @@ Graphics.prototype.axes = function (opts)
 	this.yAxis = d3.axisLeft()
 	    .scale(this.Y)
 	    .tickFormat(options.yTickFormat)
-	if (options.xTickValues == null)
+	if (options.yTickValues == 'automatic')
 	    this.yAxis = this.yAxis.ticks(options.yTicks)
 	else
 	    this.yAxis = this.yAxis.tickValues(options.yTickValues)
@@ -748,6 +749,7 @@ Graphics.prototype.rectangle = function (x,y,w,h,opts)
 	'class'  : null,
 	'parent' : null,
 	'fill'   : null,
+	'stroke' : null,
 	'opacity': null
     }
 
@@ -762,6 +764,8 @@ Graphics.prototype.rectangle = function (x,y,w,h,opts)
 	.attr("height",this.Y(y-h) - this.Y(y))
     if (options['fill'])
     	g.attr("fill",options['fill'])
+    if (options['stroke'])
+    	g.attr("stroke",options['stroke'])
     if (options['opacity'])
     	g.attr("opacity",options['opacity'])
     g.attr("class",options['class'])

@@ -35,7 +35,7 @@ function Histogram(s)
     
     this.add = function (x,n)
     {
-	var n = n || 1
+	var n = !n ? 1 : n
 
 	var bin
 	if (this.step == 'none')
@@ -43,9 +43,9 @@ function Histogram(s)
 	else
 	    bin = floor(x/this.step)*this.step+this.step/2
 	this.bins = this.bins.add(bin)
-	this.total += x
+	this.total += x*n
 	this.number += n
-	this.data[bin] = this.data[bin] + n || n
+	this.data[bin] = (this.data[bin] || 0) + n
 	this.maxBin = max(this.maxBin,bin)
 	this.minBin = min(this.minBin,bin)
 	this.maxValue = max(this.maxValue,this.data[bin])
@@ -77,7 +77,7 @@ function Histogram(s)
 	    bin = x
 	else
 	    bin = floor(x/this.step)*this.step+this.step/2
-	return this.data[bin]/this.number/this.step
+	return (this.data[bin] || 0)/this.number/this.step
     }
 
     this.quantileData = null
@@ -90,8 +90,8 @@ function Histogram(s)
 	    .accumsum()
 	
 	this.quantileData = res
-	    .map(x => x/res[res.length-1])
-	    .zip(this.bins.map(x => x-this.step/2))
+	    .map(x => x/res.last())
+	    .zip(this.bins.map(x => x-this.step/2).concat([h.maxBin+h.step/2]))
 	this.quantileFun = linearInterpolation(this.quantileData)
 	this.CDFFun = linearInterpolation(this.quantileData.map(x=>x.reversed()))
     }
@@ -129,24 +129,94 @@ isHistogram = function (x) {
     return (typeof x == 'object') && x.isHistogram || false
 }
 
+Histogram.prototype.csumf = function(f)
+// 𝛴f(xᵢ)vᵢ
+{
+    var res = 0,x
+    var h = this.step
+    var a = this.minBin
+    var b = this.maxBin
+    var N = ceil((b-a)/h)
+    var k = i => i == 0 ? 1
+	: i == N ? 1
+	: i % 2 == 1 ? 4 : 2
+    for(var i = 0; i <= (b-a)/h; i++) {
+	x = i*h+a
+    	res += k(i)*f(x)*this.data[x] || 0
+    }
+    return res*h/3
+}
+
 Histogram.prototype.sumf = function(f)
 // 𝛴f(xᵢ)vᵢ
 {
-    var res = 0, y
-    for(var b in this.data)
-    {
-	y = f(b)
-	if (isNaN(y) || y == null) continue
-	res += y*this.data[b]
-    }
-    return res
+    var k = i => i==0 ? 1
+	: i==this.bins.length-1 ? 1
+	: i % 2 == 1 ? 4 : 2
+    var h = (this.maxBin-this.minBin)/this.bins.length/this.step
+    return this.bins.rsum(b=>f(b-this.step/2)*(this.PDF(b)||0))
+//    return this.bins.rsum((b,i)=>k(i)*f(b-this.step/2)*(this.data[b]||0))*h/3
 }
+
 
 Histogram.prototype.expected = function(f)
 // expectation for a given expression
 {
     return this.sumf(f)/this.number
 }
+
+Histogram.prototype.zipWith = function(h,f)
+{
+    var d1 = this.samples(this.number)
+    var d2 = h.samples(h.number)
+    return new Histogram(this.step).fromList(d1.zipWith(d2,f))
+}
+
+Histogram.prototype.toList = function()
+{
+    m = this.minValue
+    return this.bins.mapappend(b => Normal(b,this.step/4).samples(this.data[b]*m))
+}
+
+Histogram.prototype.samples = function(n)
+{
+    var res = [], g = this.generator
+    for(var i = 0; i< n; i++)
+	res.push(g())
+    return res
+}
+
+Histogram.prototype.resample = function(s)
+{
+    var h = new Histogram(s).fromList(this.samples(this.number))
+    var m = h.mean
+    return h.shift(this.mean-m)
+}
+
+Histogram.prototype.map = function(f)
+{
+    return new Histogram(this.step)
+	.fromList(this.samples(this.number).map(f))
+}
+
+Histogram.prototype.scale = function(a)
+{
+    return this.map(x => x*a)
+}
+
+Histogram.prototype.shift = function(a)
+{
+    return this.map(x => x+a)
+}
+
+Object.defineProperty
+(Histogram.prototype, "generator",
+ { get : function ()
+   {
+       return () => this.quantile(Math.random())
+   }
+ }
+)
 
 Object.defineProperty
 (Histogram.prototype, "mean",
@@ -683,6 +753,25 @@ function Geometric(p)
     return res   
 }
 
+function Geometric0(p)
+{
+    var res = new DiscreteDistribution({
+	'p' : p || 0.5
+    })
+    var q = 1 - p
+    res.support   = [0,Infinity]
+    res.PMF = pdf(res, k => pow(q,floor(k))*p)
+    res.CDF = cdf(res, k => 1 - pow(q,k+1))
+    res.quantile  = quantileFun(x => ceil(log(q,1-x)))
+    res.mean      = (1-p)/p
+    res.median    = ceil(-log(q,2))-1
+    res.variance  = q/sqr(p)
+    res.mode      = 0
+    res.generator = () => floor(log(q,Math.random()))
+    res.fromHistogram = h => Geometric(1/(h.mean+1))
+    return res   
+}
+
 
 function Bag(lst)
 {
@@ -808,9 +897,9 @@ function Client(i,o,n)
     this.n = n
 }
 
-function pClient(i,o,n)
+function pClient(i,o,n,s)
 {
-    return [i,o,n]
+    return [i,o,n,s]
 }
 
 Client.prototype.add = function (o) {
@@ -821,6 +910,7 @@ Client.prototype.add = function (o) {
 const tIn = fst
 const tOut = snd
 const cN = x => x[2]
+const tServ = x => x[3]
 
 function GG1(gi,go,e)
 {
@@ -837,18 +927,18 @@ function GG1(gi,go,e)
 	t += newt
 	var o = out()
 	if (q.length==0)
-	    q.push(pClient(t,t + o,n++))
+	    q.push(pClient(t,t + o,n++,o))
 	else if (impatient())
 	{
 	    var fst = q.shift()
-	    q = q.map(c => [tIn(c),tOut(c)+o,cN(c)])
+	    q = q.map(c => [tIn(c),tOut(c)+o,cN(c),tServ(c)])
 	    q.unshift(pClient(t, tOut(fst)+o, n++))
 	    q.unshift(fst)
 	}
 	else
-	    q.push(pClient(t,tOut(q.last()) + o,n++))
+	    q.push(pClient(t,tOut(q.last()) + o,n++,o))
 	newt = newComer()
-	return [t, q.copy(),false]
+	return [t, q.copy(),"enqueue"]
     }
     this.reset = function () {
 	t = 0
@@ -881,3 +971,14 @@ const DD1 = (l,m,e) => new GG1(DeltaDistribution(1/l),DeltaDistribution(1/m),e)
 const MD1 = (l,m,e) => new GG1(Exponential(l),DeltaDistribution(1/m),e)
 const DM1 = (l,m,e) => new GG1(DeltaDistribution(1/l),Exponential(m),e)
 
+function tests1()
+{
+    var h = new Histogram(1).fromDistribution(DeltaDistribution(0.5),100000)
+    var h1 = h.resample(1.5)
+    new Graphics(fig1)
+	.yRange([0,2])
+	.xRange([-5,5])
+	.histogram(h,{'type':'PDF','class':'queueL'})
+	.histogram(h1,{'type':'PDF','class':'queueW'})
+	.axes({})
+}

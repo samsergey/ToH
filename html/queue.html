@@ -381,29 +381,15 @@ function C(c,r) {
 }
 var r = 15/16
 
-pts = [[5,0],[6,2],[8,0]]
+pts = [[5,1],[6,2],[7,5],[8,2]]
 new Graphics(fig1)
     .xRange([0,20])
     .yRange([0,6])
-    .plot(x=>listIntegralInterpolation(pts)(x))
-//    .plot(listIntegralInterpolationInv(pts))
-    .listLinePlot(pts.map(fst).zip(pts.map(snd).accumsum().tail()))
+    .plot(linearInterpolation(pts))
     .listPlot(pts)
     .axes({})
 
 
-function exch(n,m) {
-    return nestWhileList(go,[[n,0],'d'],([[x,y],_1,_2])=>x+y != 8,15)
-    function go ([[x,y],w]) {
-	if (w == 's') return [[x,y],'s','Stop']
-	if (w == 'l') return [[n,y],'r','0->A']
-	if (w == 'r') return [[n-(m-y),m],'u','A->B']
-	if (w == 'u') return [[x,0],'d','B->0']
-	if (x < m) return [[0,x],'l','A->B']
-	if (x == m) return [[0,m],'s','End']
-	return [[x-m,m],'u','A->B']
-    }
-}
 
     </script>
   </body>

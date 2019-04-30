@@ -549,7 +549,8 @@ Graphics.prototype.histogram = function(hist, opts)
     var g = parent.append('g').attr('class',options['class'])
 
     var value = {
-	'PDF' : x => hist.PDF(x),
+	'PDF' : x => hist.PMF(x),
+	'PMF' : x => hist.PMF(x),
 	'CDF' : x => hist.CDF(x),
 	'value' : x => hist.data[x]
     }[options.type]

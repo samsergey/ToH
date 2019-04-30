@@ -52,6 +52,9 @@ Array.prototype.copy = function() {
     return [].concat(this)
 }
 
+Array.prototype.equal = function(lst) {
+    return this.every((x,i)=>x==lst[i])
+}
 
 Array.prototype.head = function() {
     return this[0]
@@ -77,6 +80,11 @@ Array.prototype.last = function() {
     return this.slice(this.length-1,this.length)[0]
 }
 
+Array.prototype.skip = function(i) {
+    return this.slice(0,i-1).concat(this.slice(i))
+}
+
+
 Array.prototype.rotate = function() {
     return [this.last()].concat(this.most())
 }
@@ -85,11 +93,11 @@ Array.prototype.close = function() {
     return this.concat([this[0]])
 }
 
-
+//Array.prototype.flatMap = Array.prototype.mapappend 
 Array.prototype.mapappend = function(f) {
     var res = []
     for(var i = 0; i < this.length; i++)
-	res = res.concat(f(this[i]))
+	res = res.concat(f(this[i],i))
     return res
 }
 
@@ -106,11 +114,22 @@ var fst = x => x[0]
 var snd = x => x[1]
 var length = x => x.length
 
+monoid = {
+    Sum : {mappend:(x,y) => x+y, mempty:0},
+    Product : {mappend:(x,y) => x*y, mempty:1},
+    Free : {mappend:(x,y) => x.concat(y), mempty:[]}
+}
+
+Array.prototype.foldMap = function(f,m)
+{
+    return this.reduce((res,x) => m.mappend(res, f(x)), m.mempty)
+}
+
 
 Array.prototype.sum = function(f,s0)
 {
-    var ff = f || (x => x)
-    return this.reduce((res,x) => res + ff(x),s0===null?0:s0)
+    var f = f || id
+    return this.reduce((res,x) => res + f(x), s0 || 0)
 }
 
 Array.prototype.reversed = function()
@@ -131,7 +150,9 @@ Array.prototype.foldList = function(f,x0)
 
 Array.prototype.accumsum = function (x0)
 {
-    return this.foldList((x,y)=>x+y,x0);
+    var res = [x0 || 0]
+    this.forEach(x=>res.push(x+res.last()))
+    return res
 }
 
 Array.prototype.ema = function (a)
@@ -161,6 +182,23 @@ Array.prototype.position = function (p)
 	if (p(this[i])) return i
     return null
 }
+
+function binarySearch(pts,x)
+{
+    const n = pts.length-1
+    if (x < pts[0][0]) return [pts[0],pts[1]]
+    if (x > pts[n][0]) return [pts[n-1],pts[n]]
+    var a = 0, b = n, c
+    while (b-a > 1) {
+	c = floor((b+a)/2)
+	if (pts[a][0] <= x && x <= pts[c][0])
+	    b = c
+	else
+	    a = c
+    }
+    return [pts[a],pts[b]]
+}
+
 
 Array.prototype.find = function (p)
 {
@@ -352,3 +390,30 @@ Array.prototype.splitOn = function(el)
     return this.splitBy(x => x == el)
 }
 
+Array.prototype.convolve = function(lst)
+{
+    var res = []
+    for(var j=0; j<lst.length+this.length-1; j++) {
+	res[j]=0
+	for(var i=0; i<this.length; i++) 
+	    res[j] += (this[i] || 0)*(lst[lst.length-1-j+i] || 0)
+    }
+    return res
+}
+
+Array.prototype.rsum = function(f)
+{
+    return go(this.map(f))
+    function go(lst)
+    {
+	if (lst.length == 0) return 0
+	if (lst.length == 1) return lst[0]
+	if (lst.length == 2) return lst[0]+lst[1]
+	return go(lst.slice(0,Math.floor(lst.length/2)))+go(lst.slice(Math.floor(lst.length/2),lst.length))
+    }
+}
+
+Array.prototype.vadd = function (a)
+{
+    return this.map((x,i) => a[i]+x)
+}

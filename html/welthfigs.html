@@ -51,7 +51,7 @@
 </style>
     </head>
     <body>
-    <svg id='fig1' width='400' height='300'></svg>
+    <svg id='fig1' width='600' height='400'></svg>
     <svg id='fig2' width='300' height='300'></svg><br/>
     <svg id='fig22' width='200' height='200'></svg>
     <svg id='fig23' width='200' height='200'></svg>
@@ -241,7 +241,7 @@ function start3(opts)
 
 }
 
-
+/*
 start3({'population':1000,
 	'shares':100,
 	'alpha':0.3,
@@ -249,7 +249,7 @@ start3({'population':1000,
 	'minShare':0,
 	'steps':10000000,
 	'averaging':1});
-
+*/
 
 /*
 gs = [0.05,0.1,0.2,0.4,0.8,0.5].map(a => {
@@ -606,6 +606,35 @@ function mix(opts)
 
 //mix({})
 
+function divisors(n)
+{
+    return range(2,n/2+1).filter(x => n % x == 0)
+}
+
+function factorBy(n,k)
+{
+    if (k == 1) return [n]
+    return divisors(n)
+	.filter(x => x <= sqrt(n))
+	.mapappend(d => factorBy(n/d,k-1)
+	     .map(fs => [d].concat(fs)))
+}
+
+function factorizations(n)
+{
+    return range(2,sqrt(n)).map(k => factorBy(n,k)
+			  .map(s => s.sorted()).unique())
+	.filter(l => l.length > 0)
+}
+
+var h = new Histogram()
+range(2,100).map(n => h.addList(factorizations(n).map(x => x.length)))
+
+p = new Graphics(fig1)
+    .xRange([1,40])
+    .yRange([0,100])
+    .axes({})
+    .histogram(h)
 
 
 </script>

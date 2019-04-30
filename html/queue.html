@@ -128,11 +128,36 @@
 	fill-opacity:0.6;
 	stroke:navy;
     }
+    .VEI .eruption {
+	stroke:red;
+	fill:darkorange;
+    }
+    .VEI .level {
+	stroke:none;
+	fill:red;
+	font-size:200%;
+	font-weight:bold;	
+    }
+    .VEI .label {
+	stroke:none;
+	fill:navy;
+	font-size:80%;	
+    }
+    .VEI .type {
+	stroke:none;
+	fill:darkgreen;
+	font-size:100%;	
+    }
+    .VEI .type2 {
+	stroke:none;
+	fill:darkred;
+	font-size:100%;	
+    }
 </style>
   </head>
     <body>
 <!--       <svg id='fig1' width='700' height='250'></svg>-->
-<svg id='fig1' width='400' height='300'></svg>
+<svg id='fig1' width='800' height='460'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -381,16 +406,77 @@ function C(c,r) {
 }
 var r = 15/16
 
-pts = [[5,1],[6,2],[7,5],[8,2]]
-new Graphics(fig1)
-    .xRange([0,20])
-    .yRange([0,6])
-    .plot(linearInterpolation(pts))
-    .listPlot(pts)
-    .axes({})
+pts = [[1e3,1.1],[2e4,3],[5e5,15],[1e7,100],[1e8,18*30],[1e9,12*12*30],[10e9,75*365],[100e9,750*365],[2000e9,25e3*365]].map(([x,y])=>[log(10,y),log(10,x)])
+	  
+p = new Graphics(fig1,{'class':'VEI',
+		       margin:{left:35, right:30, top:20, bottom:100} })
+    .xRange([-1.5,10])
+    .yRange([2,13])
+    .axes({xLabel:'Период между извержениями / Period within eruptions',
+	   yLabel:'Объём извержения / Ejecta volume',
+	   xTicks:false,
+	   yTicks:false
+	  })
+    .label("день",{'at':[0,1.45]})
+    .label("неделя",{'at':[log(10,7)-0.2,1.45]})
+    .label("месяц",{'at':[log(10,30),1.45]})
+    .label("год",{'at':[log(10,365),1.45]})
+    .label("10 лет",{'at':[log(10,365*10),1.45]})
+    .label("век",{'at':[log(10,36500),1.45]})
+    .label("тысячелетие",{'at':[log(10,365000),1.45]})
+    .label("миллион лет",{'at':[log(10,365000000),1.45]})
+    .label("day",{'at':[0,1]})
+    .label("week",{'at':[log(10,7)-0.2,1]})
+    .label("month",{'at':[log(10,30),1]})
+    .label("year",{'at':[log(10,365),1]})
+    .label("decade",{'at':[log(10,365*10),1]})
+    .label("century",{'at':[log(10,36500),1]})
+    .label("millenium",{'at':[log(10,365e3),1]})
+    .label("million years",{'at':[log(10,365e6),1]})
+    .gridLines({x:[0,log(10,7)-0.2,log(10,30),log(10,365),log(10,3650),log(10,36500),log(10,365000),log(10,365e6)],
+		y:range(3,13)})
+    .label("1000 m³",{'at':[-1.25,log(10,1e3)]})
+    .label("10000 m³",{'at':[-1.25,log(10,1e4)]})
+    .label("100000 m³",{'at':[-1.25,log(10,1e5)]})
+    .label("0.001 km³",{'at':[-1.25,log(10,1e6)]})
+    .label("0.01 km³",{'at':[-1.25,log(10,1e7)]})
+    .label("0.1 km³",{'at':[-1.25,log(10,1e8)]})
+    .label("1 km³",{'at':[-1.25,log(10,1e9)]})
+    .label("10 km³",{'at':[-1.25,log(10,10e9)]})
+    .label("100 km³",{'at':[-1.25,log(10,100e9)]})
+    .label("1000 km³",{'at':[-1.25,log(10,1000e9)]})
 
 
+var i = 0
+pts.reversed().forEach(([x,y],i) => {
+    p.disc([x,y],3*Math.pow(10**y,1/2)/1000000,{'class':'eruption','opacity':0.5})
+} )
 
+p.label(0,{'at':pts[0].vadd([-0.25,0]),'class':'level'})
+p.label(1,{'at':pts[1].vadd([-0.25,0]),'class':'level'})
+p.label(2,{'at':pts[2].vadd([-0.25,0]),'class':'level'})
+p.label(3,{'at':pts[3].vadd([-0.25,0]),'class':'level'})
+p.label(4,{'at':pts[4].vadd([-0.25,0]),'class':'level'})
+p.label(5,{'at':pts[5].vadd([-0.25,0.2]),'class':'level'})
+p.label(6,{'at':pts[6].vadd([-0.13,-0.3]),'class':'level'})
+p.label(7,{'at':pts[7].vadd([-0.13,-0.3]),'class':'level'})
+p.label(8,{'at':pts[8].vadd([-0.13,-0.3]),'class':'level'})
+
+p.label("гавайское,",{'at':[0.15,log(10,1e3)],'class':"type"})
+p.label("стромболианское,",{'at': pts[1].vadd([0.2,0]),'class':"type"})
+p.label("вулканское",{'at':pts[2].vadd([-1.4,0]),'class':"type"})
+p.label("пелейское, плинианское",{'at':pts[4].vadd([-2.6,0]),'class':"type"})
+p.label("пелейское, плинианское",{'at':pts[5].vadd([-2.6,0]),'class':"type"})
+p.label("суб-плинианское",{'at':pts[3].vadd([-2,0]),'class':"type"})
+p.label("ультраплинианское",{'at':pts[7].vadd([-3,0]),'class':"type"})
+p.label("невзрывное",{'at':pts[0].vadd([1.2,0]),'class':"type2"})
+p.label("лёгкое",{'at': pts[1].vadd([2,0]),'class':"type2"})
+p.label("эксплозивное",{'at':pts[2].vadd([0.2,0]),'class':"type2"})
+p.label("сильное",{'at':pts[3].vadd([0.2,0]),'class':"type2"})
+p.label("катастрофическое",{'at':pts[4].vadd([0.2,0]),'class':"type2"})
+p.label("параксизмальное",{'at':pts[5].vadd([0.2,-0.3]),'class':"type2"})
+p.label("колоссальное",{'at':pts[6].vadd([2.1,0.45]),'class':"type2"})
+p.label("супер-извержение",{'at':pts[8].vadd([0.3,0]),'class':"type2"})
     </script>
   </body>
 </html>

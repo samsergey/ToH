@@ -1,34 +1,123 @@
 <!DOCTYPE html>
 <html>
     <head>
+    <meta charset='UTF-8'/>
     <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
     <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
+      .label {
+	  font-size:90%;
+      }
+      .route {
+	  stroke:navy;
+	  stroke-opacity:0.7;
+	  stroke-width:2;
+      }
     </style>
   </head>
     <body>
     <svg width='400' height='400'></svg>
     <script>
-    
-var paper = d3.select("svg")
-var p = new Graphics(paper,{'class' : 'Lorentz'})
-    .listPlot([[0,0],[1,1]], {'filled':true,
-			      'points':false,
-			      'joined':true,
-			      'class':'upper'})
-    .listPlot([[0,0],[0.8,0.5],[1,1]], {'filled':true, 'class':'lower'})
-    .axes({xLabel : 'время путешествия',
-	   xTickFormat : fmt.percent,
-	   yTickFormat : fmt.percent,
-	   yLabel : 'длина пути'})
-    .label("постоянная скорость",
-	   {'at' : [0.3,0.35], 'angle' : 45 })
-    .label("в горку",
-	   {'at' : [0.4,0.18], 'angle' : 30 })
-    .label("с горки",
-	   {'at' : [0.9,0.6], 'angle' : 70 })
-	   
+      
+      function fig1()
+      {
+	  var paper = d3.select("svg")
+	  var p = new Graphics(paper,{'class' : 'Lorentz'})
+	      .listPlot([[0,0],[1,1]], {'filled':true,
+					'points':false,
+					'joined':true,
+					'class':'upper'})
+	      .listPlot([[0,0],[0.8,0.5],[1,1]], {'filled':true, 'class':'lower'})
+	      .listPlot([[0,0],[0.8,0.5],[1,1]], {'joined':true,'class':'route'})
+	      .axes({xLabel : 'время путешествия',
+		     xTickFormat : fmt.percent,
+		     yTickFormat : fmt.percent,
+		     yLabel : 'длина пути'})
+	      .label("средняя скорость",
+		     {'at' : [0.3,0.35], 'angle' : 45 })
+	      .label("в горку",
+		     {'at' : [0.4,0.18], 'angle' : 30 })
+	      .label("с горки",
+		     {'at' : [0.9,0.6], 'angle' : 70 })
+      }
+
+      //fig1()
+      
+      sample2 = [[5,22],[6,15],[2,8],[3,45],[8,30],[4,10],[2,8],[4,45],[6,25],[4,11]]
+      
+      function fig2()
+      {
+	  var s,t
+	  [t,s] = sample2.map(([s,v])=>[s/v,s]).transpose()
+	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
+	  var paper = d3.select("svg")
+	  var p = new Graphics(paper,{'class' : 'Lorentz'})
+	      .listPlot([[0,0],[1,1]], {'filled':true,
+					'points':false,
+					'joined':true,
+					'class':'upper'})
+	      .listPlot(pts,{'joined':true,'class':'route'})
+	      .axes({xLabel : 'время путешествия',
+		     xTickFormat : fmt.percent,
+		     yTickFormat : fmt.percent,
+		     yLabel : 'длина пути'})
+      }
+
+//      fig2()
+
+      function fig3()
+      {
+	  var s,t
+	  [t,s] = sample2.sorted((x,y)=>x[1]-y[1]).map(([s,v])=>[s/v,s]).transpose()
+	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
+	  var paper = d3.select("svg")
+	  var p = new Graphics(paper,{'class' : 'Lorentz'})
+	      .listPlot([[0,0],[1,1]], {'filled':true,
+					'points':false,
+					'joined':true,
+					'class':'upper'})
+	      .listPlot(pts, {'filled':true, 'class':'lower'})
+	      .listPlot(pts, {'joined':true,'class':'route'})
+	      .axes({xLabel : 'время путешествия',
+		     xTickFormat : fmt.percent,
+		     yTickFormat : fmt.percent,
+		     yLabel : 'длина пути'})
+      }
+
+      //fig3()
+
+      sample3 = [[1,1],[1,2],[1,2],[1,2],[1,3],[1,10],[1,12],[1,4],[1,11],[1,3],[1,3],[1,1]]
+
+            function fig4()
+      {
+	  var s,t
+	  [t,s] = sample3.sorted((x,y)=>x[1]-y[1]).map(([s,v])=>[s/v,s]).transpose()
+	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
+	  var paper = d3.select("svg")
+	  var p = new Graphics(paper,{'class' : 'Lorentz'})
+	      .listPlot([[0,0],[1,1]], {'filled':true,
+					'points':false,
+					'joined':true,
+					'class':'upper'})
+	      .listPlot(pts, {'filled':true, 'class':'lower'})
+	      .listPlot(pts, {'joined':true,'class':'route'})
+	      .axes({xLabel : 'доля автобусов',
+		     xTickFormat : fmt.percent,
+		     yTickFormat : fmt.percent,
+		     yLabel : 'доля пассажиров'})
+      }
+
+      fig4()
+
+      
   </script>
   </body>
 </html>

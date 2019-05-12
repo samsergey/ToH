@@ -21,11 +21,10 @@
       {
 	  figure = createSVG('fig1',{aspectRatio : 1})
 	  new Graphics(figure,{'class' : 'Lorentz'})
-	      .LorentzPlot([[0,0],[0.8,0.5],[1,1]])
-	      .axes({xLabel : 'время путешествия',
-		     xTickFormat : fmt.percent,
-		     yTickFormat : fmt.percent,
-		     yLabel : 'длина пути'})
+	      .LorentzPlot([[0,0],[0.8,0.5],[1,1]],{xLabel : 'время путешествия',
+						    yLabel : 'длина пути',
+						    xTickValues:range(0,1.1,0.1),
+						    yTickValues:range(0,1.1,0.1)})
 	      .label("средняя скорость",
 		     {'at' : [0.3,0.35], 'angle' : 45 })
 	      .label("в горку",
@@ -62,11 +61,10 @@
 	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
 	  figure = createSVG('fig3',{aspectRatio : 1})
 	  var p = new Graphics(figure,{'class' : 'Lorentz'})
-	      .LorentzPlot(pts)
-	      .axes({xLabel : 'время путешествия',
-		     xTickFormat : fmt.percent,
-		     yTickFormat : fmt.percent,
-		     yLabel : 'длина пути'})
+	      .LorentzPlot(pts,{xLabel : 'время путешествия',
+				yLabel : 'длина пути',
+				xTickValues:range(0,1.1,0.1),
+				yTickValues:range(0,1.1,0.1)})
       }
 
       function fig4()
@@ -77,11 +75,10 @@
 	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
 	  figure = createSVG('fig4',{aspectRatio : 1})
 	  var p = new Graphics(figure,{'class' : 'Lorentz'})
-	      .LorentzPlot(pts)
-	      .axes({xLabel : 'доля автобусов',
-		     xTickFormat : fmt.percent,
-		     yTickFormat : fmt.percent,
-		     yLabel : 'доля пассажиров'})
+	      .LorentzPlot(pts,{xLabel : 'доля автобусов',
+				yLabel : 'доля пассажиров',
+				xTickValues:range(0,1.1,0.1),
+				yTickValues:range(0,1.1,0.1)})
       }
 
       fig1()

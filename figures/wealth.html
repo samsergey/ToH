@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style></style>
+    </head>
+    <body></body>
+    <script>
+      function degenerate()
+      {
+	  var distr = createSVG('fig11')
+	  new Graphics(distr)
+	      .xRange([0,200])
+	      .yRange([0,1])
+	      .listPlot([[100,1]],{'needles':true})
+	      .axes({yLabel : 'доля людей в группе',
+		     xLabel : 'уровень богатства'})
+	  var lor = createSVG('fig12',{'aspectRatio':1,'size':270})
+	  new Graphics(lor,{'class' : 'Lorentz'})
+	      .LorentzPlot([[0,0],[1,1]], {Gini : 0,
+					   xLabel : 'доля членов группы',
+					   yLabel : 'доля общей суммы'})
+      }
+      degenerate()
+
+      function poissonStrategy()
+      {
+	  var lst = range(0,200,2).map(i=>[i,i>134?0:Binomial(10000,1/100).PMF(i)])
+	  var distr = createSVG('fig21')
+	  new Graphics(distr)
+	      .xRange([0,200])
+	      .listPlot(lst,{'needles':true})
+	      .plot(Normal(100,100).PDF)
+	      .axes({ yLabel : 'доля членов группы',
+		      xLabel : 'уровень богатства'})
+	  var lor = createSVG('fig22',{'aspectRatio':1,'size':270})
+	  new Graphics(lor,{'class' : 'Lorentz'})
+	      .LorentzPlot('empty', { Gini : 0.02,
+				      xLabel : 'доля членов группы',
+				      yLabel : 'доля общей суммы' })
+	      .plot(x=>x*(1+pow(x,1/4))/2,{'class':'lower','filled':true})
+      }
+      poissonStrategy()
+
+      function uniform()
+      {
+	  var distr = createSVG('fig31')
+	  new Graphics(distr)
+	      .xRange([0,210])
+	      .yRange([0,1/150])
+	      .plot(Uniform([0,200]).PDF,{'filled':true,plotPoints:400})
+	      .axes({yLabel : 'доля членов группы',
+		     xLabel : 'уровень богатства',
+		     yTickValues : range(0,0.007,0.001),
+		     yTickFormat : fmt.number
+		    })
+	  var lor = createSVG('fig32',{'aspectRatio':1,'size':270})
+	  var h= new Histogram(2).fromDistribution(Uniform([0,100]),1000)
+	  new Graphics(lor,{'class' : 'Lorentz'})
+	      .LorentzPlot('empty',{ Gini : 0.33,
+				     xLabel : 'доля членов группы',
+				     yLabel : 'доля общей суммы' })
+	      .plot(x=>x*x,{'class':'lower','filled':true})
+      }
+      uniform()
+
+    </script>
+</html>

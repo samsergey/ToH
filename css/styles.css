@@ -4,7 +4,7 @@
     stroke-linecap  : round;    
     font-family : sans-serif;
     font-style : italic;
-    font-size : 16px
+    font-size : 11px;
 }
 
 /* listPlot */
@@ -18,17 +18,17 @@
     stroke : navy;
 }
 
-.listPlot .points {
+.points {
     stroke : white;
     stroke-width : 1;
     stroke-opacity : 0.5;
     fill : navy;
 }
 
-.listPlot .needles {
-    stroke : goldenrod;
+.needles {
+    stroke : darkorange;
     stroke-width : 1.5;
-    stroke-opacity : 0.5;
+    stroke-opacity : 1;
 }
 
 .listPlot .A .line {
@@ -63,7 +63,8 @@
 
 
 .plot .area {
-    fill : skyblue;
+    fill : goldenrod;
+    fill-opacity : 0.75;
 }
 
 .plot .line {
@@ -77,21 +78,46 @@
     fill : navy;
 }
 
-.plot .A .line {
+.A .line {
     stroke : navy;
+    stroke-opacity : 0.75;
 }
 
-.plot .A .area {
-    fill : palegreen;
+.A .area {
+    fill : darkorange;
+    fill-opacity : 0.75;
 }
 
-.plot .B .line {
+.B .line {
     stroke : brown;
+    stroke-opacity : 1;
 }
 
-.plot .B .area {
-    fill : pink;
+.B .area {
+    fill : brown;
+    fill-opacity : 0.5;
 }
+
+.D .line {
+    stroke : darkorange;
+    stroke-opacity : 1;
+}
+
+.D .area {
+    fill : darkorange;
+    fill-opacity : 0.5;
+}
+
+.C .line {
+    stroke : darkgreen;
+    stroke-opacity : 0.75;
+}
+
+.C .area {
+    fill : green;
+    fill-opacity : 0.5;
+}
+
 
 /* Axes */
 
@@ -99,14 +125,14 @@
     stroke-width : 1.25;
     font-family : sans-serif;
     font-style : italic;
-    font-size : 14px
+    font-size : 100%;
 }
 
 .axis .tick {
     stroke-width : 1.25;
     font-family : sans-serif;
     font-style : italic;
-    font-size : 13px
+    font-size : 100%;
 }
 
 .axis .label {
@@ -117,10 +143,9 @@
 
 .label {
     fill : #503;
-    font-size:8pt;
+    font-size:100%;
     font-family: 'Arial';
     font-style : italic;
-
 }
 
 /* diffListPlot */

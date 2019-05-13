@@ -12,7 +12,11 @@
     <script src='../lib/signal.js'></script>
     <script src='../lib/odesolve.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
-    <style></style>
+    <style>
+      .wealth .plot {
+	  stroke-opacity:0.7;
+      }
+    </style>
     </head>
     <body></body>
     <script>
@@ -31,7 +35,7 @@
 					   xLabel : 'доля членов группы',
 					   yLabel : 'доля общей суммы'})
       }
-      degenerate()
+//      degenerate()
 
       function poissonStrategy()
       {
@@ -50,7 +54,7 @@
 				      yLabel : 'доля общей суммы' })
 	      .plot(x=>x*(1+pow(x,1/4))/2,{'class':'lower','filled':true})
       }
-      poissonStrategy()
+//      poissonStrategy()
 
       function uniform()
       {
@@ -72,7 +76,70 @@
 				     yLabel : 'доля общей суммы' })
 	      .plot(x=>x*x,{'class':'lower','filled':true})
       }
-      uniform()
+      //     uniform()
+
+      function exchange(opts)
+      {
+	  var alpha = opts["alpha"] || 0
+	  var beta = opts["beta"] || 0
+	  var minShare = opts["minShare"] || 0
+	  var bound = opts["bound"] || 0
+	  
+	  return function (data)
+	  {
+	      for(i=0;i<data.length;i++) {
+		  if (data[i] >= 1)
+		  {
+		      d = minShare + floor(data[i]*alpha)
+		      do {
+			  j = randomInteger(data.length)()
+			  df = min(d,minShare + floor(data[j]*beta))
+			  if (bound > 0 && data[j]>=bound-df) continue
+			  data[i]-=df
+			  data[j]+=df
+			  d-=df
+		      } while (d > 0)
+		  }
+	      }
+	      return data
+	  }
+      }
+
+      function model1()
+      {
+	  var n = 5000, m = 100, b = 1, rep = 20
+	  var strategy = exchange({'minShare':1})
+	  var step = (k,p) => nest(strategy,p,k)
+	  function histopts(c) {
+	      return {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
+	  }
+	  var fig = createSVG('fig3')
+	  var hs = [new Histogram(1),new Histogram(b)
+		    ,new Histogram(b),new Histogram(b)]
+	  for(var i = 0; i<rep; i++)
+	  {
+	      var g = [m].repeat(n)
+	      hs[0].fromList(g = step(1,g))
+	      hs[1].fromList(g = step(8e2,g))
+	      hs[2].fromList(g = step(2e3,g))
+	      hs[3].fromList(g = step(1e5,g))
+	      console.log(Math.round((i+1)/rep*100)+"%")
+	  }
+	  var p = new Graphics(fig,{'class':'wealth'})
+	      .xRange([0,4*m])
+	      .yRange([0,0.02])
+	  range(0,4).forEach((c,i) => p.histogram(hs[i],histopts(c)))
+	  p.plot(Exponential(1/m).PDF,{'class':'refference'})
+	      .label('a',{'at':[110,0.019]})
+	      .label('b',{'at':[130,0.01]})
+	      .label('c',{'at':[170,0.004]})
+	      .label('d',{'at':[30,0.008]})
+	      .clipPaper()
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+      }
+      // вычисляется долго
+      model1()
 
     </script>
 </html>

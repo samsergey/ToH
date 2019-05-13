@@ -118,6 +118,9 @@
     fill-opacity : 0.5;
 }
 
+.refference {
+    stroke:black;
+}
 
 /* Axes */
 
@@ -203,6 +206,11 @@
     stroke : none;
     fill : darkorange;
 }
+
+.histogram .stairs {
+    stroke : navy;
+}
+
 
 .QQdiagonal {
     stroke : red;

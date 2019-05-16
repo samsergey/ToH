@@ -80,6 +80,7 @@
 
       function exchange(opts)
       {
+	  var batch = opts["batch"] == undefined ? true : opts["batch"]
 	  var alpha = opts["alpha"] || 0
 	  var beta = opts["beta"] || 0
 	  var minShare = opts["minShare"] || 0
@@ -87,7 +88,7 @@
 	  
 	  return function (data)
 	  {
-	      for(i=0;i<data.length;i++) {
+	      function exch(i) {
 		  if (data[i] >= 1)
 		  {
 		      d = minShare + floor(data[i]*alpha)
@@ -101,6 +102,10 @@
 		      } while (d > 0)
 		  }
 	      }
+	      if (batch)
+		  for(i=0;i<data.length;i++) exch(i)
+	      else
+		  exch(i=randomInteger(data.length)())
 	      return data
 	  }
       }
@@ -139,7 +144,40 @@
 		     yLabel:"плотность вероятности"})
       }
       // вычисляется долго
-      model1()
+      //model1()
+
+      function model1_entropy()
+      {
+	  var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
+	  var strategy = exchange({'minShare':1,'batch':false})
+	  var fig = createSVG('fig3')
+	  pts = []
+	  var h
+	  var g = [m].repeat(n)
+	  for(var i = 1; i<=N; i*=dN) {
+	      h = new Histogram(b).fromList(g)
+	      pts.push([i, h.entropy])
+	      g = nest(strategy,[m].repeat(n),i)
+	  }
+	  new Graphics(fig,)
+	      .xRange([1,N])
+	      .xAxisType('log')
+	      .yRange([0,7])
+	      .listLinePlot(pts)
+	      .gridLines({'y':[1-ln(1/m)]})
+	      .label('a',{'at':[100,0.35]})
+	      .label('b',{'at':[5e3,1.7]})
+	      .label('c',{'at':[5e6,5.1]})
+	      .label('d',{'at':[1e8,pts[23][1]+0.25]})
+	      .axes({xLabel:"число обменов",
+		     yLabel:"энтропия распределения",
+		     xTickValues:range(0,10).map(p=>10**p),
+		     xTickFormat:fmt['pow10'],
+		     yTickValues:range(0,8),
+		     yTickFormat:fmt['int']})
+      }
+      // вычисляется долго
+      model1_entropy()
 
     </script>
 </html>

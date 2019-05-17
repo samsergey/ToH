@@ -177,7 +177,108 @@
 		     yTickFormat:fmt['int']})
       }
       // вычисляется долго
-      model1_entropy()
+      //model1_entropy()
 
+////////////////////////////////////////////////////////////
+      
+      function model2()
+      {
+	  var n = 2000, m = 100, b = 1, rep = 10
+	  var strategy = exchange({'minShare':1,'bound':2*m})
+	  var step = (k,p) => nest(strategy,p,k)
+	  function histopts(c) {
+	      return {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
+	  }
+	  var fig = createSVG('fig3')
+	  var hs = [new Histogram(1),new Histogram(b)
+		    ,new Histogram(b),new Histogram(b)]
+	  for(var i = 0; i<rep; i++)
+	  {
+	      var g = [m].repeat(n)
+	      hs[0].fromList(g = step(1,g))
+	      hs[1].fromList(g = step(8e2,g))
+	      hs[2].fromList(g = step(2e3,g))
+	      hs[3].fromList(g = step(2e5,g))
+	      console.log(Math.round((i+1)/rep*100)+"%")
+	  }
+	  var p = new Graphics(fig,{'class':'wealth'})
+	      .xRange([0,3*m])
+	      .yRange([0,0.02])
+	  range(0,4).forEach((c,i) => p.histogram(hs[i],histopts(c)))
+	  p.plot(Uniform([0,2*m]).PDF,{'class':'refference'})
+	      .label('a',{'at':[110,0.019]})
+	      .label('b',{'at':[130,0.01]})
+	      .label('c',{'at':[120,0.008]})
+	      .label('d',{'at':[30,0.006]})
+	      .clipPaper()
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+      }
+      // вычисляется долго
+//      model2()
+
+      function model2_entropy()
+      {
+	  var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
+	  var strategy = exchange({'minShare':1,'batch':false,'bound':2*m})
+	  var fig = createSVG('fig3')
+	  pts = []
+	  var h
+	  var g = [m].repeat(n)
+	  for(var i = 1; i<=N; i*=dN) {
+	      console.log(i/N*100)
+	      h = new Histogram(b).fromList(g)
+	      pts.push([i, h.entropy])
+	      g = nest(strategy,[m].repeat(n),i)
+	  }
+	  new Graphics(fig,)
+	      .xRange([1,N])
+	      .xAxisType('log')
+	      .yRange([0,7])
+	      .listLinePlot(pts)
+	      .gridLines({'y':[1-ln(1/m),ln(2*m)]})
+	      .label('распределение Гиббса',{'at':[100,5.7]})
+	      .axes({xLabel:"число обменов",
+		     yLabel:"энтропия распределения",
+		     xTickValues:range(0,10).map(p=>10**p),
+		     xTickFormat:fmt['pow10'],
+		     yTickValues:range(0,8),
+		     yTickFormat:fmt['int']})
+      }
+      // вычисляется долго
+//      model2_entropy()
+
+////////////////////////////////////////////////////////////
+      
+      function model3()
+      {
+	  var n = 5000, m = 100, b = 1, rep = 10
+	  var strategy1 = exchange({'minShare':1,'bound':2*m-m/2})
+	  var strategy2 = exchange({'minShare':1,'bound':2*m+m/2})
+	  var step1 = (k,p) => nest(strategy1,p,k)
+	  var step2 = (k,p) => nest(strategy2,p,k)
+	  var histopts = {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
+	  var fig = createSVG('fig3')
+	  hs1 = new Histogram(1)
+	  hs2 = new Histogram(1)
+	  for(var i = 0; i<rep; i++)
+	  {
+	      hs1.fromList(step1(1e5,[m].repeat(n)))
+	      hs2.fromList(step2(1e5,[m].repeat(n)))
+	      console.log(Math.round((i+1)/rep*100)+"%")
+	  }
+	  var p = new Graphics(fig,{'class':'wealth'})
+	      .xRange([0,3*m])
+	      .yRange([0,0.02])
+	      .histogram(hs1,histopts)
+	      .histogram(hs2,histopts)
+	      .gridLines({x:[100]})
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+      }
+      // вычисляется долго
+      model3()
+
+      
     </script>
 </html>

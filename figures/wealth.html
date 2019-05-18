@@ -39,7 +39,8 @@
 
       function poissonStrategy()
       {
-	  var lst = range(0,200,2).map(i=>[i,i>134?0:Binomial(10000,1/100).PMF(i)])
+	  f = Binomial(10000,1/100)
+	  var lst = range(0,200,2).map(i=>[i,i>134?0:f.PMF(i)])
 	  var distr = createSVG('fig21')
 	  new Graphics(distr)
 	      .xRange([0,200])
@@ -52,7 +53,7 @@
 	      .LorentzPlot('empty', { Gini : 0.02,
 				      xLabel : 'доля членов группы',
 				      yLabel : 'доля общей суммы' })
-	      .plot(x=>x*(1+pow(x,1/4))/2,{'class':'lower','filled':true})
+	      .listLinePlot(f.LorentzCurve(range(60,130,1)),{'class':'lower','filled':true})
       }
 //      poissonStrategy()
 
@@ -94,8 +95,8 @@
 		      d = minShare + floor(data[i]*alpha)
 		      do {
 			  j = randomInteger(data.length)()
-			  df = min(d,minShare + floor(data[j]*beta))
-			  if (bound > 0 && data[j]>=bound-df) continue
+			  df = d // max(min(d,minShare + floor(data[j]*beta)),1)
+			  //if (bound > 0 && data[j]>=bound-df) continue
 			  data[i]-=df
 			  data[j]+=df
 			  d-=df
@@ -105,7 +106,7 @@
 	      if (batch)
 		  for(i=0;i<data.length;i++) exch(i)
 	      else
-		  exch(i=randomInteger(data.length)())
+		  exch(randomInteger(data.length)())
 	      return data
 	  }
       }
@@ -179,6 +180,23 @@
       // вычисляется долго
       //model1_entropy()
 
+
+      function model1_temp()
+      {
+	  var fig = createSVG('fig3')
+	  var p = new Graphics(fig)
+	      .xRange([0,400])
+	      .yRange([0,0.02])
+	      .plot(Exponential(1/50).PDF)
+	      .label("m=50",{'at':[50, 0.01]})
+	      .plot(Exponential(1/200).PDF)
+	      .label("m=200",{'at':[200, 0.0025]})
+	      .clipPaper()
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+	  
+      }
+//      model1_temp()
 ////////////////////////////////////////////////////////////
       
       function model2()
@@ -252,9 +270,9 @@
       
       function model3()
       {
-	  var n = 5000, m = 100, b = 1, rep = 10
-	  var strategy1 = exchange({'minShare':1,'bound':2*m-m/2})
-	  var strategy2 = exchange({'minShare':1,'bound':2*m+m/2})
+	  var n = 2000, m = 100, b1 = 2*m-m/2, b2 = 2*m+m/2, rep = 10
+	  var strategy1 = exchange({'minShare':1,'bound':b1})
+	  var strategy2 = exchange({'minShare':1,'bound':b2})
 	  var step1 = (k,p) => nest(strategy1,p,k)
 	  var step2 = (k,p) => nest(strategy2,p,k)
 	  var histopts = {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
@@ -263,8 +281,8 @@
 	  hs2 = new Histogram(1)
 	  for(var i = 0; i<rep; i++)
 	  {
-	      hs1.fromList(step1(1e5,[m].repeat(n)))
-	      hs2.fromList(step2(1e5,[m].repeat(n)))
+	      hs1.fromList(step1(1e4,[m].repeat(n)))
+	      hs2.fromList(step2(1e4,[m].repeat(n)))
 	      console.log(Math.round((i+1)/rep*100)+"%")
 	  }
 	  var p = new Graphics(fig,{'class':'wealth'})
@@ -273,12 +291,115 @@
 	      .histogram(hs1,histopts)
 	      .histogram(hs2,histopts)
 	      .gridLines({x:[100]})
+	      .plot(exact(b1,m),{'class':'refference','plotpoints':400})
+	      .plot(exact(b2,m),{'class':'refference','domain':[0,250]})
 	      .axes({xLabel:"уровень богатства",
 		     yLabel:"плотность вероятности"})
       }
       // вычисляется долго
-      model3()
+//      model3()
 
-      
+      function exact(b,m)
+      {
+	  f = x => exp(b/m*x)-(1+x)/(1+x*(1-b/m))
+	  if (b > 2*m)
+	      l = bisection(f, -0.6, -0.01,f=>f<0)[0]
+	  else
+	      l = bisection(f, 0.1, 1.5,f=>f<0)[0]
+	  n = (exp(l*b/m)-1)/l
+	  return x => (x >= 0 && x < b) ? exp(l*x/m)/n/m : 0
+      }
+
+      ////////////////////////////////////////////////////////////
+
+      function model4(a)
+      {
+	  var m = 100
+	  var fig = createSVG('fig3')
+	  f = Gamma(1/a-1,1/m*(1/a-1))
+	  hs = new Histogram(1).fromDistribution(f,20000)
+	  var p = new Graphics(fig,{'class':'wealth'})
+	      .xRange([0,4*m])
+	      .yRange([0,0.015])
+	      .histogram(hs,{'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'})
+	      .plot(Gamma(1/a-1,1/m*(1/a-1)).PDF,{'class':'refference'})
+	      .clipPaper()
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+      }
+      //model4(0.25)
+
+      function model42()
+      {
+	  var m = 100
+	  var f = a => Gamma(1/a-1,1/m*(1/a-1)).PDF
+	  var fig = createSVG('fig3')
+	  var p = new Graphics(fig,{'class':'wealth'})
+	      .xRange([0,4*m])
+	      .yRange([0,0.015])
+	      .plot(f(0.1)).label(0.1,{'at':[110,0.011]})
+	      .plot(f(0.25)).label(0.25,{'at':[80,0.0084]})
+	      .plot(f(0.5)).label(0.5,{'at':[70,0.0055]})
+	      .plot(f(0.75)).label(0.75,{'at':[50,0.0014]})
+	      .clipPaper()
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+      }
+      //model42()
+
+      function model43()
+      {
+	  var m = 100
+	  f = a => Gamma(1/a-1,1/m*(1/a-1))
+	  var pts = a => new Histogram(1).fromDistribution(f(a),10000).LorenzCurve
+	  var fig = createSVG('fig3',{'aspectRatio':1,'size':270})
+	  var p = new Graphics(fig,{'class':'Lorentz'})
+	      .xRange([0,1])
+	      .yRange([0,1])
+	      .listLinePlot([[0,0],[1,1]],{'class':'lower','filled':true})
+	      .listLinePlot(ps=f(0.08).LorentzCurve(range(0,200,1)))
+	      .listLinePlot(ps=f(0.25).LorentzCurve(range(0,300,5)))
+	      .listLinePlot(ps=f(0.5).LorentzCurve(range(0,600,5)))
+	      .listLinePlot(ps=f(0.8).LorentzCurve(range(0,600,5)))
+	      .label('0.1 (0.2)',{'at':[0.48,0.3],'angle':45})
+	      .label('0.25 (0.3)',{'at':[0.52,0.22],'angle':45})
+    	      .label('0.5 (0.5)',{'at':[0.62,0.18],'angle':45})
+              .label('0.75 (0.7)',{'at':[0.74,0.07],'angle':45})
+	      .axes({ xLabel : 'доля членов группы',
+		      yLabel : 'доля общей суммы'})
+      }
+//      model43()
+
+      function model4_entropy()
+      {
+	  var n = 10000, m = 100, b = 1, N=1e6, steps=50, dN=pow(N,1/steps)
+	  var strategy = exchange({'alpha':0.8,'batch':false})
+	  var fig = createSVG('fig3')
+	  pts = []
+	  var h,j=0
+	  var g = [m].repeat(n)
+	  for(var i = 1; i<=N; i*=dN) {
+	      console.log(floor(j++/steps*100)+"%")
+	      h = new Histogram(b).fromList(g)
+	      pts.push([i, h.entropy])
+	      g = nest(strategy,[m].repeat(n),i)
+	  }
+	  new Graphics(fig,)
+	      .xRange([1,N])
+	      .xAxisType('log')
+	      .yRange([0,7])
+	      .listLinePlot(pts)
+	      .gridLines({'y':[1-ln(1/m)]})
+	      .label('распределение Гиббса',{'at':[100,5.7]})
+	      .axes({xLabel:"число обменов",
+		     yLabel:"энтропия распределения",
+		     xTickValues:range(0,10).map(p=>10**p),
+		     xTickFormat:fmt['pow10'],
+		     yTickValues:range(0,8),
+		     yTickFormat:fmt['int']})
+      }
+      // вычисляется долго
+      model4_entropy()
+
     </script>
 </html>

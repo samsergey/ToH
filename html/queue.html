@@ -153,11 +153,24 @@
 	fill:darkred;
 	font-size:100%;	
     }
+    .process {
+	stroke:navy;
+	stroke-opacity:0.1;
+    }
+    .meanF {
+	stroke:black;
+	stroke-width:1.5;
+    }
+    .stdevF {
+	stroke:black;
+	stroke-width:1.5;
+	stroke-dasharray:5,5;
+    }
 </style>
   </head>
     <body>
 <!--       <svg id='fig1' width='700' height='250'></svg>-->
-<svg id='fig1' width='800' height='460'></svg>
+      <svg id='fig1' width='400' height='300'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
@@ -378,6 +391,60 @@ function queueTimes3(l,m,s)
 }
 //queueTimes3(10,12,1)
 
+
+      function Stairs1()
+      {
+	  var pts = [], n = 200, T = 50, l = 1/4
+	  var pr = PoissonProcess(1/4)
+	  for(var i = 0; i < n; i++)
+	  {
+	      pr.reset()
+	      pts.push(pr.runToTime(T))
+	  }
+	  var fig = createSVG('fig3')
+	  var p = new Graphics(fig1)
+	      .xRange([0,T])
+	      .yRange([0,T/2])
+	  pts.forEach(ps => p.listLinePlot(ps,{'class':'process'}))
+	  var pps = pts.map(stepInterpolation)
+	  var ms = range(0,T,T/100).map(x => [x,pps.sum(p => p(x))/n])
+	  var ds = range(0,T,T/100).map((x,i) => [x,sqrt(pps.sum(p => (p(x)-ms[i][1])**2)/n)])
+	  var d1 = ms.zipWith(ds,(m,d)=>[m[0],m[1]+d[1]])
+	  var d2 = ms.zipWith(ds,(m,d)=>[m[0],m[1]-d[1]])
+	  p.listLinePlot(ms,{'class':'meanF'})
+	      .listLinePlot(d1,{'class':'stdevF'})
+	      .listLinePlot(d2,{'class':'stdevF'})
+	      .clipPaper()
+	      .axes({xLabel:'время',yLabel:'число событий'})
+      }
+      //Stairs1()
+
+      function Atocorr1()
+      {
+	  var T = 200, l = 1/4
+	  f0 = stepInterpolation(PoissonProcess(l).runToTime(T))
+	  f = x => f0(x)-l*x
+	  var fig = createSVG('fig3')
+	  X = range(0,T)
+	  N = X.sum(t=>t*f(t)**2)/T
+	  K = tau => range(tau,T-tau).sum(t=>tau*f(t)*f(t+tau))/N/(T-2*tau)
+	  var p = new Graphics(fig1)
+	      .xRange([-10,100])
+	      .yRange([-10,10])
+	      .listLinePlot(range(-10,10,1).map(t => [t,K(t)]))
+	      .plot(t=>l*abs(t)+l*l*t*t)
+	      .plot(f)
+	      .axes({})
+	  
+      }
+      Atocorr1()
+
+      
+
+////////////////////////////////////////////////////////////
+      
+      
+      /*
 var dd =[[0.5,0.176048],[0.594604,0.159214],[0.707107,0.143746],[0.840896,0.129545],[1.,0.11652],[1.18921,0.104582],[1.41421,0.0936527],[1.68179,0.0836543],[2.,0.0745172],[2.37841,0.0661763],[2.82843,0.0585716],[3.36359,0.0516478],[4.,0.0453542],[4.75683,0.0396441],[5.65685,0.0344749],[6.72717,0.0298075],[8.,0.0256059],[9.51366,0.0218373],[11.3137,0.0184715],[13.4543,0.0154807],[16.,0.012839],[19.0273,0.0105223]]
 
 function Little()
@@ -477,6 +544,7 @@ p.label("катастрофическое",{'at':pts[4].vadd([0.2,0]),'class':"t
 p.label("параксизмальное",{'at':pts[5].vadd([0.2,-0.3]),'class':"type2"})
 p.label("колоссальное",{'at':pts[6].vadd([2.1,0.45]),'class':"type2"})
 p.label("супер-извержение",{'at':pts[8].vadd([0.3,0]),'class':"type2"})
+*/
     </script>
   </body>
 </html>

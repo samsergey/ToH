@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+      .wealth .plot {
+	  stroke-opacity:0.7;
+      }
+    </style>
+    </head>
+    <body></body>
+    <script>
+function figure1()
+{
+    var h = new Histogram(5).fromDistribution(Gamma(50,0.5),1000)
+    new Graphics(createSVG('fig1',{'size':300,'aspectRatio':1}))
+	.xRange([0,200])
+	.yRange([0,250])
+	.histogram(h)
+	.axes({	xLabel : "уровень воды (см)",
+		yLabel : "число наблюдений"
+		})
+    new Graphics(createSVG('fig2',{'size':300,'aspectRatio':1}))
+	.xRange([0,20])
+	.yRange([0,0.3])
+	.discretePlot(Poisson(4).PMF,{'class':'pdf'})
+	.axes({	xLabel : "число машин",
+		yLabel : "вероятность наблюдения"
+		})
+}
+figure1()
+     </script>
+</html>

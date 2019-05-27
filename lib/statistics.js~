@@ -1,6 +1,160 @@
+////////////////////////////////////////////////////////////
+
+function ContinuousDistribution(par)
+{
+    this.parameters = par
+    this.isDistribution = true
+    this.isDiscrete = false
+    this.support   = undefined
+    this.PDF = undefined
+    this.CDF       = cdf(this,x => integrate(this.PDF,[0,x]))
+    this.quantile  = quantileFun(q => newton(x => this.CDF(x) - q,this.PDF,this.mean))
+    this.mean      = undefined
+    this.variance  = undefined
+    this.mode      = undefined
+    this.generator = undefined
+    this.samples   = n => d3.range(n).map(this.generator).filter(x => !isNaN(x))
+    this.fromHistogram  = undefined
+    this.fromList = lst => this.fromHistogram(new Histogram().fromList(lst))
+}
+
+Object.defineProperty
+(ContinuousDistribution.prototype, "stdev",
+ { get : function ()
+   {
+       return sqrt(this.variance)
+   }
+ }
+)
+
+Object.defineProperty
+(ContinuousDistribution.prototype, "median",
+ { get : function ()
+   {
+       return this.quantile(1/2)
+   }
+ }
+)
+
+Object.defineProperty
+(ContinuousDistribution.prototype, "sample",
+ { get : function ()
+   {
+       return this.generator()
+   }
+ }
+)
+
+ContinuousDistribution.prototype.LorentzCurve = function (lst)
+{
+    var x0 = lst[0]
+    var res = lst.map(x=>[integrate(t=>this.PDF(t),[x0,x]),integrate(t=>t*this.PDF(t),[x0,x])])
+    var xmax = res.last()[0], ymax = res.last()[1]
+    return res.map(([x,y])=>[x/xmax,y/ymax])
+}
+
+function Gini(l)
+{
+    var res = 1
+    for(var i = 1;i< l.length;i++)
+	res -= (l[i][0]-l[i-1][0])*(l[i][1]+l[i-1][1])
+    return res
+}
+
+////////////////////////////////////////////////////////////
+
+function DiscreteDistribution(par)
+{
+    this.parameters = par
+    this.isDistribution = true
+    this.isDiscrete = true
+    this.support   = undefined
+    this.PMF = undefined
+    this.CDF       = cdf(this,x => range(0,x).sum(this.PMF))
+    this.quantile  = quantileFun(q => bisection(this.CDF,0,1,x => x <= q)[0])
+    this.mean      = undefined
+    this.variance  = undefined
+    this.mode      = undefined
+    this.generator = undefined
+    this.samples   = n => d3.range(n).map(this.generator)
+    this.fromHistogram  = undefined
+    this.fromList = lst => this.fromHistogram(new Histogram().fromList(lst))
+}
+
+Object.defineProperty
+(DiscreteDistribution.prototype, "stdev",
+ { get : function ()
+   {
+       return sqrt(this.variance)
+   }
+ }
+)
+
+Object.defineProperty
+(DiscreteDistribution.prototype, "median",
+ { get : function ()
+   {
+       return this.quantile(1/2)
+   }
+ }
+)
+
+Object.defineProperty
+(DiscreteDistribution.prototype, "sample",
+ { get : function ()
+   {
+       return this.generator()
+   }
+ }
+)
+
+DiscreteDistribution.prototype.LorentzCurve = function (lst)
+{
+    var res = transpose([lst.accumsum(this.PMF),lst.accumsum(t=>t*this.PMF(t))])
+    var xmax = res.last()[0], ymax = res.last()[1]
+    return res.map(([x,y])=>[x/xmax,y/ymax])
+}
+
+
+isDistribution = function (x) {
+    return (typeof x == 'object') && x.isDistribution || false
+}
+
+////////////////////////////////////////////////////////////
+
+function quantileFun(f)
+{
+    return x =>
+	(x >= 0 && x < 1) ? f(x) : undefined
+}
+
+function pdf(self,f)
+{
+    return x =>
+	(x >= self.support[0] && x <= self.support[1]) ? f(x) : 0
+}
+
+function cdf(self,f)
+{
+    return x =>
+	(x <= self.support[0] ? 0 :
+	 x >= self.support[1] ? 1 :
+	 f(x))
+}
+
+////////////////////////////////////////////////////////////
+
+
+function binFunction(s) {
+    return x => floor(x/s)*s + s/2
+}
+
 function Histogram(s)
 {
     this.isHistogram = true
+    this.parameters = 'empiric'
+    this.isDistribution = true
+    this.isDiscrete = true
     this.step = s || 1
     this.data = {}
     this.bins = []
@@ -12,7 +166,31 @@ function Histogram(s)
     this.maxBin = -1/0
     this.minValue = 1/0
     this.maxValue = 0
-    
+    var binF = (this.step == 'none') ? id : binFunction(this.step)
+        
+    this.add = function (x,n)
+    {
+	var n = !n ? 1 : n
+
+	var bin = binF(x)
+	this.bins = this.bins.add(bin)
+	this.total += x*n
+	this.number += n
+	this.data[bin] = (this.data[bin] || 0) + n
+	this.maxBin = max(this.maxBin,bin)
+	this.minBin = min(this.minBin,bin)
+	this.maxValue = max(this.maxValue,this.data[bin])
+	this.minValue = min(this.minValue,this.data[bin])
+	if (this.mode == undefined) this.mode = bin
+	if (this.data[this.mode] < this.data[bin])
+	    this.mode = bin
+	if (this.antimode == undefined) this.antimode = bin
+	if (this.data[this.antimode] > this.data[bin])
+	    this.antimode = bin
+	this.quantileData = null
+	return this
+    }
+
     this.fromList = function (lst)
     {
 	lst.forEach(x => this.add(x))
@@ -33,40 +211,13 @@ function Histogram(s)
     }
 
     
-    this.add = function (x,n)
-    {
-	var n = !n ? 1 : n
-
-	var bin
-	if (this.step == 'none')
-	    bin = x
-	else
-	    bin = floor(x/this.step)*this.step+this.step/2
-	this.bins = this.bins.add(bin)
-	this.total += x*n
-	this.number += n
-	this.data[bin] = (this.data[bin] || 0) + n
-	this.maxBin = max(this.maxBin,bin)
-	this.minBin = min(this.minBin,bin)
-	this.maxValue = max(this.maxValue,this.data[bin])
-	this.minValue = min(this.minValue,this.data[bin])
-	if (this.mode == undefined) this.mode = bin
-	if (this.data[this.mode] < this.data[bin])
-	    this.mode = bin
-	if (this.antimode == undefined) this.antimode = bin
-	if (this.data[this.antimode] > this.data[bin])
-	    this.antimode = bin
-	this.quantileData = null
-	return this
-    }
-
     this.addList = function(data)
     {
 	data.forEach(x => this.add(x))
 	return this
     }
     
-    this.PDF = function(x)
+    this.PMF = function(x)
     {
 	var bin
 	if (x < this.minBin-this.step/2)
@@ -91,7 +242,7 @@ function Histogram(s)
 	
 	this.quantileData = res
 	    .map(x => x/res.last())
-	    .zip(this.bins.map(x => x-this.step/2).concat([h.maxBin+h.step/2]))
+	    .zip(this.bins.map(x => x-this.step/2).concat([this.maxBin+this.step/2]))
 	this.quantileFun = linearInterpolation(this.quantileData)
 	this.CDFFun = linearInterpolation(this.quantileData.map(x=>x.reversed()))
     }
@@ -154,7 +305,7 @@ Histogram.prototype.sumf = function(f)
 	: i==this.bins.length-1 ? 1
 	: i % 2 == 1 ? 4 : 2
     var h = (this.maxBin-this.minBin)/this.bins.length/this.step
-    return this.bins.rsum(b=>f(b-this.step/2)*(this.PDF(b)||0))
+    return this.bins.rsum(b=>f(b-this.step/2)*(this.PMF(b)||0))
 //    return this.bins.rsum((b,i)=>k(i)*f(b-this.step/2)*(this.data[b]||0))*h/3
 }
 
@@ -208,6 +359,15 @@ Histogram.prototype.shift = function(a)
 {
     return this.map(x => x+a)
 }
+
+Object.defineProperty
+(Histogram.prototype, "support",
+ { get : function ()
+   {
+       return [this.minBin,this.maxBin]
+   }
+ }
+)
 
 Object.defineProperty
 (Histogram.prototype, "generator",
@@ -268,11 +428,12 @@ Object.defineProperty
 
 Object.defineProperty
 (Histogram.prototype,
- "LorenzCurve",
+ "LorentzCurve",
  { get : function ()
    {
        var res = [[0,0]], x = 0, y = 0
-       this.bins.forEach(b => res.push([x+=this.data[b],y+=this.data[b]*b]))
+       lst = this.bins.map(b=>[this.data[b],b]).sorted((x,y)=>-x[0]+y[0])
+       lst.forEach(([d,b]) => res.push([x+=d,y+=d*b*this.step]))
        return res.map(r => [r[0]/x,r[1]/y])
    }
  }
@@ -291,18 +452,16 @@ Object.defineProperty
  }
 )
 
-
 Object.defineProperty
 (Histogram.prototype, "entropy",
  { get : function ()
    {
        var res = 0
-       for(var b in this.data)
-       {
-	   if (this.PDF(b) > 0)
-	       res += this.PDF(b)*ln(this.PDF(b))
-       }
-       return -res*this.step
+       this.bins.forEach(b => {
+	   if (this.PMF(b) > 0)
+	       res += this.PMF(b)*ln(this.PMF(b)*this.step)*this.step
+       })
+       return -res
    }
  }
 )
@@ -386,100 +545,7 @@ Histogram.prototype.WeibullPlot = function (fig,opts)
 					    'class':'QQdiagonal'})
 }
 
-
-function ContinuousDistribution(par)
-{
-    this.parameters = par
-    this.isDistribution = true
-    this.isDiscrete = false
-    this.support   = undefined
-    this.PDF = undefined
-    this.CDF       = cdf(this,x => integrate(this.PDF,[0,x]))
-    this.quantile  = quantileFun(q => newton(x => this.CDF(x) - q,this.PDF,this.mean))
-    this.mean      = undefined
-    this.variance  = undefined
-    this.mode      = undefined
-    this.generator = undefined
-    this.samples   = n => d3.range(n).map(this.generator)
-    this.fromHistogram  = undefined
-    this.fromList = lst => this.fromHistogram(new Histogram().fromList(lst))
-}
-
-Object.defineProperty
-(ContinuousDistribution.prototype, "stdev",
- { get : function ()
-   {
-       return sqrt(this.variance)
-   }
- }
-)
-
-Object.defineProperty
-(ContinuousDistribution.prototype, "median",
- { get : function ()
-   {
-       return this.quantile(1/2)
-   }
- }
-)
-
-Object.defineProperty
-(ContinuousDistribution.prototype, "sample",
- { get : function ()
-   {
-       return this.generator()
-   }
- }
-)
-
-function DiscreteDistribution(par)
-{
-    this.parameters = par
-    this.isDistribution = true
-    this.isDiscrete = true
-    this.support   = undefined
-    this.PMF = undefined
-    this.CDF       = cdf(this,x => range(0,x).sum(this.PMF))
-    this.quantile  = quantileFun(q => bisection(this.CDF,0,1,x => x <= q)[0])
-    this.mean      = undefined
-    this.variance  = undefined
-    this.mode      = undefined
-    this.generator = undefined
-    this.samples   = n => d3.range(n).map(this.generator)
-    this.fromHistogram  = undefined
-    this.fromList = lst => this.fromHistogram(new Histogram().fromList(lst))
-}
-
-Object.defineProperty
-(DiscreteDistribution.prototype, "stdev",
- { get : function ()
-   {
-       return sqrt(this.variance)
-   }
- }
-)
-
-Object.defineProperty
-(DiscreteDistribution.prototype, "median",
- { get : function ()
-   {
-       return this.quantile(1/2)
-   }
- }
-)
-
-Object.defineProperty
-(DiscreteDistribution.prototype, "sample",
- { get : function ()
-   {
-       return this.generator()
-   }
- }
-)
-
-isDistribution = function (x) {
-    return (typeof x == 'object') && x.isDistribution || false
-}
+////////////////////////////////////////////////////////////
 
 function Gamma(a,b)
 {
@@ -540,6 +606,8 @@ function gammaGen(a,b)
     }
 }
 
+////////////////////////////////////////////////////////////
+
 function Exponential(l)
 {
     var res = new ContinuousDistribution({
@@ -559,12 +627,13 @@ function Exponential(l)
     return res
 }
 
+////////////////////////////////////////////////////////////
+
 function Poisson(l)
 {
     var res = new DiscreteDistribution({
 	    rate : l || 1
     })
-    res.support  = [0,Infinity]
     res.PMF      = pdf(res,function (k) {
 	var x = floor(k)
 	return pow(l,x)*exp(-l)/fact(x)
@@ -589,6 +658,8 @@ function Poisson(l)
     return res
 }
 
+////////////////////////////////////////////////////////////
+
 function Binomial(n,p)
 {
     var res = new DiscreteDistribution({
@@ -611,13 +682,14 @@ function Binomial(n,p)
     res.fromHistogram = function(h,opts)
     {
 	if (!opts || opts === {}) return undefined
-	if (opts.p) return Binomial(round(h.mean/opts.p),opts.p) 
+	if (opts.p) return Binomial(Math.round(h.mean/opts.p),opts.p) 
 	if (opts.trials) return Binomial(opts.trials,h.mean/opts.trials) 
     }
     res.quantile  = quantileFun(q => findRoot(res.CDF,0,x => x <= q)[0])
     return res
 }
 
+////////////////////////////////////////////////////////////
 
 function Normal(m,v)
 {
@@ -638,6 +710,8 @@ function Normal(m,v)
     res.fromHistogram = h => Normal(h.mean,h.variance)
     return res
 }
+
+////////////////////////////////////////////////////////////
 
 function LogNormal(m,s2)
 {
@@ -666,6 +740,8 @@ function LogNormal(m,s2)
     }
     return res
 }
+
+////////////////////////////////////////////////////////////
 
 function Pareto(k,a)
 {
@@ -696,6 +772,8 @@ function Pareto(k,a)
     return res   
 }
 
+////////////////////////////////////////////////////////////
+
 function Uniform([a,b])
 {
     var res = new ContinuousDistribution({
@@ -714,7 +792,11 @@ function Uniform([a,b])
     return res   
 }
 
+////////////////////////////////////////////////////////////
+
 const DeltaDistribution = x => Uniform([x,x])
+
+////////////////////////////////////////////////////////////
 
 function Bernoulli(p)
 {
@@ -733,6 +815,8 @@ function Bernoulli(p)
     res.fromHistogram = h => Bernoulli(h.data[1])
     return res   
 }
+
+////////////////////////////////////////////////////////////
 
 function Geometric(p)
 {
@@ -772,6 +856,7 @@ function Geometric0(p)
     return res   
 }
 
+////////////////////////////////////////////////////////////
 
 function Bag(lst)
 {
@@ -793,25 +878,55 @@ function Bag(lst)
 }
 
 
-function quantileFun(f)
+
+////////////////////////////////////////////////////////////
+
+function Process(timeD,accD,accum)
 {
-    return x =>
-	(x >= 0 && x < 1) ? f(x) : undefined
+    var gent = timeD.generator, gena = accD.generator 
+    this.t = 0
+    this.acc = 0
+    if (!accum)
+	this.next = function () {
+	    return [this.t += gent(), this.acc += gena()]
+	}
+    else
+	this.next = function () {
+	    return [this.t += gent(), this.acc = gena()]
+	}
+
+    this.get = function () {
+	return [this.t, this.acc]
+    }
+    this.reset = function () {
+	this.t = 0
+	this.acc = 0
+	return this
+    }
+    this.samples = function (n) {
+	var res = [this.get()]
+	repeat(n,()=>res.push(this.next()))
+	return res
+    }
+    this.runToTime = function (T) {
+	var res = [this.get()]
+	while (this.t<T)
+	    res.push(this.next())
+	return res
+    }   
+    this.runToVal = function (V) {
+	var res = [this.get()]
+	while (this.acc<V)
+	    res.push(this.next())
+	return res
+    }   
 }
 
-function pdf(self,f)
-{
-    return x =>
-	(x >= self.support[0] && x <= self.support[1]) ? f(x) : 0
-}
 
-function cdf(self,f)
-{
-    return x =>
-	(x <= self.support[0] ? 0 :
-	 x >= self.support[1] ? 1 :
-	 f(x))
-}
+const PoissonProcess = l => new Process(Exponential(l),DeltaDistribution(1))
+const GammaProcess = (a,b) => new Process(Gamma(a,b),DeltaDistribution(1))
+const RandWalk = p => new Process(DeltaDistribution(1),p)
+const RandProcess = p => new Process(DeltaDistribution(1),p,false)
 
 
 function DiscretePoissonProcess(l)
@@ -831,40 +946,6 @@ function DiscretePoissonProcess(l)
 	}
     }
 }
-
-function Process(timeD,accD)
-{
-    var gent = timeD.generator, gena = accD.generator 
-    this.t = 0
-    this.acc = 0
-    this.next = function () {
-	return [this.t += gent(), this.acc += gena()]
-    }
-    this.reset = function () {
-	this.t = 0
-	this.acc = 0
-	return this
-    }
-    this.samples = function (n) {
-	var res = []
-	repeat(n,()=>res.push(this.next()))
-	return res
-    }
-    this.runToTime = function (T) {
-	var res = []
-	while (this.t<T)
-	    res.push(this.next())
-	return res
-    }   
-    this.runToVal = function (V) {
-	var res = []
-	while (this.acc<V)
-	    res.push(this.next())
-	return res
-    }   
-}
-
-const PoissonProcess = l => new Process(Exponential(l),DeltaDistribution(1))
 
 function RandomWalk(opts)
 {
@@ -890,23 +971,9 @@ function cycling(distr,N)
     return x => range(-N,N).sum(k=>distr.PDF(x+2*pi*k),0)
 }
 
-function Client(i,o,n)
-{
-    this.i = i
-    this.o = o
-    this.n = n
-}
+////////////////////////////////////////////////////////////
 
-function pClient(i,o,n,s)
-{
-    return [i,o,n,s]
-}
-
-Client.prototype.add = function (o) {
-    this.o += o
-    return this
-}
-
+const Client = (i,o,n,s) => [i,o,n,s]
 const tIn = fst
 const tOut = snd
 const cN = x => x[2]
@@ -927,16 +994,16 @@ function GG1(gi,go,e)
 	t += newt
 	var o = out()
 	if (q.length==0)
-	    q.push(pClient(t,t + o,n++,o))
+	    q.push(Client(t,t + o,n++,o))
 	else if (impatient())
 	{
 	    var fst = q.shift()
-	    q = q.map(c => [tIn(c),tOut(c)+o,cN(c),tServ(c)])
-	    q.unshift(pClient(t, tOut(fst)+o, n++))
+	    q = q.map(c => Client(tIn(c),tOut(c)+o,cN(c),tServ(c)))
+	    q.unshift(Client(t, tOut(fst)+o, n++))
 	    q.unshift(fst)
 	}
 	else
-	    q.push(pClient(t,tOut(q.last()) + o,n++,o))
+	    q.push(Client(t,tOut(q.last()) + o,n++,o))
 	newt = newComer()
 	return [t, q.copy(),"enqueue"]
     }

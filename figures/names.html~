@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    </style>
+    </head>
+    <body></body>
+    <script>
+
+var IncMatr = [], N = 100, m = 10, M=100
+var Net = {}
+for (var i = 0; i <= N; i++)
+{
+    IncMatr[i] = []
+    for (var j = 0; j < N; j++)
+	IncMatr[i][j] = 0
+}
+
+for (var i = 0; i <= N; i++)
+{
+    var n = Geometric(1/m).generator()
+    const normalize = x => Math.round(x < 0 ? N+x : x > N ? x-N : x)
+    js = Normal(0,3*n).samples(n).map(j => normalize(i+j))
+    js.forEach(j => {
+	IncMatr[i][j] = IncMatr[j][i] = 1
+    })
+    Net[i]=js
+}
+
+var Names = Uniform([0,M]).samples(N).map(floor)
+
+/*new Graphics(createSVG('fig1',{'aspectRatio':1}))
+    .matrixPlot(IncMatr)
+*/
+
+p = new Graphics(createSVG('fig2'),{'aspectRatio':1})
+
+function step()
+{
+    ns = ns.map((n,i) => dice(Net[i].map(j=>ns[j]))() || n)
+    var h = new Histogram().fromList(ns)
+    p.clear().histogram(hs).axes({})
+}
+
+
+    </script>
+</html>

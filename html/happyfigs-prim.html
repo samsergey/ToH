@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+    <meta charset='UTF-8'/>
     <script src='../lib/d3.js'></script>
     <script src='../lib/analysis.js'></script>
     <script src='../lib/functions.js'></script>
@@ -94,7 +95,7 @@
 </style>
   </head>
     <body>
-    <svg id='fig1' width='500' height='500'></svg>
+    <svg id='fig1' width='500' height='300'></svg>
     <svg id='fig2' width='500' height='500'></svg>
     <script>
     
@@ -295,7 +296,7 @@ function happyDecayHist2(opts)
 	
     var life,zero,dx
    
-    h = new Histogram(10).fromList(Pareto(1,2/3).samples(100000))
+    h = new Histogram(10).fromList(Pareto(1,3/2).samples(10000))
     return new Graphics(fig)
 	.xRange([0,1000])
 	.yRange([0,1000])
@@ -959,7 +960,39 @@ function leeteration(n)
 	.axes({xLabel:"",yLabel:""})
     	.matrixPlot(mm)
 }
-leeteration(4)
+//leeteration(4)
+
+function randomReturn()
+{
+    proc = RandWalk(Normal(0,2))
+    function step() {
+	proc.reset()
+	proc.next()
+	var s = Math.sign(proc.get()[1])
+	var i = 0
+	return proc.runWhile(x => Math.sign(x)==s && (i++<110)).length-1
+    }
+    var h = new Histogram().fromList(nestList(step,undefined,20000).tail())
+    var d = 1/3
+    return new Graphics(fig1)
+	.xRange([1,100])
+    	.yRange([0.0001,1])
+	.xAxisType('log')
+    	.yAxisType('log')
+	.histogram(h,{'type':'PDF','kind':'needles'})
+	.plot(Pareto(1,1/3).PDF)
+//    	.plot(x => gamma(x)/gamma(x+d+1)/gamma(d+3))
+	.clipPaper()
+	.axes({xLabel : 'длительность периодов в жизни',
+	       yLabel : 'вероятность наблюдения',
+	       xTicks : 5,
+	       xTickValues:[1,2,5,10,20,50,100],
+	       yTickValues:[1e0,1e-1,1e-2,1e-3],
+	       xTickFormat : fmt.int,
+	       yTickFormat : fmt.pow10})
+}
+randomReturn()
+
 </script>
   </body>
 </html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    </style>
+    </head>
+    <body>
+    <canvas id='paper' width='500' height='1000'></canvas>
+</body>
+    <script>
+
+var IncMatr = [], N = 10000, m = 25, M=200
+var Net = {}
+
+for (var i = 0; i <= N; i++)
+{
+    var n = Geometric(1/m).generator()
+    const normalize = x => Math.round(x < 0 ? N+x : x > N ? x-N : x)
+    js = Normal(0,3*n).samples(n).map(j => normalize(i+j))
+    Net[i]=js
+}
+
+var Names = Uniform([0,M]).samples(N).map(floor)
+
+p = new Graphics(createSVG('fig2',{'aspectRatio':1}))
+    .xRange([0,M])
+    .yRange([0,M])
+
+function step()
+{
+    var u = Uniform([0,M]).generator, b=Bernoulli(1/50).generator
+    function newname(n,i)
+    {
+	var x = dice(Net[i].map(j=>Names[j]))() || n
+	return [floor(u()),x][b()]
+    }
+    for(var k = 0; k<10; k++)
+	Names = Names.map(newname)
+    showHistory()
+}
+var ctx = paper.getContext('2d')
+var s = ctx.canvas.width/M
+function showHistory()
+{
+    var h = new Histogram().fromList(Names), c
+    var rate = h.bins.sorted((b2,b1)=>h.data[b1]-h.data[b2]).take(10)
+    rate.forEach(b => {
+	ctx.beginPath()
+	c = h.data[b]/h.number*50
+	ctx.fillStyle = `rgb(255,${255*(1-c)},${255*(1-c)})`
+	ctx.rect(b*s,0,s,s)
+	ctx.fill()
+    })
+   ctx.translate(0, s);
+}
+
+window.setInterval(step,100)
+    </script>
+</html>

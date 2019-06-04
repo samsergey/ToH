@@ -129,7 +129,7 @@ Array.prototype.foldMap = function(f,m)
 Array.prototype.sum = function(f,s0)
 {
     var f = f || id
-    return this.reduce((res,x) => res + f(x), s0 || 0)
+    return this.reduce((res,x,i) => res + f(x,i), s0 || 0)
 }
 
 Array.prototype.reversed = function()
@@ -148,10 +148,11 @@ Array.prototype.foldList = function(f,x0)
     return res
 }
 
-Array.prototype.accumsum = function (x0)
+Array.prototype.accumsum = function (f,x0)
 {
+    var F = f || (x => x)
     var res = [x0 || 0]
-    this.forEach(x=>res.push(x+res.last()))
+    this.forEach((x,i)=>res.push(F(x,i)+res.last()))
     return res
 }
 
@@ -245,12 +246,12 @@ Array.prototype.add = function (x)
     for(var i = 0; i < n; i++)
     {
 	y = this.shift()
-	if (y == x)
+	if (y.toString() == x.toString())
 	{
 	    res.push(y)
 	    break
 	}
-	if (y > x)
+	if (y.toString() > x.toString())
 	{
 	    res.push(x)
 	    res.push(y)
@@ -416,4 +417,26 @@ Array.prototype.rsum = function(f)
 Array.prototype.vadd = function (a)
 {
     return this.map((x,i) => a[i]+x)
+}
+
+Array.prototype.distance = function (v)
+{
+    return sqrt(this.sum((x,i)=>(x-v[i])**2))
+}
+
+Array.prototype.sparce = function (n)
+{
+    var L = 0
+    for(var i = 1; i < this.length; i++)
+	L += this[i].distance(this[i-1])
+    var dl = L/n, res = [this[0]], l = 0
+    for(var i = 1; i < this.length; i++)
+    {
+	l += this[i].distance(this[i-1])
+	if (l >= dl || i == this.length-1) {
+	    res.push(this[i])
+	    l=0
+	}
+    }
+    return res
 }

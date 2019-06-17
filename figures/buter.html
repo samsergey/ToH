@@ -22,11 +22,11 @@
     <script>
 function figure1()
 {
-    var h = new Histogram(5).fromDistribution(Gamma(50,0.5),1000)
+    //var h = new Histogram(5).fromDistribution(Gamma(50,0.5),1000)
     new Graphics(createSVG('fig1',{'size':300,'aspectRatio':1}))
 	.xRange([0,200])
-	.yRange([0,250])
-	.histogram(h)
+	.yRange([0,0.05])
+	.plot(Gamma(50,0.5).PDF,{'filled':true})
 	.axes({	xLabel : "уровень воды (см)",
 		yLabel : "число наблюдений"
 		})

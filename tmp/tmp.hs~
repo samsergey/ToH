@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns, DeriveFunctor #-}
 
 module Main where
 
@@ -57,3 +57,11 @@ primesq = 2 : sieve 3 (singleton 4 2)
 
 
 main = print $ primesq !! 100000
+
+newtype Parser a = Parser {unParse :: String -> [(String,a)]}
+--  deriving Functor
+
+instance Functor Parser where
+  fmap f = Parser . (fmap . fmap . fmap) f . unParse
+
+

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='leela.js'></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+    .ref .line {
+	stroke:gray;
+    }
+    .bar .line {
+	stroke:black;
+	stroke-width:0.5;
+    }
+</style>
+  </head>
+    <body>
+    <svg id='fig1' width='300' height='250'></svg>
+    <script>
+    
+var fig1 = d3.select("#fig1")
+
+var g = new Graphics(fig1,{'aspectRatio':1})
+
+function polygon(n,s)
+{
+    s = s|1
+    da = s/n*2*pi
+    a = 0
+    g.cleanPaper()
+	.listLinePlot(range(0,s*(n+1))
+		      .map(() => {a+=da;return [sin(a),cos(a)]}))
+}
+
+//h = new Histogram().fromList(range(100).map(()=>range(100).map(()=>[dice([0,1])()].concat([0])).filter(l=>l.sum()==0).length))
+
+sizes = [[3.5, 4, 3, 4.5, 3, 4.5, 4, 4,  2.5],
+	 [2.5, 3, 2, 2.5, 2.9, 2.6, 2.2, 3, 2.5],
+	 [2, 2.2, 2, 1.5, 2, 2.1, 1.9, 1.8, 2],
+	 [1.4, 1.5, 1.5, 1.4, 1.3, 1.6, 1.6, 1.4, 1.8],
+	 [1, 1.3, 1.1, 1, 1, 1.1, 1.2, 1.3, 1.1] ].reversed()
+
+weights = [1,2,4,8,16]
+refsize = sizes[0].mean()
+g.yRange([0.8,16]).xRange([0.8,4])
+    .xAxisType('log').yAxisType('log')
+    .plot(x=>x,{'class':'ref'})
+    .plot(x=>x**2,{'class':'ref'})
+    .plot(x=>x**3,{'class':'ref'})
+    .listPlot(sizes.map(s => s.mean()/refsize).zip(weights))
+//    .listPlot(sizes.zip(weights).mapappend(([s,w]) => s.map(x=>[x/refsize,w])),{'class':'data'})
+    .line([[1*(1-0.08),1],[1*(1+0.08),1]],{'class':'bar'})
+    .line([[1.34*(1-0.1),2],[1.34*(1+0.1),2]],{'class':'bar'})
+    .line([[1.73*(1-0.12),4],[1.73*(1+0.12),4]],{'class':'bar'})
+    .line([[2.3*(1-0.13),8],[2.3*(1+0.13),8]],{'class':'bar'})
+    .line([[3.27*(1-0.15),16],[3.27*(1+0.15),16]],{'class':'bar'})
+    .plot(x=>x**2.45)
+    .axes({'xLabel':'относительный размер комка',
+	   'yLabel':'относительная масса комка',
+	   'xTickFormat':fmt.number,
+	   'yTickFormat':fmt.number,
+	   'xTickValues':range(1,5,1),
+	   'yTickValues':[1,2,4,8,16]})
+    .label('одномерные тела',{'at':[2,1.7],'angle':20})
+    .label('плоские тела',{'at':[1.7,2.4],'angle':36})
+    .label('объёмные тела',{'at':[1.6,4.4],'angle':49})
+
+</script>
+  </body>
+</html>

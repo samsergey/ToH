@@ -28,7 +28,7 @@ function figure1()
 	.yRange([0,0.05])
 	.plot(Gamma(50,0.5).PDF,{'filled':true})
 	.axes({	xLabel : "уровень воды (см)",
-		yLabel : "число наблюдений"
+		yLabel : "вероятность наблюдения"
 		})
     new Graphics(createSVG('fig2',{'size':300,'aspectRatio':1}))
 	.xRange([0,20])

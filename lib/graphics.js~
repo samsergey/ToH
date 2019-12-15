@@ -1,7 +1,26 @@
+function createSVG(id, opts)
+{
+    var defaults = {
+	'class'  : 'graphics',
+	'aspectRatio' : 0.68,
+	'size' : 400
+    }
+
+    var options = Object.assign(defaults, opts || {})
+    
+    var res = document.createElementNS('http://www.w3.org/2000/svg',"svg")
+    res.setAttribute('id', id)
+    res.setAttribute('width', options.size)
+    res.setAttribute('height', options.size*options.aspectRatio)
+    res.setAttribute('class', options['class'])
+    document.body.appendChild(res)
+    return d3.select("#"+id)
+}
+
 function Graphics(viewport, opts)
 {
     var defaults = {
-	margin    : {left : 55, right : 30, top : 30, bottom : 60}, 
+	margin    : {left : 40, right : 30, top : 30, bottom : 55}, 
 	xRange    : 'automatic',
 	yRange    : 'automatic',
 	xAxisType : 'linear',
@@ -114,8 +133,18 @@ var fmt = {
     'normal' : null,
     'percent' : d3.format("." + max(0, d3.precisionFixed(0.05) - 2) + "%"),
     'int' : d3.format('i'),
-    'pow10' : n => "10"+sup(floor(log10(n))),
-    'h:mm' : t=>`${floor(t/60)}:${t%60==0?"00":t%60}`
+    'pow10' : pow10,
+    'h:mm' : t=>`${floor(t/60)}:${t%60==0?"00":t%60}`,
+    'number' : x => x.toString()
+}
+
+function pow10(n)
+{
+    if (n == 1) return 1
+    var x = Math.round(log(10,n))
+    if (x == 1) return 10
+    if (x == 2) return 100
+    return "10"+sup(x)
 }
 
 Graphics.prototype.clipPaper = function ()
@@ -172,10 +201,10 @@ Graphics.prototype.axes = function (opts)
     var xAxisPositionY = this.viewportHeight - this.options.margin.bottom+1
     var yAxisPositionX = this.options.margin.left-1
     var yAxisPositionY = this.options.margin.top
-    var xAxisLabelPositionX = this.options.margin.left + this.width / 2
+    var xAxisLabelPositionX = this.options.margin.left + this.width / 2 + 20
     var xAxisLabelPositionY = this.viewportHeight - this.options.margin.bottom / 3
     var yAxisLabelPositionX = 12 + 0*this.options.margin.left
-    var yAxisLabelPositionY = this.options.margin.top + this.height / 2 
+    var yAxisLabelPositionY = this.options.margin.top + this.height / 2 -20
 
     var g = this.viewport.append('g').attr('class','axis')
 
@@ -227,7 +256,7 @@ Graphics.prototype.label = function (txt,opts)
     var defaults = {
 	at       : [0.5*(this.xRange()[0]+this.xRange()[1]),0.5*(this.yRange()[0]+this.yRange()[1])],
 	angle    : 0,
-	text     : txt || "label",
+	text     : txt,
 	'class'  : null,
 	'parent' : null
         }
@@ -541,7 +570,8 @@ Graphics.prototype.histogram = function(hist, opts)
 	'class'  : 'histogram',
 	'parent' : null,
 	'barWidth' : 0.95,
-	'values' : false
+	'values' : false,
+	'smoothRadius' : 2
         }
 
     var options = Object.assign(defaults, opts || {})
@@ -611,6 +641,11 @@ Graphics.prototype.histogram = function(hist, opts)
 	    .attr("x2", d => this.X(d.bin)+2*bw/2)
 	    .attr("y1", d => this.Y(d.value))
 	    .attr("y2", d => this.Y(d.value))
+    }
+    else if (options.kind == 'smooth') {
+	dd = data
+	f = x => data.sum(d => d.value*Normal(0,options.smoothRadius*hist.step).PDF(x-d.bin-hist.step/2))
+	this.plot(f)
     }
     
     return this
@@ -786,7 +821,7 @@ Graphics.prototype.disc = function ([x,y],r,opts)
     var g = this.paper.append('circle')
 	.attr("cx",this.X(x))
 	.attr("cy",this.Y(y))
-	.attr("r",this.X(r))
+	.attr("r",this.X(r)-this.X(0))
     if (options['class'])
 	g.attr("class",options['class'])
     return this
@@ -861,4 +896,36 @@ Graphics.prototype.matrixPlot = function (m,opts)
     return this
 }
 
+Graphics.prototype.LorentzPlot = function(data,options)
+{
+    defaults = {
+	'filled':true,
+	'points':false,
+	'joined':true,
+	'class':'lower',
+	yLabel : 'доля элементов',
+	xLabel : 'доля групп',
+	xTickValues : range(0,1.25,0.25),
+	yTickValues : range(0,1.25,0.25),
+	'Gini': undefined
 
+    }
+    var opts = Object.assign(defaults, options || {})
+    var res = this.xRange([0,1]).yRange([0,1])
+	.listPlot([[0,0],[1,1]], {'filled':true,
+				  'points':false,
+				  'joined':true,
+				  'class':'upper'})
+    if(data != 'empty')
+	res.listPlot(data,opts)
+    if(opts.Gini != undefined)
+    	res.label(opts.Gini,{'at':[0.3,0.8]})
+
+    return res.axes({xLabel : opts.xLabel,
+		     yLabel : opts.yLabel,
+		     xTickValues : opts.xTickValues,
+		     yTickValues : opts.yTickValues,
+		     xTickFormat : fmt.percent,
+		     yTickFormat : fmt.percent})
+
+}

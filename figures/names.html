@@ -31,11 +31,11 @@ for (var i = 0; i <= N; i++)
     Net[i]=js
 }
 
-var Names = Uniform([0,M]).samples(N).map(floor)
+//var Names = Uniform([0,M]).samples(N).map(floor)
 
-p = new Graphics(createSVG('fig2',{'aspectRatio':1}))
-    .xRange([0,M])
-    .yRange([0,M])
+//p = new Graphics(createSVG('fig2',{'aspectRatio':1}))
+//    .xRange([0,M])
+//    .yRange([0,M])
 
 function step()
 {
@@ -65,6 +65,6 @@ function showHistory()
    ctx.translate(0, s);
 }
 
-window.setInterval(step,100)
+//window.setInterval(step,100)
     </script>
 </html>

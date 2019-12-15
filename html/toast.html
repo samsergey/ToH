@@ -49,7 +49,7 @@
     </head>
     <body>
     <svg id='fig1' width='300' height='200'></svg>
-    <svg id='fig2' width='400' height='400'></svg>
+    <svg id='fig2' width='400' height='300'></svg>
     <span id="cnv"></span><span id="cnv"></span>
     <script>
     
@@ -289,12 +289,12 @@ function figure7()
 	.yRange([0,2])
 	.plot(Exponential(2).PDF,{'class':'pdf',
 				  'filled':true})
-	.axes({	xLabel : "начальная горизотальная скорость (м/с)",
+	.axes({	xLabel : "начальная горизонтальная скорость (м/с)",
 		yLabel : "плотность вероятности",
 		xTickValues: range(0,3,0.5)})
 }
 
-//figure7()
+figure7()
 
 function figure8()
 {
@@ -331,7 +331,7 @@ function figure9()
 }   
 
 //n == 2 v w/g = w t
-figure9()
+//figure9()
 
 
 

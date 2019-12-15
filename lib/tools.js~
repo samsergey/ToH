@@ -132,6 +132,13 @@ Array.prototype.sum = function(f,s0)
     return this.reduce((res,x,i) => res + f(x,i), s0 || 0)
 }
 
+Array.prototype.mean = function(f)
+{
+    var f = f || (x => 1)
+    return this.reduce((res,x,i) => res + x*f(x,i), 0)/this.length
+}
+
+
 Array.prototype.reversed = function()
 {
     var res = [].concat(this)
@@ -439,4 +446,20 @@ Array.prototype.sparce = function (n)
 	}
     }
     return res
+}
+
+function Queue(N)
+{
+    this.data = []
+    this.add = function (x)
+    {
+	if (this.data.length < N)
+	    this.data.push(x)
+	else
+	{
+	    this.data.push(x)
+	    this.data.shift(x)
+	}
+	return this
+    }
 }

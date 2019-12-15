@@ -65,3 +65,6 @@ instance Functor Parser where
   fmap f = Parser . (fmap . fmap . fmap) f . unParse
 
 
+multable n = [[(a*b) `mod` n | a <- [0..n-1]] | b <- [0..n-1]]
+
+vis tbl = putStr $ unlines $ [[if x==0 then '0' else ' ' | x <- y ] | y <- tbl] 

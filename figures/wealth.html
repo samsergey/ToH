@@ -18,7 +18,8 @@
       }
     </style>
     </head>
-    <body></body>
+    <body>
+
     <script>
       function degenerate()
       {
@@ -32,7 +33,7 @@
 	  var lor = createSVG('fig12',{'aspectRatio':1,'size':270})
 	  new Graphics(lor,{'class' : 'Lorentz'})
 	      .LorentzPlot([[0,0],[1,1]], {Gini : 0,
-					   xLabel : 'доля членов группы',
+					   xLabel : 'доля участников группы',
 					   yLabel : 'доля общей суммы'})
       }
 //      degenerate()
@@ -46,12 +47,12 @@
 	      .xRange([0,200])
 	      .listPlot(lst,{'needles':true})
 	      .plot(Normal(100,100).PDF)
-	      .axes({ yLabel : 'доля членов группы',
+	      .axes({ yLabel : 'доля участников группы',
 		      xLabel : 'уровень богатства'})
 	  var lor = createSVG('fig22',{'aspectRatio':1,'size':270})
 	  new Graphics(lor,{'class' : 'Lorentz'})
 	      .LorentzPlot('empty', { Gini : 0.02,
-				      xLabel : 'доля членов группы',
+				      xLabel : 'доля участников группы',
 				      yLabel : 'доля общей суммы' })
 	      .listLinePlot(f.LorentzCurve(range(60,130,1)),{'class':'lower','filled':true})
       }
@@ -64,7 +65,7 @@
 	      .xRange([0,210])
 	      .yRange([0,1/150])
 	      .plot(Uniform([0,200]).PDF,{'filled':true,plotPoints:400})
-	      .axes({yLabel : 'доля членов группы',
+	      .axes({yLabel : 'доля участников группы',
 		     xLabel : 'уровень богатства',
 		     yTickValues : range(0,0.007,0.001),
 		     yTickFormat : fmt.number
@@ -73,7 +74,7 @@
 	  var h= new Histogram(2).fromDistribution(Uniform([0,100]),1000)
 	  new Graphics(lor,{'class' : 'Lorentz'})
 	      .LorentzPlot('empty',{ Gini : 0.33,
-				     xLabel : 'доля членов группы',
+				     xLabel : 'доля участников группы',
 				     yLabel : 'доля общей суммы' })
 	      .plot(x=>x*x,{'class':'lower','filled':true})
       }
@@ -365,10 +366,10 @@
 	      .label('0.25 (0.3)',{'at':[0.52,0.22],'angle':45})
     	      .label('0.5 (0.5)',{'at':[0.62,0.18],'angle':45})
               .label('0.75 (0.7)',{'at':[0.74,0.07],'angle':45})
-	      .axes({ xLabel : 'доля членов группы',
+	      .axes({ xLabel : 'доля участников группы',
 		      yLabel : 'доля общей суммы'})
       }
-//      model43()
+      model43()
 
       function model4_entropy()
       {
@@ -399,7 +400,25 @@
 		     yTickFormat:fmt['int']})
       }
       // вычисляется долго
-      model4_entropy()
+      //model4_entropy()
+/*
+var vei = [[0.00001,1],[0.0001,1e-1],[0.001,1e-2],[0.01,1e-3],[0.1,1e-4],[1,1e-5],[10,1e-6],[100,1e-7],[1000,1e-8]]
+*/
+
+function multable(n)
+{
+    var r = range(1,n)
+    return r.map(x => r.map(y => (x*y)%n == 0 ? 1 : 0))
+}
+//var fig = createSVG('fig1',{aspectRatio:1})
+
+function rerun()
+{
+    new Graphics(fig)
+	.cleanPaper()
+	.matrixPlot(multable(Number(nn.value)))
+
+}
 
     </script>
 </html>

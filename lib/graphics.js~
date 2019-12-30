@@ -13,9 +13,14 @@ function createSVG(id, opts)
     res.setAttribute('width', options.size)
     res.setAttribute('height', options.size*options.aspectRatio)
     res.setAttribute('class', options['class'])
+    res.setAttribute('xmlns',"http://www.w3.org/2000/svg")
     document.body.appendChild(res)
+    d3.select("#"+id).append('defs').attr('id',"defs")
+    d3.select("#defs").html(patterns)
     return d3.select("#"+id)
 }
+
+var patterns = '<pattern id="h1" width="20" height="20" viewBox="0,0,20,20" ><line  class="hatch" x1="1" y1="20" x2="20" y2="1" /><line  x1="0" y1="1" x2="1" y2="0" /></pattern><pattern id="h2" width="34" height="20"><line  x1="0" y1="20" x2="20" y2="0" /><line  x1="0" y1="0" x2="20" y2="20" /></pattern>'
 
 function Graphics(viewport, opts)
 {
@@ -201,7 +206,7 @@ Graphics.prototype.axes = function (opts)
     var xAxisPositionY = this.viewportHeight - this.options.margin.bottom+1
     var yAxisPositionX = this.options.margin.left-1
     var yAxisPositionY = this.options.margin.top
-    var xAxisLabelPositionX = this.options.margin.left + this.width / 2 + 20
+    var xAxisLabelPositionX = this.options.margin.left + this.width / 2 + 0
     var xAxisLabelPositionY = this.viewportHeight - this.options.margin.bottom / 3
     var yAxisLabelPositionX = 12 + 0*this.options.margin.left
     var yAxisLabelPositionY = this.options.margin.top + this.height / 2 -20
@@ -217,6 +222,7 @@ Graphics.prototype.axes = function (opts)
 	    this.xAxis = this.xAxis.ticks(options.xTicks)
 	else
 	    this.xAxis = this.xAxis.tickValues(options.xTickValues)
+	
 	g.append("g").attr('class','x')
 	    .call(this.xAxis)
 	    .attr("transform", 'translate(' + xAxisPositionX + ',' + xAxisPositionY +')')
@@ -224,8 +230,9 @@ Graphics.prototype.axes = function (opts)
 	g.append('g').attr('class','axisLabel')
 	    .attr("transform", 'translate(' + xAxisLabelPositionX + ',' + xAxisLabelPositionY + ')')
 	    .append("text").attr('class',options['class'])
-	    .attr('dx',-options.xLabel.length*4)
+	    .attr('dx',-options.xLabel.length*2)
 	    .text(options.xLabel)
+	
     }
     if (options.yAxis)
     {
@@ -243,7 +250,7 @@ Graphics.prototype.axes = function (opts)
 	g.append('g').attr('class', 'axisLabel')
 	    .attr("transform", 'translate(' + yAxisLabelPositionX + ',' + yAxisLabelPositionY + ')')
 	    .append("text").attr('class', options['class'])
-	    .attr('dx', -options.yLabel.length*4)
+	    .attr('dx', -options.yLabel.length*3)
 	    .attr('transform', 'rotate(-90)')
 	    .text(options.yLabel)
     }
@@ -304,7 +311,6 @@ Graphics.prototype.listStairsPlot = function (d, opts)
     return this.listLinePlot(pts,opts)
 }
 
-
 Graphics.prototype.listPlot = function (d, opts)
 {
     var defaults = {
@@ -332,7 +338,7 @@ Graphics.prototype.listPlot = function (d, opts)
 
     var parent = options.parent && d3.select(options.parent) || this.paper
     var g = parent.append('g').attr('class',options['class'])
-
+  
     if (options.filled)
     {
 	var area = d3.area().x(d=>this.X(d[0])).y0(this.height).y1(d => this.Y(d[1]))

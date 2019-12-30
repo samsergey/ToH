@@ -11,7 +11,7 @@
     <script src='../lib/graphics.js'></script>
     <script src='../lib/signal.js'></script>
     <script src='../lib/odesolve.js'></script>
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/styles2.css">
     <style>
       .wealth .plot {
 	  stroke-opacity:0.7;
@@ -26,9 +26,9 @@ function figure1()
     new Graphics(createSVG('fig1',{'size':300,'aspectRatio':1}))
 	.xRange([0,200])
 	.yRange([0,0.05])
-	.plot(Gamma(50,0.5).PDF,{'filled':true})
+	.plot(Gamma(50,0.5).PDF,{'filled' : true})
 	.axes({	xLabel : "уровень воды (см)",
-		yLabel : "число наблюдений"
+		yLabel : "вероятность наблюдения"
 		})
     new Graphics(createSVG('fig2',{'size':300,'aspectRatio':1}))
 	.xRange([0,20])

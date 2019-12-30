@@ -239,3 +239,13 @@
 .matrixPlot .positives {
     fill : indianred;
 }
+
+.hatched {
+    fill : url(#hatch1);
+}
+
+.hatch {
+    fill : none;
+    stroke : black;
+    stroke-width : 25%;
+}

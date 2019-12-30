@@ -73,6 +73,32 @@ g.yRange([0.8,16]).xRange([0.8,4])
     .label('плоские тела',{'at':[1.7,2.4],'angle':36})
     .label('объёмные тела',{'at':[1.6,4.4],'angle':49})
 
+
+tbl = [[1,2,3,4],[3,4,1,2],[4,3,2,1],[2,1,4,3]]
+
+function fold(seq)
+{
+    var r = seq[0]
+    seq.tail().forEach(x => {r = tbl[r-1][x-1]})
+    return r
+}
+
+
+
+function samples(n) {
+    if (n==1)
+	return range(1,5)
+    if (n==2)
+	return range(1,5).outer(range(1,5))
+    return samples(n-1).outer(range(1,5)).map(([l,x])=>l.concat([x]))
+}
+
+function folds(n) {
+    var res = {}
+    samples(n).forEach(s => {f=fold(s); res[f] = res[f] ? res[f].concat([s]) : [s]})
+    return res
+}
+
 </script>
   </body>
 </html>

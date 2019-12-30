@@ -13,23 +13,28 @@
     <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-    .ref .line {
-	stroke:gray;
+    .plot .line {
+	stroke-opacity:20%;
     }
     .bar .line {
 	stroke:black;
 	stroke-width:0.5;
     }
+#    .points {
+#	stroke:red;
+#	stroke-width:2;
+    }
+
 </style>
   </head>
     <body>
-    <svg id='fig1' width='300' height='250'></svg>
+    <svg id='fig1' width='250' height='250'></svg>
     <script>
     
 var fig1 = d3.select("#fig1")
 
 var g = new Graphics(fig1,{'aspectRatio':1})
-
+/*
 function polygon(n,s)
 {
     s = s|1
@@ -98,6 +103,29 @@ function folds(n) {
     samples(n).forEach(s => {f=fold(s); res[f] = res[f] ? res[f].concat([s]) : [s]})
     return res
 }
+*/
+
+function Sqrt(n,m)
+{
+    return range(0,m).filter(x => (x*x % m) == n % m).map(x => x>m/2?x-m:x)
+}
+
+g.xRange([0,100])
+    .yRange([-50,50])
+    .listPlot(range(0,100).mapappend(x => Sqrt(5,x).map(s=>[x,s])))
+    .axes({'xLabel':'mod m','yLabel':"√5"})
+    .gridLines({y:[0]})
+
+
+/*
+var m = 5
+g.xRange([0,m-1])
+    .yRange([0,m-1])
+//    .plot(x=>(x*x-x-1+m) % m)
+    .listPlot(range(0,m).map(x => [x,(x*x-x-1+m) % m]))
+    .axes({'yLabel':"x - 1 - 1"})
+    .gridLines({x:range(0,m),y:range(0,m)})
+*/
 
 </script>
   </body>

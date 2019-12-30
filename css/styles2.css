@@ -11,7 +11,7 @@
 
 
 .listPlot .area {
-    fill : skyblue;
+    fill : url(#h1);
 }
 
 .listPlot .line {
@@ -36,7 +36,7 @@
 }
 
 .listPlot .A .area {
-    fill : palegreen;
+    fill : url(#h1);
 }
 
 .listPlot .B .line {
@@ -44,7 +44,7 @@
 }
 
 .listPlot .B .area {
-    fill : pink;
+    fill : url(#h2);
 }
 
 .listPlot .A .points {
@@ -63,12 +63,11 @@
 
 
 .plot .area {
-    fill : goldenrod;
-    fill-opacity : 0.75;
+    fill : url(#h1);
 }
 
 .plot .line {
-    stroke : navy;
+    stroke : black;
 }
 
 .plot .points {
@@ -84,8 +83,7 @@
 }
 
 .A .area {
-    fill : darkorange;
-    fill-opacity : 0.75;
+    fill : url(#h2);
 }
 
 .B .line {
@@ -94,8 +92,7 @@
 }
 
 .B .area {
-    fill : brown;
-    fill-opacity : 0.5;
+    fill : url(#h2);
 }
 
 .D .line {
@@ -104,8 +101,7 @@
 }
 
 .D .area {
-    fill : darkorange;
-    fill-opacity : 0.5;
+    fill : url(#h2);
 }
 
 .C .line {
@@ -114,8 +110,7 @@
 }
 
 .C .area {
-    fill : green;
-    fill-opacity : 0.5;
+    fill : url(#h2);
 }
 
 .refference {
@@ -238,4 +233,9 @@
 
 .matrixPlot .positives {
     fill : indianred;
+}
+
+.hatch {
+    stroke : black;
+    stroke-width : 2px;
 }

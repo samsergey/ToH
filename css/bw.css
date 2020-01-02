@@ -65,6 +65,14 @@
     stroke : black;
 }
 
+.marker {
+    fill : black;
+    stroke: none;
+    font-family : sans-serif;
+    font-size : 120%;
+
+}
+
 .needles {
     stroke : black;
     stroke-width : 1;
@@ -144,8 +152,9 @@
 }
 
 .gridLine {
-    stroke : #444;
-    stroke-opacity:0.25;
+    stroke : black;
+    stroke-width: 1px;
+    stroke-dasharray: 5,6;
 }
 
 .gridLineLabel {

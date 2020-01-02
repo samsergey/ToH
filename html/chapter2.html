@@ -28,8 +28,8 @@
       // Рис. 2.1
       function fig1()
       {
-	  var figure = createSVG('fig1',{'aspectRatio':1})
-	  var p = new Graphics(figure,{'left-margin':45})
+	  var figure = createSVG('fig1')
+	  var p = new Graphics(figure,{'aspectRatio':1, 'left-margin':45})
 	      .xRange([0.01,2])
 	      .yRange([0,50])
 	  var g =10
@@ -63,8 +63,8 @@
       {
 	  m = (p,a) => n => (a*n + 2*a - sqrt(a)) >= 0 ? -0.1 : (-2*a*n + sqrt(a)*n - 4*a + 4*sqrt(a) - p)/(a*n + 2*a - sqrt(a))
 	  ns = range(0,6)
-	  var figure = createSVG('fig2',{'aspectRatio':1})
-	  var p = new Graphics(figure,{'left-margin':45})
+	  var figure = createSVG('fig2')
+	  var p = new Graphics(figure,{'aspectRatio':1})
 	      .xRange([0,5]).yRange([0,5])
 	  pp =range(0.01,0.00,-0.0025)
 	  pp.map(a => p.plot(m(0.5,a),{'joined':false,'filledUp':true,'class':'grayGrad'}))
@@ -92,8 +92,8 @@
 	  var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,161.2],0.01)
 	  pts = ODE.solution(sol2,[0,1]).reversed().concat(ODE.solution(sol1,[0,1]))
 	  pts.push(pts[0])
-	  var figure = createSVG('fig3',{'aspectRatio':1})
-	  var p = new Graphics(figure,{'left-margin':45})
+	  var figure = createSVG('fig3')
+	  var p = new Graphics(figure,{'aspectRatio':1})
 	      .xRange([0,5]).yRange([0,5])
 	  
 	  p.xRange([-3,3])
@@ -111,11 +111,20 @@
       
       // Рис. 2.6
       function fig26()
-      {xTickFormat: fmt['int'],
-		     yTickValues:[1],
-		     yTickFormat: fmt['int'],
+      {
+	  var figure = createSVG('fig4')
+	  new Graphics(figure).xRange([0,3]).yRange([0,2.5])
+	      .plot(x => exp(-2*x))
+	      .plot(x => exp(2*x))
+    	      .plot(x => 0.98+1/(1+exp(-4*(x-1))))
+	      .label("катастрофа",{at:[0.45,2.0],angle:0})
+	      .label("релаксация",{at:[1.5,0.2],angle:0})
+	      .label("бифуркация или",{at:[2,1.77],angle:0})
+	      .label("самоорганизация",{at:[2,1.58],angle:0})
+	      .axes({xTickValues:[1],xTickFormat:fmt['int'],
+		     yTickValues:[1],yTickFormat:fmt['int'],
 		     xLabel: "время",
-		     yLabel: "обобщённая координата процесса"})
+		     yLabel: "обобщённая координата"})
       }
       fig26()
     </script>

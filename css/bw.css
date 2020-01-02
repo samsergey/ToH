@@ -157,7 +157,13 @@
 .histogram rect {
     stroke : black;
     stroke-width: 1px;
-    fill : #url(#h1);
+    fill : url(#h2);
+}
+
+.histogram {
+    stroke : black;
+    stroke-width: 1px;
+    fill: url(#h1);
 }
 
 .histogram .stairs {

@@ -21,18 +21,18 @@
       function fig31()
       {
 	  var h = new Histogram(5).fromDistribution(Gamma(50,0.5),1000)
-	  new Graphics(createSVG('fig1',{'aspectRatio':0.9}),{'left-margin':58})
+	  new Graphics(createSVG('fig1'))
 	      .xRange([0,200])
-	      .yRange([0,200])
-	  //    .plot(Gamma(50,0.5).PDF)
+	      .yRange([0,40])
 	      .histogram(h)
+	      .plot(x => Gamma(50,0.5).PDF(x)*1000)
 	      .axes({
 		  xLabel : "уровень воды (см)",
 		  yLabel : "вероятность наблюдения",
 //		  yTickFormat: fmt.percent05,
 //		  yTickValues : range(0,0.045,0.005)
 		    })
-	  new Graphics(createSVG('fig2',{'aspectRatio':1}))
+	  new Graphics(createSVG('fig2'),{'left-margin':55})
 	      .xRange([0,20])
 	      .yRange([0,0.3])
 	      .discretePlot(Poisson(4).PMF,{'class':'pdf'})

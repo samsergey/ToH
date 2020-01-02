@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+    </style>
+    </head>
+    <body></body>
+    <script>
+      // Рис. 3.1
+      function fig31()
+      {
+	  var h = new Histogram(5).fromDistribution(Gamma(50,0.5),1000)
+	  new Graphics(createSVG('fig1',{'aspectRatio':0.9}),{'left-margin':58})
+	      .xRange([0,200])
+	      .yRange([0,200])
+	  //    .plot(Gamma(50,0.5).PDF)
+	      .histogram(h)
+	      .axes({
+		  xLabel : "уровень воды (см)",
+		  yLabel : "вероятность наблюдения",
+//		  yTickFormat: fmt.percent05,
+//		  yTickValues : range(0,0.045,0.005)
+		    })
+	  new Graphics(createSVG('fig2',{'aspectRatio':1}))
+	      .xRange([0,20])
+	      .yRange([0,0.3])
+	      .discretePlot(Poisson(4).PMF,{'class':'pdf'})
+	      .axes({
+		  xLabel : "число машин",
+		  yLabel : "вероятность наблюдения",
+		  yTickFormat: fmt.percent,
+		  yTickValues : range(0,0.35,0.05)
+		    })
+      }
+      fig31()
+      
+      // Рис. 3.2
+      // Рис. 3.3
+      // Рис. 3.4
+      // Рис. 3.5
+      // Рис. 3.6
+    </script>

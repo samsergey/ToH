@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+      .white {
+	  fill:white;
+      }
+      .rect {
+	  stroke: black;
+	  fill: none;
+	  stroke-dasharray: 5,5;
+      }
+    </style>
+    </head>
+    <body></body>
+    <script>
+      // Рис. 2.1
+      function fig1()
+      {
+	  var figure = createSVG('fig1',{'aspectRatio':1})
+	  var p = new Graphics(figure,{'left-margin':45})
+	      .xRange([0.01,2])
+	      .yRange([0,50])
+	  var g =10
+	  var w = n => t => n/(t * exp(-0.1*t))
+	  range(1,200,2)
+	      .reversed()
+	      .map(n => p.plot(w(n),{
+		  'filled':true,
+		  'class':'white'})
+		   .plot(w(n-1),{
+		       'filled':true,
+		       'joined':false,
+		       'class':'graySolid'}))
+	  p.rectangle(0.5,20,0.6,20,{
+	      'cornerRadius':2,
+	      'class':'rect'})
+	  p.clipPaper()
+	      .axes({
+		  'yLabel' : "угловая скорость (об/сек)",
+		  'xLabel' : "время полёта монетки (сек)"})
+
+	  
+      }   
+      fig1()
+      
+      // Рис. 2.2 png
+      // Рис. 2.3 png
+      // Рис. 2.4
+
+      function fig24()
+      {
+	  m = (p,a) => n => (a*n + 2*a - sqrt(a)) >= 0 ? -0.1 : (-2*a*n + sqrt(a)*n - 4*a + 4*sqrt(a) - p)/(a*n + 2*a - sqrt(a))
+	  ns = range(0,6)
+	  var figure = createSVG('fig2',{'aspectRatio':1})
+	  var p = new Graphics(figure,{'left-margin':45})
+	      .xRange([0,5]).yRange([0,5])
+	  pp =range(0.01,0.00,-0.0025)
+	  pp.map(a => p.plot(m(0.5,a),{'joined':false,'filledUp':true,'class':'grayGrad'}))
+	  pp.map(a => p.plot(m(0.5,a)))
+
+	  p.gridLines({x:ns,y:ns})
+	      .label("0.25%",{'at':[4.2,4.2]})
+	      .label("0.5%",{'at':[2.25,3.5]})
+	      .label("0.75%",{'at':[1.4,1.6]})
+	      .label("1%",{'at':[1.5,0.5]})
+	      .clipPaper()
+	      .axes({xTickValues:ns,
+		     yTickValues:ns,
+		     xTickFormat: fmt.int,
+		     yTickFormat: fmt.int,
+		     xLabel:'число горизонтальных складок',
+		     yLabel:'число вертикальных складок',})
+      }
+      fig24()
+      
+      // Рис. 2.5
+      function fig25() {
+	  var Eq = (t,[x,y]) => [y, x*(1-x*x)+0.025*y]
+	  var sol1 = ODE.solve(Eq,[0.1,0.1],[0,160],0.01)
+	  var sol2 = ODE.solve(Eq,[-0.1,-0.1],[0,161.2],0.01)
+	  pts = ODE.solution(sol2,[0,1]).reversed().concat(ODE.solution(sol1,[0,1]))
+	  pts.push(pts[0])
+	  var figure = createSVG('fig3',{'aspectRatio':1})
+	  var p = new Graphics(figure,{'left-margin':45})
+	      .xRange([0,5]).yRange([0,5])
+	  
+	  p.xRange([-3,3])
+	      .yRange([-4,4])
+	      .listPlot(pts,{'joined':false,'points':false,'filled':true,'class':'graySolid'})
+	      .clipPaper()
+	      .axes({xLabel : "начальное отклонение",
+		     xTickValues : range(-3,4),
+		     yLabel : "начальная скорость"})
+	      .listPlot([[-1,0],[1,0]],{'class':'attr'})
+    	      .listPlot([[0,0]],{'class':'repell'})
+	  
+      }
+      fig25()
+      
+      // Рис. 2.6
+      function fig26()
+      {xTickFormat: fmt['int'],
+		     yTickValues:[1],
+		     yTickFormat: fmt['int'],
+		     xLabel: "время",
+		     yLabel: "обобщённая координата процесса"})
+      }
+      fig26()
+    </script>

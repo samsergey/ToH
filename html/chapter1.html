@@ -11,29 +11,48 @@
     <script src='../lib/graphics.js'></script>
     <script src='../lib/signal.js'></script>
     <script src='../lib/odesolve.js'></script>
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/bw.css">
     <style></style>
     </head>
     <body></body>
     <script>
-   
+
+      // Рис. 1.3
       function fig1()
       {
-	  figure = createSVG('fig1',{aspectRatio : 1})
+	  figure = createSVG('fig1',{'aspectRatio' : 1})
 	  new Graphics(figure,{'class' : 'Lorentz'})
-	      .LorentzPlot([[0,0],[0.8,0.5],[1,1]])
-	      .axes({xLabel : 'время путешествия',
-		     xTickFormat : fmt.percent,
-		     yTickFormat : fmt.percent,
-		     yLabel : 'длина пути'})
+	      .LorentzPlot([[0,0],[0.8,0.5],[1,1]],
+			   {xLabel : 'время путешествия',
+			   yLabel : 'длина пути'})
 	      .label("средняя скорость",
-		     {'at' : [0.3,0.35], 'angle' : 45 })
+		     {'at' : [0.35,0.4], 'angle' : 45 })
 	      .label("в горку",
-		     {'at' : [0.4,0.18], 'angle' : 30 })
+		     {'at' : [0.4,0.28], 'angle' : 32 })
 	      .label("с горки",
-		     {'at' : [0.9,0.6], 'angle' : 70 })
+		     {'at' : [0.84,0.65], 'angle' : 68 })
       }
+      
+      fig1()
 
+      // Рис. 1.4
+      function fig11()
+      {
+	  figure = createSVG('fig11',{})
+	  new Graphics(figure,{'left-margin':50})
+	      .xRange([0,60])
+	      .yRange([0,1.2])
+	      .listPlot([[10,1],[40,1]],
+			{'joined':false,
+			 'needles':true})
+	      .axes({'xLabel' : 'скорость (км/ч)',
+		     'yLabel' : 'длина пути (км)',
+		     'yTickValues':range(0,1.4,0.2)})
+      }
+      
+      fig11()
+      
+      // Рис. 1.5
      
       sample2 = [[5,22],[6,15],[2,8],[3,45],[8,30],[4,10],[2,8],[4,45],[6,25],[4,11]]
       
@@ -55,6 +74,9 @@
 		     yLabel : 'длина пути'})
       }
 
+      // Рис. 1.6
+
+      
       function fig3()
       {
 	  var s,t
@@ -62,12 +84,12 @@
 	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
 	  figure = createSVG('fig3',{aspectRatio : 1})
 	  var p = new Graphics(figure,{'class' : 'Lorentz'})
-	      .LorentzPlot(pts)
-	      .axes({xLabel : 'время путешествия',
-		     xTickFormat : fmt.percent,
-		     yTickFormat : fmt.percent,
-		     yLabel : 'длина пути'})
+	      .LorentzPlot(pts,{
+		  'xLabel' : 'время путешествия',
+		  'yLabel' : 'длина пути'})
       }
+
+      // Рис. 1.7
 
       function fig4()
       {
@@ -77,14 +99,11 @@
 	  pts = [t.accumsum().map(x => x/t.sum()),s.accumsum().map(x => x/s.sum())].transpose()
 	  figure = createSVG('fig4',{aspectRatio : 1})
 	  var p = new Graphics(figure,{'class' : 'Lorentz'})
-	      .LorentzPlot(pts)
-	      .axes({xLabel : 'доля автобусов',
-		     xTickFormat : fmt.percent,
-		     yTickFormat : fmt.percent,
-		     yLabel : 'доля пассажиров'})
+	      .LorentzPlot(pts, {
+		  'xLabel' : "доля автобусов",
+		  'yLabel' : "доля пассажиров"})
       }
 
-      fig1()
       fig2()
       fig3()
       fig4()

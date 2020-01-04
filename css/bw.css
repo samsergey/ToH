@@ -1,4 +1,5 @@
 @media print {
+   
     .pagebreak {
 	page-break-after: always;
     } 
@@ -76,6 +77,18 @@
     stroke : black;
 }
 
+.dashed .line {
+    stroke : black;
+    stroke-width : 1;
+    stroke-dasharray : 5,5;
+}
+
+.dotted .line {
+    stroke : black;
+    stroke-width : 1;
+    stroke-dasharray : 2,3;
+}
+
 .marker {
     fill : black;
     stroke: none;
@@ -113,11 +126,16 @@
     fill : black;
 }
 
+.polarMesh {
+    stroke: black;
+    stroke-width:0.5;
+}
+
 /* labels */
 
 .label {
     fill : black;
-    font-size: 80%;
+    font-size: 75%;
     font-family: 'Arial';
     font-style : italic;
 }
@@ -155,7 +173,7 @@
 }
 
 .Lorentz .lower .area {
-    fill : url(#h1);
+    fill : dimgray;
 }
 
 .Lorentz .lower .line {
@@ -178,7 +196,8 @@
 .histogram rect {
     stroke : black;
     stroke-width: 1px;
-    fill : url(#h2);
+    fill: black;
+    fill-opacity: 0.25;
 }
 
 .histogram {

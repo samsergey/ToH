@@ -13,120 +13,97 @@
     <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-    .plot .line {
-	stroke-opacity:20%;
+    .red .points {
+	stroke:none;
+	fill:red;
     }
-    .bar .line {
-	stroke:black;
-	stroke-width:0.5;
+    .green .points {
+	stroke:none;
+	fill:darkgreen;
     }
-#    .points {
-#	stroke:red;
-#	stroke-width:2;
+    .yellow .points {
+	stroke:none;
+	fill:orange;
     }
-
-</style>
-  </head>
+    .purple .points {
+	stroke:none;
+	fill:purple;
+    }
+    .label {
+	font-size : 150%;
+    }
+    </style>
+    </head>
     <body>
-    <svg id='fig1' width='250' height='250'></svg>
-    <script>
-    
-var fig1 = d3.select("#fig1")
+      <script>
 
-var g = new Graphics(fig1,{'aspectRatio':1})
-/*
-function polygon(n,s)
-{
-    s = s|1
-    da = s/n*2*pi
-    a = 0
-    g.cleanPaper()
-	.listLinePlot(range(0,s*(n+1))
-		      .map(() => {a+=da;return [sin(a),cos(a)]}))
-}
+	var z2 =  [[0,1],
+		   [1,0]]
 
-//h = new Histogram().fromList(range(100).map(()=>range(100).map(()=>[dice([0,1])()].concat([0])).filter(l=>l.sum()==0).length))
+	var z3 =  [[0,1,2],
+		   [1,2,0],
+		   [2,0,1]]
 
-sizes = [[3.5, 4, 3, 4.5, 3, 4.5, 4, 4,  2.5],
-	 [2.5, 3, 2, 2.5, 2.9, 2.6, 2.2, 3, 2.5],
-	 [2, 2.2, 2, 1.5, 2, 2.1, 1.9, 1.8, 2],
-	 [1.4, 1.5, 1.5, 1.4, 1.3, 1.6, 1.6, 1.4, 1.8],
-	 [1, 1.3, 1.1, 1, 1, 1.1, 1.2, 1.3, 1.1] ].reversed()
+	var q31 =  [[0,1,2],
+		    [2,0,1],
+		    [1,2,0]]
 
-weights = [1,2,4,8,16]
-refsize = sizes[0].mean()
-g.yRange([0.8,16]).xRange([0.8,4])
-    .xAxisType('log').yAxisType('log')
-    .plot(x=>x,{'class':'ref'})
-    .plot(x=>x**2,{'class':'ref'})
-    .plot(x=>x**3,{'class':'ref'})
-    .listPlot(sizes.map(s => s.mean()/refsize).zip(weights))
-//    .listPlot(sizes.zip(weights).mapappend(([s,w]) => s.map(x=>[x/refsize,w])),{'class':'data'})
-    .line([[1*(1-0.08),1],[1*(1+0.08),1]],{'class':'bar'})
-    .line([[1.34*(1-0.1),2],[1.34*(1+0.1),2]],{'class':'bar'})
-    .line([[1.73*(1-0.12),4],[1.73*(1+0.12),4]],{'class':'bar'})
-    .line([[2.3*(1-0.13),8],[2.3*(1+0.13),8]],{'class':'bar'})
-    .line([[3.27*(1-0.15),16],[3.27*(1+0.15),16]],{'class':'bar'})
-    .plot(x=>x**2.45)
-    .axes({'xLabel':'относительный размер комка',
-	   'yLabel':'относительная масса комка',
-	   'xTickFormat':fmt.number,
-	   'yTickFormat':fmt.number,
-	   'xTickValues':range(1,5,1),
-	   'yTickValues':[1,2,4,8,16]})
-    .label('одномерные тела',{'at':[2,1.7],'angle':20})
-    .label('плоские тела',{'at':[1.7,2.4],'angle':36})
-    .label('объёмные тела',{'at':[1.6,4.4],'angle':49})
+	var q32 =  [[0,1,2],
+		    [2,0,1],
+		    [1,2,0]]
 
+	var z4 =  [[0,1,2,3],
+		   [1,2,3,0],
+		   [2,3,0,1],
+		   [3,0,1,2]]
 
-tbl = [[1,2,3,4],[3,4,1,2],[4,3,2,1],[2,1,4,3]]
+	var v4 =  [[0,1,2,3],
+		   [1,0,3,2],
+		   [2,3,0,1],
+		   [3,2,1,0]]
 
-function fold(seq)
-{
-    var r = seq[0]
-    seq.tail().forEach(x => {r = tbl[r-1][x-1]})
-    return r
-}
+	var z5 =  [[0,1,2,3,4],
+		   [1,2,3,4,0],
+		   [2,3,4,0,1],
+		   [3,4,0,1,2],
+		   [4,0,1,2,3]]
+	
+	function plus(g)
+	{
+	    return (x,y) => g[x][y]
+	}
 
+	function fibs(g,[a,b],n)
+	{
+	    res= [a,b]
+	    for(var i = 2 ; i < n; i++)
+	    {
+		res.push(plus(g)(res[i-1],res[i-2]))
+	    }
+	    return res
+	}
 
+	var g = z2, N = g.length, k = floor(log(N,128))
+	var n = N**k
+	var row = lst => [0].concat(lst).zipWith(lst.concat([0]),plus(g))
+	var start = Bernoulli(0.6).samples(n)
+	var start = [0,1,1].repeat(n/3)
+	pts = nestList(row,start,n)
+	    .reversed()
+	    .mapappend((r,y) => r.map((n,x) => [n,[x+y/2,y]]))
+	
+	
+	var p = new Graphics(createSVG('fig1'),{'size':2000,'aspectRatio':0.45})
+	    .xRange([0,2*n]).yRange([0,n])
+	    .listPlot(pts.filter(([n,_]) => n == 1).map(x => x[1]),{'class':'green'})
+	    .listPlot(pts.filter(([n,_]) => n == 2).map(x => x[1]),{'class':'red'})
+	    .listPlot(pts.filter(([n,_]) => n == 3).map(x => x[1]),{'class':'yellow'})
+	    .listPlot(pts.filter(([n,_]) => n == 4).map(x => x[1]),{'class':'purple'})
 
-function samples(n) {
-    if (n==1)
-	return range(1,5)
-    if (n==2)
-	return range(1,5).outer(range(1,5))
-    return samples(n-1).outer(range(1,5)).map(([l,x])=>l.concat([x]))
-}
+//	range(0,k+2).map(i => p.label(N**i,{'at':[n/2+N**i/2+1,n-N**i]}))
+	
+	
+      </script>
+    </body>
+</html>	
 
-function folds(n) {
-    var res = {}
-    samples(n).forEach(s => {f=fold(s); res[f] = res[f] ? res[f].concat([s]) : [s]})
-    return res
-}
-*/
-
-function Sqrt(n,m)
-{
-    return range(0,m).filter(x => (x*x % m) == n % m).map(x => x>m/2?x-m:x)
-}
-
-g.xRange([0,100])
-    .yRange([-50,50])
-    .listPlot(range(0,100).mapappend(x => Sqrt(5,x).map(s=>[x,s])))
-    .axes({'xLabel':'mod m','yLabel':"√5"})
-    .gridLines({y:[0]})
-
-
-/*
-var m = 5
-g.xRange([0,m-1])
-    .yRange([0,m-1])
-//    .plot(x=>(x*x-x-1+m) % m)
-    .listPlot(range(0,m).map(x => [x,(x*x-x-1+m) % m]))
-    .axes({'yLabel':"x - 1 - 1"})
-    .gridLines({x:range(0,m),y:range(0,m)})
-*/
-
-</script>
-  </body>
-</html>

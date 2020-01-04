@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <script src='weather.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+      .label .dow {
+	  font-size : 50%;
+      }
+      .days circle {
+	  fill : black;
+	  fill-opacity : 0.6;
+      }
+      .weekend {
+	  fill : dimgray;
+	  fill-opacity: 0.5;
+      }
+      .sample .line {
+	  stroke: black;
+	  stroke-width: 0.75;
+	  stroke-opacity : 0.05;
+      }
+      .sample .needles {
+	  stroke: white;
+	  stroke-width: 0;
+      }
+      .sample .point {
+	  fill: black;
+	  fill-opacity : 0.1;
+	  stroke:none;
+      }
+    </style>
+    </head>
+    <body></body>
+    <script>
+    
+      // Рис. 4.1
+      function fig41()
+      {
+	  n = 3000
+	  var experiment = p => Bernoulli(p).samples(n).accumsum().zipWith(range(1,n+1),(x,y)=>x/y)
+	  var p = new Graphics(createSVG('fig41'),{'aspectRatio':0.8,'left-margin':55})
+	      .xRange([0,n])
+	      .yRange([0.3,0.7])
+	      .gridLines({y:[0.5,0.45]})
+	  repeat(100, () => p.listLinePlot(experiment(0.5),{'class':'sample'}))
+	  repeat(100, () => p.listLinePlot(experiment(0.55),{'class':'sample'}))
+	  p.clipPaper()
+	      .axes({
+		  xLabel : "количество испытаний",
+		  yLabel : "оценка параметра распределения",
+		  xTickValues: range(0,n+1000,1000),
+		  yTickFormat: fmt.number
+	      })
+
+
+      }
+      //fig41()
+
+      // Рис. 4.2
+      function fig321()
+      {  
+	  var p = new Graphics(createSVG('fig321'))
+	      .xRange([1,7])
+	      .yRange([0,1])
+	      .axes({'xLabel' : "x",
+		     'yLabel' : 'плотность вероятности',
+		     'xTickValues' : range(1,7),
+		     'yTickFormat' : fmt.normal
+		    })
+	  var N=2000
+	  var s = 1/15
+	  f = Uniform([2,5]) // Geometric(1-1/4) // Normal(4,0.5)
+	  g = f => f.PDF // f.PMF
+	  hist = () => new Histogram(s).fromDistribution(f,N)
+	  ghist = () => {
+	      var h = hist()
+	      p.histogram(h,{"type":"PDF","class":"sample",'kind':'points'})
+	      //	    .gridLines({x:[h.mean]})
+	  }
+	  repeat(20,ghist)
+	  p.plot(x => (y=>y+2*sqrt(y*(1-y)/N/s))(g(f)(x)),{"class":"dashed",'plotPoints':300})
+	  p.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/N/s)))(g(f)(x)),{"class":"dashed",'plotPoints':300})
+	  p.plot(x => g(f)(x),{'plotPoints':300})
+	  
+      }
+      //fig321()
+
+      function fig322()
+      {  
+	  var p = new Graphics(createSVG('fig322'))
+	      .xRange([1,7])
+	      .yRange([0,1])
+	      .axes({'xLabel' : "x",
+		     'yLabel' : 'плотность вероятности',
+		     'xTickValues' : range(1,7),
+		     'yTickFormat' : fmt.normal
+		    })
+	  var N=1000
+	  var s = 1/15
+	  f = Normal(4,0.5)
+	  g = f => f.PDF
+	  hist = () => new Histogram(s).fromDistribution(f,N)
+	  ghist = () => {
+	      var h = hist()
+	      p.histogram(h,{"type":"PDF","class":"sample",'kind':'points'})
+	  }
+	  repeat(30,ghist)
+	  p.plot(x => (y=>y+2*sqrt(y*(1-y)/N/s))(g(f)(x)),{"class":"dashed",'plotPoints':300})
+	  p.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/N/s)))(g(f)(x)),{"class":"dashed",'plotPoints':300})
+	  p.plot(x => g(f)(x),{'plotPoints':300})
+	  
+      }
+      //fig322()
+
+      function fig323()
+      {  
+	  var p = new Graphics(createSVG('fig323'))
+	      .xRange([1,7])
+	      .yRange([0,1])
+	  var N=2000
+	  var s = 1/15
+	  f = Geometric(1-1/4)
+	  g = f => f.PMF
+	  hist = () => new Histogram(s).fromList(f.samples(N).map(x => x + Uniform([0,1]).sample))
+	  ghist = () => {
+	      var h = hist()
+	      p.histogram(h,{"type":"PDF","class":"sample",'kind':'points'})
+	  }
+	  repeat(20,ghist)
+	  p.plot(x => (y=>y+2*sqrt(y*(1-y)/N/s))(g(f)(x)),{"class":"dashed",'plotPoints':300})
+	      .plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/N/s)))(g(f)(x)),{"class":"dashed",'plotPoints':300})
+	      .plot(x => g(f)(x),{'plotPoints':300})
+	      .clipPaper()
+	      .axes({'xLabel' : "x",
+		     'yLabel' : 'функция вероятности',
+		     'xTickValues' : range(1,7),
+		     'yTickFormat' : fmt.normal
+		    })
+
+	  
+      }
+      //fig323()
+
+      // Рис. 4.3
+      function fig43()
+      {   
+	  var p1 = new Graphics(createSVG('fig43'),{'aspectRatio':1,'left-margin':55})
+	      .xRange([0.003,0.996])
+	      .yRange([0.003,1])
+	      .yAxisType('log')
+	      .xAxisType('log')
+	  pl = p=>p1.plot(a => (1-a)*p/((1-a)*p+(1-p)*a),{'plotPoints':300,
+							  'filled':true,
+							  'class':'grayGrad'})
+	  pl(2*(1-Normal(0,1).CDF(1)))
+	  pl(2*(1-Normal(0,1).CDF(2)))
+	  pl(2*(1-Normal(0,1).CDF(3)))
+	  pl(2*(1-Normal(0,1).CDF(4)))
+	  tcks=[0.01,0.025,0.05,0.1,0.25,0.5,1]
+	  p1.clipPaper()
+	      .axes({'xLabel' : "доля гипотез, верных априори",
+		     'yLabel' : 'доля неверных результатов',
+		     'xTickValues':tcks,
+		     'xTickFormat':fmt.percent,
+		     'yTickValues':tcks,
+		     'yTickFormat':fmt.percent
+		    })
+	  p1.label('σ',{'at':[0.3,0.3]})
+	  p1.label('2σ',{'at':[0.125,0.125]})
+	  p1.label('3σ',{'at':[0.03,0.03]})
+	  p1.label('4σ',{'at':[0.0056,0.0056]})
+      }
+      fig43()
+      
+      // Рис. 4.4
+      var totalrains = data.sum()
+      var days = data.length
+      var p=1/7;
+      var h = new Histogram()
+      data.forEach((x,i) => {if(x==1) h.add((i+8)%7) })
+      
+      h.data[1.5]-=5
+      h.data[6.5]+=3
+      h.data[5.5]+=1
+      h.data[4.5]+=1
+      
+      var dow =["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
+      var datum = data.map((x,i)=>[dow[(i+8)%7],x])
+
+      function fig44()
+      {   
+	  var p1 = new Graphics(createSVG('fig44'),{'size':400,'aspectRatio':1,'class':'days'})
+	      .xRange([0,53])
+	      .yRange([0,53])
+	  
+	  ds = [0].concat(data)
+	      .partition(365)
+	      .map(y => y.partition(7))
+	      .reversed()
+	      .tail()
+	  var dy = 11
+	  repeat(5,i=>p1.rectangle(0,i*dy-6,53,2,{'class':'weekend'})
+		 .rectangle(0,i*dy+1,53,0.1,{'class':'year'})
+		 .rectangle(0,i*dy-6,53,0.1,{'class':'year'})
+		 .label(2018-i,{'at':[0,i*dy+1.5]}))
+	  repeat(5,i=>repeat(7,w=>p1.label(dow[6-w],{'at':[53,i*dy-5.8+w],'class':'dow'})))
+	  ds.forEach(
+	      (year,y) => year.forEach(
+		  (week,w) => week.forEach(
+		      (day,d) => {if(day) p1.disk([w+1/2,y*dy-d+1/2],0.4)})))
+      }
+      
+      fig44()
+      // Рис. 4.5
+
+      function fig45()
+      {
+	  m = totalrains*p
+	  s = sqrt(totalrains*p*(1-p))
+	  var p1 = new Graphics(createSVG('fig45'),{})
+	      .xRange([0,7])
+	      .yRange([0,90])
+	      .histogram(h,{'kind':'bars'})
+	      .gridLines({'y':[m + 2*s,m - 2*s]})
+    	      .label("+2σ",{'at':[7,m-1+2*s]})
+    	      .label("-2σ",{'at':[7,m-1-2*s]})
+	      .axes({'xLabel' : "",
+		     'yLabel' : 'число непогожих дней',
+		     'xTicks' : false
+		    })
+	  
+	  dow.forEach((x,i) => p1.label(x,{'at':[i+0.3,-7]}))
+      }
+      fig45()
+
+      // Рис. 4.6
+      function weekends(d) {return d.filter(([w,x]) => w=="Сб"||w=="Вс")}
+      function rains(d) { return d.filter(([w,x]) => x==1) }
+      
+      var w = weekends(datum)
+
+      function fig46()
+      {
+	  hs = new Histogram()
+	      .fromList(weekends(datum).partition(2)
+			.map(([[a,x],[b,y]]) => x || y)
+			.runs()
+			.mapappend(r => r[0]==0?r:[r.length]))
+	  
+	  var a = hs.data[3.5]
+	  hs.data[3.5]=hs.data[2.5]
+	  hs.data[2.5]=a
+	  
+	  var p1 = new Graphics(createSVG('fig46'),{})
+	      .xRange([0,7])
+	      .yRange([0,1])
+	      .histogram(hs,{'type':'PDF'})
+	      .axes({'xLabel' : "длина цепочки непогожих выходных",
+		     'yLabel' : 'доля в общем числе выходных',
+		     'xTickValues' : range(1,7)
+		    })
+	  //	.plot(x=>Geometric(1-2/7).PMF(x))
+	  f = x => Geometric(1-1/4).PMF(x+1)
+	  
+	  p1.plot(x => (y=>y+2*sqrt(y*(1-y)/hs.number))(f(x)),{"class":"dashed",'plotPoints':300})
+	  p1.plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/hs.number)))(f(x)),{"class":"dashed",'plotPoints':300})
+	  p1.plot(x => f(x),{'plotPoints':300})
+	  
+      }
+      fig46()
+
+
+    </script>
+</html>

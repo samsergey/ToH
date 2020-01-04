@@ -2,7 +2,7 @@
 #
 # input -- pdf file-name 
 
-gs -q -dNOCACHE -dNOPAUSE -dBATCH -dSAFER -sDEVICE=eps2write -sOutputFile=$1-%d.eps $1.pdf
+gs -q -dNOCACHE -dNOPAUSE -dBATCH -dSAFER -sDEVICE=eps2write -dLanguageLevel=3 -sOutputFile=$1-%d.eps $1.pdf
 
 # cropping EPS
 files=$1-*.eps

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <script src='weather.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+      .inner .points {
+	  stroke:none;
+	  fill:black;
+	  fill-opacity:0.1;
+      }
+      .outer .points {
+	  stroke:none;
+	  fill:black;
+	  fill-opacity:0.5;
+      }
+
+      .gridLine {
+	  stroke:black;
+	  stroke-width:1.75;
+	  stroke-opacity:1;
+      }
+      .wrapped {
+	  stroke: black;
+	  stroke-width:1.25;
+	  fill:black;
+	  fill-opacity:0.2;
+      }
+
+    </style>
+  </head>
+  <body></body>
+  <script>
+    // Рис. 5.1
+
+    ////////////////////////////////////////////////////////////
+    // Рис. 5.2
+    function fig52()
+    {
+	new Graphics(createSVG('fig52'),{'left-margin':55})
+	    .xRange([1,20])
+	    .yRange([0,1])
+	    .plot(x => (1 - Math.pow(0.85,x)),{'class':'curve'})
+	    .listPlot(range(1,21).map(x => (1 - Math.pow(0.85,x))),{
+		'pointSize':3,
+		'class':'points'})
+	    .axes({xTicks:20,
+		   xLabel:'размерность пространства',
+		   xTickValues:range(0,22,2),
+		   yLabel:'доля корки в общем объёме',
+		   yTickFormat : fmt.percent,
+		   yTickValues:range(0,1.2,0.2)
+		  })
+    }
+    fig52()
+
+    ////////////////////////////////////////////////////////////
+    // Рис. 5.3
+
+    function fig53()
+    {
+	var n = 10000
+	var xs = Normal(0,1).samples(n)
+	var ys = Normal(0,1).samples(n)
+	var pts = xs.zipWith(ys,(x,y)=>[x,y])
+	inn = pts.filter(([x,y])=>x*x+y*y<2)
+	out = pts.filter(([x,y])=>x*x+y*y>=2)
+	return new Graphics(createSVG('fig53'),{'aspectRatio':1})
+	    .xRange([-5,5])
+	    .yRange([-5,5])
+	    .listPlot(out,{'pointSize':0.75,"class":'outer'})
+	    .listPlot(inn,{'pointSize':0.75,"class":'inner'})
+	    .listPlot([[0,0],[1,1]],{'points':false,'joined':true})
+	    .label("σ",{'at':[0.6,0.3]})
+    }
+    
+    fig53()
+    
+    ////////////////////////////////////////////////////////////
+    // Рис. 5.4
+
+    function fig54()
+    {
+	new Graphics(createSVG('fig54'),{'left-margin':55})
+	    .xRange([0,20])
+	    .yRange([0,1])
+	    .listPlot(d3.range(1,21).map(x => (1 - Math.pow(0.64,x))))
+	    .listPlot(d3.range(1,21).map(x => (1 - Math.pow(0.95,x))),{'points':false,'marker':marker[0]})
+	    .axes({xLabel:"число критериев",
+		   yLabel:'доля «ненормальных»',
+		   yTickFormat : fmt.percent,
+		   yTickValues:range(0,1.2,0.2)
+		  })
+    }
+    
+    fig54()
+    
+    function Multispace(m,n,s)
+    {
+	h = new Histogram(1)
+	range(n).forEach(() => h.add(isNormal(Normal(0,1).samples(m))))
+	return h.PMF(1)
+	
+	function isNormal(v)
+	{
+	    return v.every(x => x <= s) ? 0 : 1
+	}
+    }
+
+    function Multispace2(m,n,s)
+    {
+	h = new Histogram(1)
+	range(n).forEach(() => h.add(isNormal(Normal(0,1).samples(m))))
+	return h.PMF(1)
+	
+	function isNormal(v)
+	{
+	    return (v.dot(v) < s*s) ? 0 : 1
+	}
+    }
+
+    ////////////////////////////////////////////////////////////
+    // рис. 5.5
+    function angle(v1,v2)
+    {
+	return 180/Math.PI*Math.acos(v1.dot(v2))
+    }
+
+    function normalize(v)
+    {
+	var n = Math.sqrt(v.dot(v))
+	return v.map(x => x / n)
+    }
+
+    function unitVector(m)
+    {
+	return normalize(Normal(0,1).samples(m))
+    }
+
+
+    function angleHist(m,n)
+    {
+	var h = new Histogram(180/40)
+	var v = unitVector(m)
+	d3.range(n).forEach(x => h.add(angle(v,unitVector(m))))
+	return h    
+    }
+
+    function angleDistPDF(m)
+    {
+	var A = gamma(m/2)/gamma((m-1)/2)/sqrt(pi) 
+	return a => {
+	    if (a < 0) return angleDistPDF(m)(-a)
+	    if (a >= 180) return angleDistPDF(m)(a-180)
+	    return deg2rad(180/pi*A*Math.pow(Math.sin(deg2rad(a)),m-2))
+	}
+    }
+
+    function angleDistCDF(m)
+    {
+	return a => integrate(angleDistPDF(m),[0,a])
+    }
+
+    function draw(m,n)
+    {
+	new Graphics(fig1)
+	    .xRange([0,180])
+	    .histogram(angleHist(m,n),{type:'PDF'})
+	    .plot(angleDistPDF(m))
+	    .axes({})
+    }
+
+    function fig55()
+    {
+	new Graphics(createSVG('fig55'),{'size':400})
+	    .xRange([0,180])
+    	    .yRange([0,1.8])
+	    .plot(angleDistPDF(2))
+    	    .plot(angleDistPDF(3),{domain:[0,180]})
+            .plot(angleDistPDF(4))
+            .plot(angleDistPDF(8))
+            .plot(angleDistPDF(16))
+	    .clipPaper()
+	    .axes({xLabel:'угол между векторами',
+		   yLabel:'плотность вероятности',
+		   xTickValues : d3.range(0,181,30)
+		  })
+    	    .label('m = 2',{at:[81,0.18]})
+	    .label('m = 3',{at:[81,0.38]})
+    	    .label('m = 4',{at:[81,0.66]})
+    	    .label('m = 8',{at:[81,1.05]})
+    	    .label('m = 16',{at:[79,1.55]})
+    }
+    fig55()
+
+    ////////////////////////////////////////////////////////////
+    //
+    function fig561()
+    {
+	h = new Histogram(1).fromList(Gamma(13,0.6)
+				      .samples(1000)
+				      .map(x => Math.round(x) % 24)
+				     )
+	//h = new Histogram().fromMap(range(1,20))
+	new Graphics(createSVG('fig561'),{'aspectRatio':0.8,'left-margin':55})
+	    .xRange([0,24])
+	    .yRange([0,0.1])
+	    .histogram(h,{'type':'PDF'})
+	    .axes({xLabel:"время суток (час)",
+		   yLabel:"частота обращения в полицию"})
+	    .gridLines({x:[h.mean]})
+    }
+    
+    function fig562()
+    {
+	mx = 0
+	my = 0
+	for(d in h.data)
+	{
+	    mx += cos(d)*h.data[d]
+	    my += sin(d)*h.data[d]
+	}
+	m = pi+Math.atan(my/mx)
+	var a = 0.08    
+	var p = new Graphics(createSVG('fig562'),{'aspectRatio':1})
+	    .xRange([-0.1,0.1])
+	    .yRange([-0.1,0.1])
+	    .polarPlot(a => h.PMF(((2*pi-a+pi/2)/(2*pi)*24) % 24),
+		       {'filled':true,
+			'plotPoints':400,
+			'domain':[0,2*pi]})
+	    .line([[0,0],[a*cos(m),a*sin(m)]],{'class':"gridLine"})
+
+	range(0,a+a/10,a/10)
+	    .map(r => p.polarPlot(x=>r,{'class':'polarMesh'}))
+	range(0,2*pi,pi/12)
+	    .map(phi => p.line([[0,0],[a*sin(phi),a*cos(phi)]],{'class':'polarMesh'}))
+        
+	range(1,25)
+	    .map(x => p.label(x,{'at':[1.09*a*cos(-x/12*pi+pi/2+pi/24)-0.005,1.09*a*sin(-x/12*pi+pi/2+pi/24)-0.003]}))
+	
+    }
+
+    fig561()
+    fig562()
+
+    ////////////////////////////////////////////////////////////
+    //
+    function Cycling(fig, distr,opts)
+    {
+	opts = opts || {}
+	var N = opts['winding'] || 10
+	var a = opts['rmax'] || 0.26
+	var  p = new Graphics(createSVG(fig),{'aspectRatio':1})
+	    .xRange([-a*1.05,a*1.05])
+    	    .yRange([-a*1.05,a*1.05])
+	range(0,a+a/10,a/10)
+	    .map(r => p.polarPlot(x=>r,{'class':'polarMesh'}))
+	range(0,2*pi,pi/20)
+	    .map(phi => p.line([[0,0],[a*sin(phi),a*cos(phi)]],{'class':'polarMesh'}))
+        
+	    p.polarPlot(distr.PDF,{ 'domain':[-10*pi,10*pi],
+				    'plotPoints' : 3600})
+	p.polarPlot(cycling(distr,N),{ 'class':'wrapped',
+				       'plotPoints' : 360,
+				       'domain':[-pi,pi],
+				       'filled':true})
+	range(0,360,45)
+	    .map(x => p.label(x+"°",{'at':[1.14*a*cos(deg2rad(x))-0.02,1.07*a*sin(deg2rad(x))-0.006]}))
+    }
+
+
+
+    Cycling('fig571',Normal(0,6),{'rmax':0.19})
+    Cycling('fig572',Exponential(1/6),{'winding':10})
+    var gam = 2
+    Cycling('fig573',{'PDF': x => 1/(pi*gam)/(1+(x/gam)**2)},{'winding':1000,'rmax':0.25})
+    //Cycling(Pareto(1,1/10),{'winding':100})
+    
+  </script>

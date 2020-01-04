@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <script src='weather.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+    </style>
+  </head>
+  <body></body>
+  <script>
+    ////////////////////////////////////////////////////////////
+    // Рис 6.1
+    
+    function fig61()
+    {
+	xs = Uniform([0,365]).samples(52)
+	new Graphics(createSVG('fig61'),{'size':500,'aspectRatio':1/10})
+	    .yRange([0,1])
+	    .xRange([0,365])
+	    .listPlot(xs.map(x => [x,0.1]),{pointSize:3})
+	    .axes({yAxis:null,
+		   xLabel:'время (дни)',
+		   xTickValues:d3.range(0,365,30)})
+    }
+    
+    //fig61()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.2
+
+    function fig62()
+    {
+	h = new Histogram(3).fromList(xs.sorted().differences(1))
+	var f = Exponential(1/7)
+	new Graphics(createSVG('fig62'),{'left-margin':55})
+	    .xRange([0,40])
+	    .yRange([0,0.2])
+    	    .histogram(h,{'type':'PMF'})
+	    .plot(f.PDF,{'marks':[f.mean]})
+	    .axes({xLabel:'длительность промежутков (дни)',
+		   yLabel:'доля интервалов'})
+	    .gridLines({x:[f.median]})
+	    .label('среднее',{at:[7,0.06]})
+    	    .label('медиана',{at:[f.median-0.2,0.12],angle:90})
+    }
+    //fig62()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.3
+
+    function happyDecay(opts)
+    {
+	
+	var N = (opts.years || 10)*365,
+	    lambda = opts.lambda || 1/7,
+	    mu = opts.mu || 1/60
+	
+	var life = [], x = 0, zero = [0].repeat(N)
+	var g1 = d3.randomNormal(0,1), p1 = DiscretePoissonProcess(lambda/2)
+	var g2 = d3.randomNormal(0,0.2), p2 = DiscretePoissonProcess(lambda)
+	var s = 1
+	var alpha = (1 - Math.pow(10,-mu))
+	for(var i = 0; i < N; i++)
+	{
+	    poi = p1() + p2()
+	    if (poi !=0) s *= -1
+	    x = x*(1-alpha) + Math.abs(g2())*p2()*s + Math.abs(g1())*p1()*s
+	    life.push(x)
+	}
+	var dx = life.map(Math.sign)
+	    .differences(1)
+	    .positions(x => x != 0)
+	    .map(x => x + 1)
+	
+	return [life, dx]
+    }
+
+    function fig63()
+    {
+//	var life,dx
+	[life, dx] = happyDecay({years:1,mu:1,lambda:2/7})
+	var ys =  d3.extent(life)
+	var good = life.map((x,i) => [i,Math.max(x,0)])
+	var bad = life.map((x,i) => [i,Math.min(x,0)])
+	return new Graphics(createSVG('fig63'),{'size':500,'aspectRatio':1/2})
+	    .yRange(ys.vadd([-1,1]))
+	    .xRange([0,365])
+	    .listLinePlot([[0,0],[life.length,0]],{'filled':true,'joined':false})
+	    .listLinePlot(life)
+	    .axes({xLabel : 'время, дни',
+		   yLabel : 'условный "уровень счастья"',
+		   yTickValues : [0],
+		   yTickFormat: fmt.int
+		  })
+	    .label('хорошо',{'at':[5,ys[1]]})
+	    .label('плохо',{'at':[5,ys[0]]})
+    }
+    //fig63()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.4
+    function fig64()
+    {
+	var life,dx
+	[life, dx] = happyDecay({years:10,mu:1/50000,lambda:2/7})
+	var ys =  d3.extent(life)
+	var pts = life.map((x,i) => [i/365,x])
+	return new Graphics(createSVG('fig64'),{'size':500,'aspectRatio':1/2})
+	    .yRange(ys.vadd([-1,1]))
+	    .xRange([0,10])
+	    .listLinePlot([[0,0],[life.length/365,0]],{'filled':true,'joined':false})
+	    .listLinePlot(pts)
+    	    .axes({xLabel : 'время, годы',
+		   yLabel : 'условный "уровень счастья"',
+		   yTickValues : [0],
+		   yTickFormat: fmt.int})
+	    .label('хорошо',{'at':[0.5,ys[1]*0.9]})
+	    .label('плохо',{'at':[0.5,ys[0]*0.9]})
+    }
+    //fig64()
+
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.5
+    
+    ////////////////////////////////////////////////////////////
+    // Рис 6.6
+    
+    ////////////////////////////////////////////////////////////
+    // Рис 6.7
+
+  </script>
+</html>

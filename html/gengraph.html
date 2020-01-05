@@ -97,18 +97,18 @@
 	    var start = [1].repeat(k)
 	    //var start = [1]
 	    pts = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
-	    start = [2]
-	    //pts2 = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
+//	    start = [2]
+//	    pts2 = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
 	    var R = (a,[x,y]) => vmul(rotate(a),[x,y,1]).most()
 	    
-	    /*
+/*	    
 	     pts = pts
 	     .concat(pts2.map(([n,p]) => [n,R(1/3*pi,p)]))
 	     .concat(pts.map(([n,p]) => [n,R(2/3*pi,p)]))
 	     .concat(pts2.map(([n,p]) => [n,R(3/3*pi,p)]))
 	     .concat(pts.map(([n,p]) => [n,R(4/3*pi,p)]))
 	     .concat(pts2.map(([n,p]) => [n,R(5/3*pi,p)]))
-	    */	
+*/	    	
 	    
 	    //	    .listPlot(pts.filter(([n,_]) => n == 0).map(x => x[1]),{'class':'green'})
 	    p.cleanPaper()
@@ -120,7 +120,7 @@
 	    //	range(0,k+2).map(i => p.label(N**i,{'at':[n/2+N**i/2+1,n-N**i]}))
 	}
 	var i = 2
-//	window.setInterval(() => step(i=(i+1) % 81),100)
+	window.setInterval(() => step(i=(i+1) % 81),50)
       </script>
     </body>
 </html>	

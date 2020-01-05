@@ -143,11 +143,12 @@
 /* diffListPlot */
 
 .diffListPlot .areaAbove {
-    fill : #F80
+    fill : none;
 }
 
 .diffListPlot .areaBelow {
-    fill : #08F
+    fill : black;
+    fill-opacity: 0.25;
 }
 
 .diffListPlot1 .above line {
@@ -200,7 +201,7 @@
     fill-opacity: 0.25;
 }
 
-.histogram {
+.histogram .points {
     stroke : black;
     stroke-width: 1px;
     fill: black;

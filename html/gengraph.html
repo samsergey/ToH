@@ -83,26 +83,44 @@
 	    return res
 	}
 
-	var g = z2, N = g.length, k = floor(log(N,128))
-	var n = N**k
-	var row = lst => [0].concat(lst).zipWith(lst.concat([0]),plus(g))
-	var start = Bernoulli(0.6).samples(n)
-	var start = [0,1,1].repeat(n/3)
-	pts = nestList(row,start,n)
-	    .reversed()
-	    .mapappend((r,y) => r.map((n,x) => [n,[x+y/2,y]]))
+	var g = z3, N = g.length, k = floor(log(N,81))
+	var n = 81
+	var p = new Graphics(createSVG('fig1'),{'size':1200,'aspectRatio':1})
+	    .xRange([-n/2,n*1.5]).yRange([-2*n,0])
 	
-	
-	var p = new Graphics(createSVG('fig1'),{'size':2000,'aspectRatio':0.45})
-	    .xRange([0,2*n]).yRange([0,n])
-	    .listPlot(pts.filter(([n,_]) => n == 1).map(x => x[1]),{'class':'green'})
-	    .listPlot(pts.filter(([n,_]) => n == 2).map(x => x[1]),{'class':'red'})
-	    .listPlot(pts.filter(([n,_]) => n == 3).map(x => x[1]),{'class':'yellow'})
-	    .listPlot(pts.filter(([n,_]) => n == 4).map(x => x[1]),{'class':'purple'})
+	function step(k)
+	{
 
-//	range(0,k+2).map(i => p.label(N**i,{'at':[n/2+N**i/2+1,n-N**i]}))
-	
-	
+	    var row = lst => [0].concat(lst).zipWith(lst.concat([0]),plus(g))
+	    //var start = Bernoulli(0.6).samples(n)
+//	    var start = [1,2,0,2,2,1,0,1].repeat(200).take(k)
+	    var start = [1].repeat(k)
+	    //var start = [1]
+	    pts = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
+	    start = [2]
+	    //pts2 = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
+	    var R = (a,[x,y]) => vmul(rotate(a),[x,y,1]).most()
+	    
+	    /*
+	     pts = pts
+	     .concat(pts2.map(([n,p]) => [n,R(1/3*pi,p)]))
+	     .concat(pts.map(([n,p]) => [n,R(2/3*pi,p)]))
+	     .concat(pts2.map(([n,p]) => [n,R(3/3*pi,p)]))
+	     .concat(pts.map(([n,p]) => [n,R(4/3*pi,p)]))
+	     .concat(pts2.map(([n,p]) => [n,R(5/3*pi,p)]))
+	    */	
+	    
+	    //	    .listPlot(pts.filter(([n,_]) => n == 0).map(x => x[1]),{'class':'green'})
+	    p.cleanPaper()
+		.listPlot(pts.filter(([n,_]) => n == 1).map(x => x[1]),{'class':'green'})
+		.listPlot(pts.filter(([n,_]) => n == 2).map(x => x[1]),{'class':'red'})
+		.listPlot(pts.filter(([n,_]) => n == 3).map(x => x[1]),{'class':'yellow'})
+		.listPlot(pts.filter(([n,_]) => n == 4).map(x => x[1]),{'class':'purple'})
+	    
+	    //	range(0,k+2).map(i => p.label(N**i,{'at':[n/2+N**i/2+1,n-N**i]}))
+	}
+	var i = 2
+//	window.setInterval(() => step(i=(i+1) % 81),100)
       </script>
     </body>
 </html>	

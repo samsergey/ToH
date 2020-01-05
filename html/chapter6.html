@@ -87,7 +87,7 @@
 
     function fig63()
     {
-//	var life,dx
+	//	var life,dx
 	[life, dx] = happyDecay({years:1,mu:1,lambda:2/7})
 	var ys =  d3.extent(life)
 	var good = life.map((x,i) => [i,Math.max(x,0)])
@@ -132,12 +132,185 @@
 
     ////////////////////////////////////////////////////////////
     // Рис 6.5
+    function fig65()
+    {
+	var life,dx
+	[life, dx] = happyDecay({years:10,mu:1/50000,lambda:2/7})
+	var ys =  d3.extent(life)
+	var pts = life.map((x,i) => [i/365,x])
+	var p = new Graphics(createSVG('fig65'),{'size':500,'aspectRatio':1/2})
+	    .yRange([-50,50])
+	    .xRange([0,10])
+	    .listLinePlot([[0,0],[life.length/365,0]],{'filled':true,'joined':false})
+    	    .axes({xLabel : 'время, годы',
+		   yLabel : 'условный "уровень счастья"',
+		   yTickValues : [0],
+		   yTickFormat: fmt.int})
+	    .label('хорошо',{'at':[0.5,45]})
+	    .label('плохо',{'at':[0.5,-45]})
+
+	repeat(10, () => {
+	    [life, dx] = happyDecay({years:10,mu:1/50000,lambda:2/7})
+	    p.listLinePlot(life.map((x,i) => [i/365,x]))
+	})
+    }
+    //fig65()
     
     ////////////////////////////////////////////////////////////
     // Рис 6.6
+    function fig66()
+    {
+	var life,dx
+	[life, dx] = happyDecay({years:10,mu:1/120,lambda:2/7})
+	var ys =  d3.extent(life)
+	var pts = life.map((x,i) => [i/365,x])
+	var p = new Graphics(createSVG('fig66'),{'size':500,'aspectRatio':1/2})
+	    .yRange([-10,10])
+	    .xRange([0,10])
+	    .listLinePlot([[0,0],[life.length/365,0]],{'filled':true,'joined':false})
+	    .listLinePlot(pts)
+    	    .axes({xLabel : 'время, годы',
+		   yLabel : 'условный "уровень счастья"',
+		   yTickValues : [0],
+		   yTickFormat: fmt.int})
+	    .label('хорошо',{'at':[0.5,8]})
+	    .label('плохо',{'at':[0.5,-8]})
+    }
+    //   fig66()
     
     ////////////////////////////////////////////////////////////
     // Рис 6.7
+    function fig67()
+    {
+	
+	var life,zero,dx
+	[life,dx] = happyDecay({years:200,mu:1/60,lambda:2/7})
+	
+	h = new Histogram(5).fromList(dx.differences(1))
+	f = Gamma().fromHistogram(h)
+	return new Graphics(createSVG('fig76'),{})
+	    .histogram(h)
+	//	.plot(f.PDF)
+	    .axes({xLabel : 'длительность периодов в жизни (дни)',
+		   yLabel : 'количество периодов',
+		   xTicks : 5,
+		   xTickFormat : d3.format('i'),
+		   yTickFormat : d3.format('i')})
+    	    .gridLines({x:[h.mean]})    
+    }
+    // fig67()
 
+    ////////////////////////////////////////////////////////////
+    // Рис 6.8
+    function fig68()
+    {
+	proc = RandWalk(Normal(0,2))
+	function step() {
+	    proc.reset()
+	    proc.next()
+	    var s = Math.sign(proc.get()[1])
+	    var i = 0
+	    return proc.runWhile(x => Math.sign(x)==s && (i++<110)).length-1
+	}
+	var h = new Histogram().fromList(nestList(step,undefined,20000).tail())
+	var d = 1/3
+	return new Graphics(createSVG('fig68'),{'left-margin':55})
+	    .xRange([1,100])
+    	    .yRange([0.0001,1])
+	    .xAxisType('log')
+    	    .yAxisType('log')
+	    .histogram(h,{'type':'PDF','kind':'points'})
+	    .plot(Pareto(1,1/3).PDF,{'class':'dashed'})
+	//    	.plot(x => gamma(x)/gamma(x+d+1)/gamma(d+3))
+	    .clipPaper()
+	    .axes({xLabel : 'длительность периодов в жизни',
+		   yLabel : 'вероятность наблюдения',
+		   xTicks : 5,
+		   xTickValues:[1,2,5,10,20,50,100],
+		   yTickValues:[1e0,1e-1,1e-2,1e-3],
+		   xTickFormat : fmt.int,
+		   yTickFormat : fmt.pow10})
+    }
+    //fig68()
+    
+    ////////////////////////////////////////////////////////////
+    // Рис 6.9
+    function fig69()
+    {
+	proc = RandWalk(Normal(0,2))
+	function step() {
+	    proc.reset()
+	    proc.next()
+	    var s = Math.sign(proc.get()[1])
+	    var i = 0
+	    return proc.runWhile(x => Math.sign(x)==s && (i++<1e4)).length-1
+	}
+	//var pts = nestList(step,1,500)
+	var pts = Pareto(1,2/3).samples(500)
+	new Graphics(createSVG('fig69'),{'size':500,'left-margin':55,'bottom-margin':30})
+	    .xRange([1,500])
+	    .yRange([1,1e4])
+	    .yAxisType('log')
+	    .listPlot(pts,{'pointSize':3})
+	    .listLinePlot(pts.accumsum(0).map((x,i) => x/i).tail(),{'class':'dashed'})
+	    .axes({xTicks:false,
+		   yTickValues:[1e0,1e1,1e2,1e3,1e4],
+		   yTickFormat : fmt.int,
+		   xLabel:'последовательность периодов',
+		   yLabel:'длительность периодов'})
+    }
+    fig69()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.10
+
+    function happyEMA(opts)
+    {
+	var Ny = (opts.years || 10),
+	    lambda = opts.lambda || 1/7,
+	    mu = opts.alpha || 1/60
+
+	var N = 365*Ny
+
+	var g = d3.randomNormal(0,1), p = DiscretePoissonProcess(lambda)
+	var life = d3.range(N).map(() => g()*p()).accumsum(0)
+	var alpha = (1 - Math.pow(10,-mu))
+	var memory = life.ema(alpha)
+
+	var xs = [], d = life[0]-memory[0]
+	for(var i = 1; i < N; i++)
+	{
+	    if ((life[i]-memory[i])*d <= 0)
+	    {
+		d = life[i]-memory[i]
+		xs.push((i-1/2)/365)
+	    }
+	}
+
+	//life = d3.zip(d3.range(0,Ny,1/365),life)
+	//memory = d3.zip(d3.range(0,Ny,1/365),memory)
+	return [life, memory, xs]
+    }
+
+    function fig610(opts)
+    {
+	var life,memory,xs
+	[life,memory,xs]=happyEMA({years:1,mu:1/120,lambda:3/7})
+	
+	var Ny = 1,
+	    lambda = 2/7,
+	    N = 365
+
+	return new Graphics(createSVG('fig610'))
+	    .yRange(d3.extent(life).vadd([-1,1]))
+	    .xRange([0,365])
+//	    .gridLines({'x':xs})
+	    .diffListPlot(life,memory,{'class':'life'})
+	    .axes({xLabel : 'время (дни)',
+		   yLabel : 'условный "уровень счастья"',
+		   yTicks : 1})
+    }
+    fig610({years:1, mu:1/120, lambda:2/7})
+    
   </script>
 </html>

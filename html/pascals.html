@@ -13,6 +13,9 @@
     <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
+      body {
+	  background : black;
+      }
     .red .points {
 	stroke:none;
 	fill:red;
@@ -44,6 +47,10 @@
     .label {
 	font-size : 150%;
     }
+    .disk {
+	fill: white;
+	fill-opacity : 1;
+    }
     </style>
     </head>
     <body>
@@ -57,11 +64,6 @@
 		    [2,0,1],
 		    [1,2,0]]
 
-	var v4 =  [[0,1,2,3],
-		   [1,0,3,2],
-		   [2,3,0,1],
-		   [3,2,1,0]]
-
 	var s6 = [[0,1,2,3,4,5],
 		  [1,0,4,5,2,3],
 		  [2,5,0,4,3,1],
@@ -72,7 +74,23 @@
 	function z(n) {
 	    return nestList(x => x.rotatel(), range(0,n),n-1)
 	}
+
+	function directProd(g1,g2)
+	{
+	    var n1 = g1.length, n2 = g2.length
+	    var p1 = plus(g1), p2 = plus(g2)
+	    els = range(0,n1).outer(range(0,n2),(x,y) => [x,y])
+	    return group(els,(([a1,b1],[a2,b2]) => [p1(a1,a2),p2(b1,b2)]))
+	}
+
+	function group(els,prod)
+	{
+	    var ind = a => els.position(x => x.toString() == a.toString())
+	    return els.map(a => els.map(b => ind(prod(a,b))))
+	}
 	
+	var v4 =  directProd(z(2),z(2))
+
 	function plus(g)
 	{
 	    return (x,y) => g[x][y]
@@ -88,14 +106,14 @@
 	    return res
 	}
 
-	var g = z(6), N = g.length, k = floor(log(N,81))
-	var n = 128
+	var g = directProd(directProd(z(2),z(3)),z(4)), N = g.length, k = floor(log(N,81))
+	var n = 64
 	var p = new Graphics(createSVG('fig1'),{'size':1200,'aspectRatio':1})
 	    .xRange([-n,n]).yRange([-n,n])
 	
 	function step(k)
 	{
-	    m = 5
+	    m = g.length-1
 	    var row = lst => [0].concat(lst).zipWith(lst.concat([0]),plus(g))
 	    //var start = Bernoulli(0.6).samples(n)
 //	    var start = [1,2,0,2,2,1,0,1].repeat(200).take(k)
@@ -106,14 +124,15 @@
 	    var R = (a,[x,y]) => vmul(rotate(a),[x,y,1]).most()
 	    pts = nest((p,i) => p.concat(tri(i+1).map(([n,p]) => [n,R(i/m*2*pi,p)])), [], m)
 	    
-	    p.cleanPaper()
+/*	    p.cleanPaper()
 		.listPlot(pts.filter(([n,_]) => n == 1).map(x => x[1]),{'class':'green'})
 		.listPlot(pts.filter(([n,_]) => n == 2).map(x => x[1]),{'class':'red'})
 		.listPlot(pts.filter(([n,_]) => n == 3).map(x => x[1]),{'class':'blue'})
 	    	.listPlot(pts.filter(([n,_]) => n == 4).map(x => x[1]),{'class':'golden'})
 	    	.listPlot(pts.filter(([n,_]) => n == 5).map(x => x[1]),{'class':'purple'})
 	    	.listPlot(pts.filter(([n,_]) => n == 6).map(x => x[1]),{'class':'cian'})
-	    
+*/
+	    pts.forEach(([n,pt]) => p.disk(pt,n/(1+g.length)/2,{'class':'disk'}))
 	    //	range(0,k+2).map(i => p.label(N**i,{'at':[n/2+N**i/2+1,n-N**i]}))
 	}
 	var i = 2

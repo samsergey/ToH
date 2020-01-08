@@ -194,12 +194,20 @@
 }
 
 
+.histogram .area {
+    stroke : black;
+    stroke-width: 1px;
+    fill: black;
+    fill-opacity: 0.25;
+}
+
 .histogram rect {
     stroke : black;
     stroke-width: 1px;
     fill: black;
     fill-opacity: 0.25;
 }
+
 
 .histogram .points {
     stroke : black;

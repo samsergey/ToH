@@ -14,6 +14,16 @@
     <script src='weather.js'></script>
     <link rel="stylesheet" href="../css/bw.css">
     <style>
+      .good .points {
+	  stroke:black;
+	  fill: white;
+	  stroke-width: 0.5;
+      }
+      .bad .points {
+	  stroke:black;
+	  fill: black;
+	  stroke-width: 0.5;
+      }
     </style>
   </head>
   <body></body>
@@ -259,7 +269,7 @@
 		   xLabel:'последовательность периодов',
 		   yLabel:'длительность периодов'})
     }
-    fig69()
+    //fig69()
 
     ////////////////////////////////////////////////////////////
     // Рис 6.10
@@ -310,7 +320,62 @@
 		   yLabel : 'условный "уровень счастья"',
 		   yTicks : 1})
     }
-    fig610({years:1, mu:1/120, lambda:2/7})
-    
+    //fig610({years:1, mu:1/120, lambda:2/7})
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.11
+
+    function fig611(opts)
+    {
+	var N = 70
+	lambda = opts.lambda || 2/7,
+	P = opts.P || [[0.75,0.25],[0.25,0.75]]
+	
+	var life = nestList(s => Bernoulli(P[s][0]).generator(),0,N).map(x => x*2-1)
+	var good = life.map((x,i) => [i,x]).filter(([i,x])=>x>0).map(([i,x])=>[i,0])
+	var bad = life.map((x,i) => [i,x]).filter(([i,x])=>x<0).map(([i,x])=>[i,0])
+	
+	return new Graphics(createSVG('fig611'),{'size':700,'aspectRatio':1/5})
+	    .yRange([-1,1])
+	    .xRange([0,N])
+	    .listPlot(good,{'class':'good',
+			    'points' : true,
+			    'joined' : false,
+			    'pointSize':4})
+	    .listPlot(bad,{'class':'bad',
+			   'points' : true,
+			   'joined' : false,
+			   'pointSize':4})
+	
+    }
+
+    fig611({})
+
+    ////////////////////////////////////////////////////////////
+    // Рис 6.12
+    function fih612(fig,opts)
+    {
+	var N = (opts.years || 10)*365,
+	    lambda = opts.lambda || 2/7,
+	    p = opts.p || 0.75,
+	    p2 = opts.p2 || p,
+	    P = [[p,1-p],[1-p2,p2]]
+	
+	var life = nestList(s => Bernoulli(P[s][0]).generator(),0,N)
+	h = new Histogram().fromList(life.differences(1).positions(x => x != 0).differences(1))
+	f = Geometric().fromHistogram(h)
+	return new Graphics(createSVG(fig))
+	    .xRange([1,30]).yRange([0,250])
+	    .histogram(h)
+	    .plot(x => f.PMF(x)*h.number)
+	    .axes({xLabel : 'длительность периодов в жизни',
+		   yLabel : 'количество периодов',
+		   xTicks : 5,
+		   xTickFormat : d3.format('i'),
+		   yTickFormat : d3.format('i')})
+    }
+    fih612('fig6121',{})
+    fih612('fig6122',{p:0.9,p2:0.6})
+
   </script>
 </html>

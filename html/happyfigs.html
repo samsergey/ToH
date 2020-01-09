@@ -712,7 +712,7 @@ function happyMarkovHist(opts)
 }
 
 //happyMarkovHist({p:0.9,p2:0.6})
-
+/*
 function MG1(T,l,g)
 {
     insStep = t => Exponential(l).generator()+t
@@ -747,7 +747,7 @@ function MM1(T,l,m)
 {
     return MG1(T,l,Exponential(m))
 }
-
+*/
 function queueExample(q)
 {
     new Graphics(fig1)
@@ -994,7 +994,7 @@ function leeteration(n)
 
 function prob(ch)
 {
-    return ch.zip(ch.tail()).reduce((res,[i,j]) => res*leelaMatrix[i][j],cellFreqs[ch[0]])
+    return ch.zip(ch.tail()).reduce((res,[i,j]) => res*leelaMatrix[i][j],invariant[ch[0]])
 }
 
 function findChains(chs) {
@@ -1036,14 +1036,14 @@ function times()
 	.axes({})
 }
 //times()
-/*
+
 var chains = [4,5,6].mapappend(
     n=>cells.mapappend(
 	x=>nest(findChains,[[x]].transpose(),n-1).map(
 	    c => [c,prob(c)])))
     .filter(p => p[1]>0.0001)
     .sorted((x,y)=>y[1]-x[1])
-*/
+
 function collectChains()
 {
     s = leela()(s)
@@ -1073,9 +1073,9 @@ var p1 = new Graphics(fig1)
 window.setInterval(collectChains,1)
 */
 
-function leela4()
+function leela4(f)
 {
-    var p1 = new Graphics(fig1,{'class':'cycles'})
+    var p1 = new Graphics(createSVG(f),{'class':'cycles'})
 	.xRange([0,0.5])
 	.yRange([0,10])
 	.axes({xLabel:"вероятность встретить цепочку в партии",

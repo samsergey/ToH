@@ -2,8 +2,8 @@ function createSVG(id, opts)
 {
     var defaults = {
 	'class'  : 'graphics',
-	'aspectRatio' : 0.68,
-	'size' : 400
+	'aspectRatio' : 1,
+	'size' : 350
     }
 
     var options = Object.assign(defaults, opts || {})
@@ -12,41 +12,54 @@ function createSVG(id, opts)
     res.setAttribute('id', id)
     res.setAttribute('width', options.size)
     res.setAttribute('height', options.size*options.aspectRatio)
-    res.setAttribute('class', options['class'])
+    res.setAttribute('class', "pagebreak")
     res.setAttribute('xmlns',"http://www.w3.org/2000/svg")
     document.body.appendChild(res)
+/*    d3.select("#"+id).append('style').attr('id',"style")
+    d3.select("#style").html(styles)*/
     d3.select("#"+id).append('defs').attr('id',"defs")
     d3.select("#defs").html(patterns)
     return d3.select("#"+id)
 }
 
-var patterns = '<pattern id="h1" width="20" height="20" viewBox="0,0,20,20" ><line  class="hatch" x1="1" y1="20" x2="20" y2="1" /><line  x1="0" y1="1" x2="1" y2="0" /></pattern><pattern id="h2" width="34" height="20"><line  x1="0" y1="20" x2="20" y2="0" /><line  x1="0" y1="0" x2="20" y2="20" /></pattern>'
 
 function Graphics(viewport, opts)
 {
     var defaults = {
-	margin    : {left : 40, right : 30, top : 30, bottom : 55}, 
-	xRange    : 'automatic',
-	yRange    : 'automatic',
-	xAxisType : 'linear',
-	yAxisType : 'linear',
-	xAxis     : true,
-	yAxis     : true,
-	'class'   : 'graphics'
+	'left-margin' : 47,
+	'right-margin' : 30,
+	'top-margin' : 10,
+	'bottom-margin' : 40,
+	'xRange'    : 'automatic',
+	'yRange'    : 'automatic',
+	'xAxisType' : 'linear',
+	'yAxisType' : 'linear',
+	'xAxis'     : true,
+	'yAxis'     : true,
+	'class'   : 'graphics',
+	'aspectRatio' : 0.61803,
+	'size' : 350
     }
+  
     this.options = Object.assign(defaults,opts || {})
 
     this.viewport = viewport.append('g').attr('class',this.options['class'])
+
     this.paper = this.viewport.append('g').attr('class','paper')
 
-    this.viewportWidth = viewport.attr('width');
-    this.viewportHeight = viewport.attr('height');
     
-    this.width = this.viewportWidth - this.options.margin.left - this.options.margin.right
-    this.height = this.viewportHeight - this.options.margin.top - this.options.margin.bottom    
+    this.width = this.options['size'] - this.options['left-margin'] - this.options['right-margin']
+    this.height = this.width*this.options['aspectRatio']
+
+    this.viewportWidth = this.options['size']
+    this.viewportHeight = this.height + this.options['top-margin'] + this.options['bottom-margin']
+
+    viewport.attr('width',this.viewportWidth)
+    viewport.attr('height',this.viewportHeight)
+
     this.paper.attr('width',this.width)
 	.attr('height',this.height)
-	.attr('transform','translate('+this.options.margin.left+','+this.options.margin.top+')')
+	.attr('transform','translate('+this.options['left-margin']+','+this.options['top-margin']+')')
     
     this.xRange = function (x) {
 	this.options.xRange = x || this.options.xRange
@@ -84,11 +97,11 @@ function Graphics(viewport, opts)
     
     this.rescale = function()
     {
-	this.width = this.viewportWidth - this.options.margin.left - this.options.margin.right
-	this.height = this.viewportHeight - this.options.margin.top - this.options.margin.bottom    
+	this.width = this.viewportWidth - this.options['left-margin'] - this.options['right-margin']
+	this.height = this.viewportHeight - this.options['top-margin'] - this.options['bottom-margin']    
 	this.paper.attr('width',this.width)
 	    .attr('height',this.height)
-	    .attr('transform','translate('+this.options.margin.left+','+this.options.margin.top+')')
+	    .attr('transform','translate('+this.options['left-margin']+','+this.options['top-margin']+')')
 
 	var rx = this.options.xAxisType=='inverted'?this.options.xRange.reversed():this.options.xRange
 	var ry = this.options.yAxisType=='inverted'?this.options.yRange.reversed():this.options.yRange
@@ -110,11 +123,11 @@ function Graphics(viewport, opts)
 	this.viewportWidth = viewport.attr('width');
 	this.viewportHeight = viewport.attr('height');
 	
-	this.width = this.viewportWidth - this.options.margin.left - this.options.margin.right
-	this.height = this.viewportHeight - this.options.margin.top - this.options.margin.bottom    
+	this.width = this.viewportWidth - this.options['left-margin'] - this.options['right-margin']
+	this.height = this.viewportHeight - this.options['top-margin'] - this.options['bottom-margin']    
 	this.paper.attr('width',this.width)
 	    .attr('height',this.height)
-	    .attr('transform','translate('+this.options.margin.left+','+this.options.margin.top+')')
+	    .attr('transform','translate('+this.options['left-margin']+','+this.options['top-margin']+')')
 	return this
     }
     
@@ -135,8 +148,10 @@ function sup(n)
 }
 
 var fmt = {
-    'normal' : null,
+    'fixed1' : d3.format("." + max(0, d3.precisionFixed(0.05) - 1)),
+    'fixed2' : d3.format("." + max(0, d3.precisionFixed(0.005) - 1)),
     'percent' : d3.format("." + max(0, d3.precisionFixed(0.05) - 2) + "%"),
+    'percent05' : d3.format("." + max(0, d3.precisionFixed(0.05) - 1) + "%"),
     'int' : d3.format('i'),
     'pow10' : pow10,
     'h:mm' : t=>`${floor(t/60)}:${t%60==0?"00":t%60}`,
@@ -157,26 +172,26 @@ Graphics.prototype.clipPaper = function ()
     this.viewport.append("rect")
 	.attr("x", 0)
 	.attr("y", 0)
-	.attr("width", this.options.margin.left)
+	.attr("width", this.options['left-margin'])
 	.attr("height", this.viewportHeight)
 	.attr("class", 'clip')
     this.viewport.append("rect")
 	.attr("x", 0)
 	.attr("y", 0)
 	.attr("width", this.viewportWidth)
-	.attr("height", this.options.margin.top)
+	.attr("height", this.options['top-margin'])
 	.attr("class", 'clip')
     this.viewport.append("rect")
 	.attr("x", 0)
-	.attr("y", this.viewportHeight-this.options.margin.bottom)
+	.attr("y", this.viewportHeight-this.options['bottom-margin'])
 	.attr("width", this.viewportWidth)
-	.attr("height", this.options.margin.bottom)
+	.attr("height", this.options['bottom-margin'])
 	.attr("class", 'clip')
     this.viewport.append("rect")
-	.attr("x", this.viewportWidth-this.options.margin.right)
+	.attr("x", this.viewportWidth-this.options['right-margin'])
 	.attr("y", 0)
 	.attr("height", this.viewportHeight)
-	.attr("width", this.options.margin.right)
+	.attr("width", this.options['right-margin'])
 	.attr("class", 'clip')
     return this
 }
@@ -199,17 +214,17 @@ Graphics.prototype.axes = function (opts)
     }
     var options = Object.assign(defaults, opts || {})    
 
-    this.options.margin.bottom
+    this.options['bottom-margin']
     this.rescale()
     
-    var xAxisPositionX = this.options.margin.left
-    var xAxisPositionY = this.viewportHeight - this.options.margin.bottom+1
-    var yAxisPositionX = this.options.margin.left-1
-    var yAxisPositionY = this.options.margin.top
-    var xAxisLabelPositionX = this.options.margin.left + this.width / 2 + 0
-    var xAxisLabelPositionY = this.viewportHeight - this.options.margin.bottom / 3
-    var yAxisLabelPositionX = 12 + 0*this.options.margin.left
-    var yAxisLabelPositionY = this.options.margin.top + this.height / 2 -20
+    var xAxisPositionX = this.options['left-margin']
+    var xAxisPositionY = this.viewportHeight - this.options['bottom-margin']+1
+    var yAxisPositionX = this.options['left-margin']-1
+    var yAxisPositionY = this.options['top-margin']
+    var xAxisLabelPositionX = this.options['left-margin']/4
+    var xAxisLabelPositionY = this.viewportHeight - 5
+    var yAxisLabelPositionX = 11
+    var yAxisLabelPositionY = this.options['top-margin'] + this.height / 2 - 0
 
     var g = this.viewport.append('g').attr('class','axis')
 
@@ -230,7 +245,8 @@ Graphics.prototype.axes = function (opts)
 	g.append('g').attr('class','axisLabel')
 	    .attr("transform", 'translate(' + xAxisLabelPositionX + ',' + xAxisLabelPositionY + ')')
 	    .append("text").attr('class',options['class'])
-	    .attr('dx',-options.xLabel.length*2)
+	    .attr('text-anchor',"middle")
+	    .attr('x',"50%")
 	    .text(options.xLabel)
 	
     }
@@ -250,7 +266,7 @@ Graphics.prototype.axes = function (opts)
 	g.append('g').attr('class', 'axisLabel')
 	    .attr("transform", 'translate(' + yAxisLabelPositionX + ',' + yAxisLabelPositionY + ')')
 	    .append("text").attr('class', options['class'])
-	    .attr('dx', -options.yLabel.length*3)
+	    .attr('text-anchor',"middle")
 	    .attr('transform', 'rotate(-90)')
 	    .text(options.yLabel)
     }
@@ -285,7 +301,7 @@ Graphics.prototype.label = function (txt,opts)
 Graphics.prototype.listLinePlot = function (d, opts)
 {
     defaults ={
-	'class' : 'listPlot',
+	'class' : 'plot',
 	'points' : false,
 	'joined' : true,
 	'parent' : null
@@ -314,13 +330,14 @@ Graphics.prototype.listStairsPlot = function (d, opts)
 Graphics.prototype.listPlot = function (d, opts)
 {
     var defaults = {
-	'class' : 'listPlot',
+	'class' : 'plot',
 	'points' : true,
+	'marker' : false,
 	'joined' : false,
 	'filled' : false,
 	'filledUp' : false,
 	'needles' : false,
-	'pointSize' : 2,
+	'pointSize' : 3,
 	'parent' : null
     }
 
@@ -388,9 +405,24 @@ Graphics.prototype.listPlot = function (d, opts)
 	    .attr('r', options.pointSize)
     }
 
+    if (options.marker)
+    {
+	var dots = g.append('g').attr('class','marker')
+	dots.selectAll('text')
+	    .data(data)
+	    .enter()
+	    .append('text')
+	    .attr('text-anchor',"middle")
+	    .text(options.marker)
+	    .attr('x', d => this.X(d[0]))
+	    .attr('y', d => this.Y(d[1])+6)
+    }
+
 
     return this
 }
+
+var marker = ["▫","+","×"]
 
 Graphics.prototype.diffListPlot = function(dataA, dataB, opts)
 {
@@ -435,7 +467,7 @@ Graphics.prototype.diffListPlot = function(dataA, dataB, opts)
 	    .attr("id","A")
 	    .append("path")
 	    .attr("d", mkarea(this.yRange()[0],A));
-	g.append("path").attr('class','areaBelow')
+	g.append("path").attr('class','areaAbove')
  	    .attr("clip-path", "url(#A)")
 	    .attr("d", mkarea(this.yRange()[1],B));
 
@@ -443,7 +475,7 @@ Graphics.prototype.diffListPlot = function(dataA, dataB, opts)
 	    .attr("id","B")
 	    .append("path")
 	    .attr("d", mkarea(this.yRange()[0],B));
-	g.append("path").attr('class','areaAbove')
+	g.append("path").attr('class','areaBelow')
 	    .attr("clip-path", "url(#B)")
 	    .attr("d", mkarea(this.yRange()[1],A));
   
@@ -560,9 +592,9 @@ Graphics.prototype.gridLines = function (opts)
 	    .enter()
 	    .append('line')
 	    .attr('x1', 0)
-	    .attr('y1', this.Y)
+	    .attr('y1', y => this.Y(y) + 0.5)
 	    .attr('x2', this.width)
-	    .attr('y2', this.Y)
+	    .attr('y2', y => this.Y(y) + 0.5)
     }
     return this
 }
@@ -572,7 +604,7 @@ Graphics.prototype.histogram = function(hist, opts)
 {
     var defaults = {
 	'type'   : 'value',
-	'kind'   : 'bars',
+	'kind'   : 'area',
 	'class'  : 'histogram',
 	'parent' : null,
 	'barWidth' : 0.95,
@@ -588,7 +620,7 @@ Graphics.prototype.histogram = function(hist, opts)
 	'PDF' : x => hist.PMF(x),
 	'PMF' : x => hist.PMF(x),
 	'CDF' : x => hist.CDF(x),
-	'value' : x => hist.data[x]
+	'value' : x => hist.data[x]/hist.step || 0
     }[options.type]
 
     
@@ -638,7 +670,17 @@ Graphics.prototype.histogram = function(hist, opts)
 	    .attr("cy", d => this.Y(d.value))
 	    .attr("r", d => 2)
     }
-   
+
+    else if (options.kind == 'points')
+    {
+	g.selectAll("circle")
+	    .data(data)
+	    .enter().append("circle").attr('class','point')
+	    .attr("cx", d => this.X(d.bin))
+	    .attr("cy", d => this.Y(d.value))
+	    .attr("r", d => 2)
+    }
+    
     else if (options.kind == 'stairs') {
 	g.selectAll("line")
 	    .data(data)
@@ -648,6 +690,13 @@ Graphics.prototype.histogram = function(hist, opts)
 	    .attr("y1", d => this.Y(d.value))
 	    .attr("y2", d => this.Y(d.value))
     }
+
+    else if (options.kind == 'area') {
+	xs = range(hist.minBin-hist.step, hist.maxBin+2*hist.step, hist.step)
+	pts = xs.mapappend(x => [[x-hist.step/2,value(x)],[x+hist.step/2,value(x)]])
+	this.listPlot(pts.tail().most(),{'class':'histogram', 'joined':true,'filled':true,'points':false})
+    }
+
     else if (options.kind == 'smooth') {
 	dd = data
 	f = x => data.sum(d => d.value*Normal(0,options.smoothRadius*hist.step).PDF(x-d.bin-hist.step/2))
@@ -713,8 +762,10 @@ Graphics.prototype.plot = function (f,opts) {
 	'domain' : null,
 	'marks' : []
     }
+
+   
     var options = Object.assign(defaults, opts || {})
-    var x1,x2
+    var x1,x2,tbl
     [x1,x2] = options.domain || this.xRange()
     var X = this.X, Y = this.Y
     var dx = (x2-x1)/options.plotPoints
@@ -814,7 +865,7 @@ Graphics.prototype.rectangle = function (x,y,w,h,opts)
     return this
 }
 
-Graphics.prototype.disc = function ([x,y],r,opts)
+Graphics.prototype.disk = function ([x,y],r,opts)
 {
     var defaults = {
 	'class'  : null,
@@ -846,7 +897,6 @@ Graphics.prototype.line = function (pts,opts)
 
     return this.listPlot(pts,options)
 }
-
 
 Graphics.prototype.image = function (src,x,y,w,h,opts)
 {
@@ -905,9 +955,6 @@ Graphics.prototype.matrixPlot = function (m,opts)
 Graphics.prototype.LorentzPlot = function(data,options)
 {
     defaults = {
-	'filled':true,
-	'points':false,
-	'joined':true,
 	'class':'lower',
 	yLabel : 'доля элементов',
 	xLabel : 'доля групп',
@@ -918,12 +965,14 @@ Graphics.prototype.LorentzPlot = function(data,options)
     }
     var opts = Object.assign(defaults, options || {})
     var res = this.xRange([0,1]).yRange([0,1])
-	.listPlot([[0,0],[1,1]], {'filled':true,
+	.listPlot([[0,0],[1,1]], {'filled':false,
 				  'points':false,
 				  'joined':true,
 				  'class':'upper'})
-    if(data != 'empty')
-	res.listPlot(data,opts)
+    if(data != 'empty') {
+	res.listPlot(data,{'filled':true})
+	    .listPlot(data,{'joined':true})
+    }
     if(opts.Gini != undefined)
     	res.label(opts.Gini,{'at':[0.3,0.8]})
 
@@ -935,3 +984,12 @@ Graphics.prototype.LorentzPlot = function(data,options)
 		     yTickFormat : fmt.percent})
 
 }
+
+var patterns = `<pattern id="h1" width="5px" height="5px" viewBox="0,0,20,20" patternUnits="userSpaceOnUse">
+<line class="hatch" x1="1" y1="20" x2="20" y2="1" />
+<line class="hatch" x1="0" y1="1" x2="1" y2="0" />
+</pattern>
+<pattern id="h2" width="5px" height="5px" viewBox="0,0,20,20" patternUnits="userSpaceOnUse">
+<line class="hatch" x1="0" y1="20" x2="20" y2="0" />
+<line  class="hatch" x1="0" y1="0" x2="20" y2="20" />
+</pattern>`

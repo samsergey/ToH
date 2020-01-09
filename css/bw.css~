@@ -242,18 +242,12 @@
 }
 
 .matrixPlot .negatives {
-    fill : white;
-    stroke:black;
-}
-
-.matrixPlot .zeros {
-    fill : red;
+    fill : navy;
 }
 
 .matrixPlot .positives {
-    fill : black;
+    fill : indianred;
 }
-
 
 .hatch {
     stroke : black;

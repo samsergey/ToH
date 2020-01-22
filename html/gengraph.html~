@@ -13,115 +13,30 @@
     <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-    .red .points {
+    .pt .points {
 	stroke:none;
-	fill:red;
-    }
-    .green .points {
-	stroke:none;
-	fill:darkgreen;
-    }
-    .yellow .points {
-	stroke:none;
-	fill:orange;
-    }
-    .purple .points {
-	stroke:none;
-	fill:purple;
-    }
-    .label {
-	font-size : 150%;
+	fill-opacity:0.5;
     }
     </style>
     </head>
     <body>
-      <script>
+    <script>
+var n = 3
+var vertices = range(0,n).map(x => [cos(x*2*pi/n),sin(x*2*pi/n)])
 
-	var z2 =  [[0,1],
-		   [1,0]]
+function step([x,y])
+{
+    var [a,b] = vertices.sample()
+    return [(a+x)/2,(b+y)/2]
+}
 
-	var z3 =  [[0,1,2],
-		   [1,2,0],
-		   [2,0,1]]
+var pts = nestList(step,[0,0],50000)
 
-	var q31 =  [[0,1,2],
-		    [2,0,1],
-		    [1,2,0]]
-
-	var q32 =  [[0,1,2],
-		    [2,0,1],
-		    [1,2,0]]
-
-	var z4 =  [[0,1,2,3],
-		   [1,2,3,0],
-		   [2,3,0,1],
-		   [3,0,1,2]]
-
-	var v4 =  [[0,1,2,3],
-		   [1,0,3,2],
-		   [2,3,0,1],
-		   [3,2,1,0]]
-
-	var z5 =  [[0,1,2,3,4],
-		   [1,2,3,4,0],
-		   [2,3,4,0,1],
-		   [3,4,0,1,2],
-		   [4,0,1,2,3]]
-	
-	function plus(g)
-	{
-	    return (x,y) => g[x][y]
-	}
-
-	function fibs(g,[a,b],n)
-	{
-	    res= [a,b]
-	    for(var i = 2 ; i < n; i++)
-	    {
-		res.push(plus(g)(res[i-1],res[i-2]))
-	    }
-	    return res
-	}
-
-	var g = z3, N = g.length, k = floor(log(N,81))
-	var n = 81
-	var p = new Graphics(createSVG('fig1'),{'size':1200,'aspectRatio':1})
-	    .xRange([-n/2,n*1.5]).yRange([-2*n,0])
-	
-	function step(k)
-	{
-
-	    var row = lst => [0].concat(lst).zipWith(lst.concat([0]),plus(g))
-	    //var start = Bernoulli(0.6).samples(n)
-//	    var start = [1,2,0,2,2,1,0,1].repeat(200).take(k)
-	    var start = [1].repeat(k)
-	    //var start = [1]
-	    pts = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
-	    start = [2]
-	    //pts2 = nestList(row,start,n).mapappend((r,y) => r.map((n,x) => [n,[x-y*cos(pi/3)+2,-y*sin(pi/3)-2]]))
-	    var R = (a,[x,y]) => vmul(rotate(a),[x,y,1]).most()
-	    
-	    /*
-	     pts = pts
-	     .concat(pts2.map(([n,p]) => [n,R(1/3*pi,p)]))
-	     .concat(pts.map(([n,p]) => [n,R(2/3*pi,p)]))
-	     .concat(pts2.map(([n,p]) => [n,R(3/3*pi,p)]))
-	     .concat(pts.map(([n,p]) => [n,R(4/3*pi,p)]))
-	     .concat(pts2.map(([n,p]) => [n,R(5/3*pi,p)]))
-	    */	
-	    
-	    //	    .listPlot(pts.filter(([n,_]) => n == 0).map(x => x[1]),{'class':'green'})
-	    p.cleanPaper()
-		.listPlot(pts.filter(([n,_]) => n == 1).map(x => x[1]),{'class':'green'})
-		.listPlot(pts.filter(([n,_]) => n == 2).map(x => x[1]),{'class':'red'})
-		.listPlot(pts.filter(([n,_]) => n == 3).map(x => x[1]),{'class':'yellow'})
-		.listPlot(pts.filter(([n,_]) => n == 4).map(x => x[1]),{'class':'purple'})
-	    
-	    //	range(0,k+2).map(i => p.label(N**i,{'at':[n/2+N**i/2+1,n-N**i]}))
-	}
-	var i = 2
-//	window.setInterval(() => step(i=(i+1) % 81),100)
-      </script>
+new Graphics(createSVG('fig'),{size:900,'aspectRatio':1})
+    .xRange([-1,1])
+    .yRange([-1,1])
+    .listPlot(pts,{'pointSize':1,'class':'pt'})
+</script>
     </body>
 </html>	
 

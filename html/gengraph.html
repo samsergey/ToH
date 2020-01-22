@@ -13,36 +13,89 @@
     <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
+    .pt .points {
+	stroke:none;
+    }
+    .pt .line {
+	stroke:black;
+    }
+    .pt2 .points {
+	stroke:none;
+	fill:red;
+	fill-opacity:0.125;
+    }
+    .pt2 .line {
+	stroke:black;
+    }
     </style>
     </head>
     <body>
-      <script>
-	function solution(c)
-	{
-	    for (var a = 0; a <= sqrt(c); a++)
-		for(var b = 0; b <= a; b++)
-		    if (a*a + b*b ==c) return [[a,b]]
-	    return []
-	}
-	function arg([a,b])
-	{
-	    return Math.atan(b/a)
-	}
-	var sln = range(1,1000).mapappend(solution)
-	var pts = sln.map(([a,b],i) => a*a+b*b)
-	new Graphics(createSVG('fig1'))
-    .xRange([1,pts.length]).yRange([1,pts[pts.length-1]])
-//    .xAxisType('log')
-//    .yAxisType('log')
-    .listPlot(pts)
-    .plot(x => (exp(1)-1)*x*log(log(x))+pi,{'domain':[2,pts.length]})
+    <script>
+var n = 3
+var vertices = range(0,n).map(x => [cos(x*2*pi/n),sin(x*2*pi/n)])
+
+var j = 0
+function step([[x,y]])
+{
+    var [a,b] = vertices.sample()
+    j = (j+1) % vertices.length
+    return [[(a+x)/2, (b+y)/2]]
+}
+
+function step2(ps)
+{
+    return ps.mapappend(([x,y]) => vertices.map(([a,b]) => [(a+x)/2, (b+y)/2]))
+}
+
+
+var pts = nestList(step,[[1,0]],100).fold(Free)
+var pts2 = nestList(step,[[0,0]],100).fold(Free)
+
+function Plus(s1,s2,f)
+{
+    return s1.mapappend(x => s2.map(y => f(x,y)))
+}
+
+function reveal([x,y])
+{
+    if (y < 1/2-x)
+	return [x*2, y*2]
+    if (y < 1-x && x >= 1/2)
+	return [(x-1/2)*2, y*2]
+    if (y < 1-x && y >= 1/2)
+	return [x*2, (y-1/2)*2]
+    if (y < 1-x)
+	return [2*x, 2*y]
+    return [x, y]
+}
+
+function remap(p)
+{
+    return fixedPoint(reveal,p,100000)
+}
+
+function dist([x,y])
+{
+    return min(1-x,min(1-y,sqrt(y**2+(2*x-2)*y+x**2-2*x+1)/2))
+}
+
+function step3([x,y])
+{
+    var [a,b] = [[0,0],[1,0],[0,1]].sample()
+    return [(a+x)/2, (b+y)/2]
+}
+var pts = nestList(step3,[1,1],1000)
+var pts2 = pts.map(remap)
+	   
+new Graphics(createSVG('fig'),{size:600,'aspectRatio':1})
+    .xRange([0,1000])
+    .yRange([0,1])
+ //   .listPlot(pts,{'pointSize':1,'class':'pt'})
+    .listLinePlot(pts2.map(dist),{'pointSize':1,'class':'pt2'})
     .axes({})
-	var pts2 = sln.map(([a,b],i) => a**2)
-	new Graphics(createSVG('fig2'))
-    .xRange([1,pts2.length]).yRange([1,pts2[pts2.length-1]])
-    .listPlot(pts2)
-    .axes({})
-      </script>
+
+
+</script>
     </body>
 </html>	
 

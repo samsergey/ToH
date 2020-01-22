@@ -8,7 +8,7 @@ function nest(f,x,n)
 {
     res = x
     for(var i = 0; i < n; i++)
-	res = f(res)
+	res = f(res,i)
     return res
 }
 
@@ -89,6 +89,11 @@ Array.prototype.rotate = function() {
     return [this.last()].concat(this.most())
 }
 
+Array.prototype.rotatel = function() {
+    return this.tail().concat([this.head()])
+}
+
+
 Array.prototype.close = function() {
     return this.concat([this[0]])
 }
@@ -123,6 +128,13 @@ monoid = {
 Array.prototype.foldMap = function(f,m)
 {
     return this.reduce((res,x) => m.mappend(res, f(x)), m.mempty)
+}
+
+Array.prototype.outer = function(lst,f)
+{
+    var res = []
+    this.forEach(i => lst.forEach(j => res.push([i,j])))
+    return res
 }
 
 
@@ -462,4 +474,22 @@ function Queue(N)
 	}
 	return this
     }
+}
+
+function center(s, n,x)
+{
+    var l = s.length
+    return s.padStart(l+(n-l)/2,x).padEnd(n,x)
+}
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+
+function pageBreak() {
+    document.write('<div class="pagebreak"> </div>')
 }

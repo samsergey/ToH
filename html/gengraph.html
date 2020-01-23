@@ -27,6 +27,10 @@
     .pt2 .line {
 	stroke:black;
     }
+    .disk {
+	stroke:black;
+	fill:none;
+    }
     </style>
     </head>
     <body>
@@ -48,8 +52,8 @@ function step2(ps)
 }
 
 
-var pts = nestList(step,[[1,0]],100).fold(Free)
-var pts2 = nestList(step,[[0,0]],100).fold(Free)
+//var pts = nestList(step,[[1,0]],100).fold(Free)
+//var pts2 = nestList(step,[[0,0]],100).fold(Free)
 
 function Plus(s1,s2,f)
 {
@@ -86,14 +90,30 @@ function step3([x,y])
 }
 var pts = nestList(step3,[1,1],1000)
 var pts2 = pts.map(remap)
-	   
+/*	   
 new Graphics(createSVG('fig'),{size:600,'aspectRatio':1})
     .xRange([0,1000])
     .yRange([0,1])
  //   .listPlot(pts,{'pointSize':1,'class':'pt'})
     .listLinePlot(pts2.map(dist),{'pointSize':1,'class':'pt2'})
     .axes({})
+*/
 
+var l = 10, n = 11, m = 2, phi = 2*pi*m/n
+var R = abs(l/2/sin(phi/2))
+var r = abs(R*cos(phi/2))
+var x = (l-2*r*Math.tan(phi/m/2))/2
+var pts = range(0,n/m+1).map(i => phi*i).map(a => [R*cos(a),R*sin(a)])
+new Graphics(createSVG('fig'),{'aspectRatio':1})
+    .xRange([-R,R])
+    .yRange([-R,R])
+    .listLinePlot(pts)
+    .disk([0,0],r,{'class':'disk'})
+    .line([[0,0],[R*cos(phi/m),R*sin(phi/m)]],{'class':'pt'})
+    .line([[0,0],[R,0]],{'class':'pt'})
+    .disk([R,0],abs(x),{'class':'disk'})
+
+	    
 
 </script>
     </body>

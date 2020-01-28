@@ -1,0 +1,165 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+    .queue {
+	stroke-width:0.25px;
+    }
+</style>
+    </head>
+    <body></body>
+    <script>
+    
+////////////////////////////////////////////////////////////
+// Рис 7.1
+function fig71()
+{
+    var q1=PoissonProcess(50/60).runToVal(20).map(([t,x])=>[t,20-x])
+    var q2=PoissonProcess(50/60).runToVal(20).map(([t,x])=>[t,20-x])
+    new Graphics(createSVG('fig71'),{})
+	.xRange([0,max(q1.last()[0],q2.last()[0])])
+	.yRange([0,20])
+	.listStairsPlot(q1,{'class':'A'})
+    	.listStairsPlot(q2,{'class':'B'})
+	.axes({xLabel:"время, минуты",
+	       yTicks:5,
+	       yLabel:"длина очереди"})
+}
+fig71()
+
+////////////////////////////////////////////////////////////
+// Рис 7.2
+
+function fig72() {
+    var p = (m, k) => exp(-2*m)*BesselI(k,2*m)
+    new Graphics(createSVG('fig72'))
+	.xRange([-15,15])
+    	.yRange([0,0.1])
+    	.listPlot(range(-15,16).map(k => [k,p(10,abs(k))]),{'needles':true})
+	.axes({xLabel:"разница в шагах за минуту",
+	       yLabel:"вероятность",
+	       xTicks:5,
+	       yTickFormat:fmt.percent})
+}
+fig72()
+
+////////////////////////////////////////////////////////////
+// Рис 7.3
+function fig7(f,d,T)
+{
+    var p = new Graphics(createSVG('fig7'+f),{size:400,'aspectRatio':0.3})
+	.xRange([0,T||d.last()[0]])
+	.yRange([0,30])
+	.axes({xLabel:"время, дни",
+	       xTickFormat:fmt.int,
+	       xTickValues:range(0,T+1),
+	       yTicks:5,
+	       yLabel:"длина очереди"})
+    var col = n => n % 7 == 0 ? 'black' : 'gray'
+    for(i=0; i<d.length-1; i++)
+    {
+	t1 = d[i][0]
+	t2 = d[i+1][0]
+	d[i][1].forEach((c,j) => {
+	    p.rectangle(t1*1.0,j,max(0.01,t2-t1),1
+			,{'fill':col(cN(c)),
+			  'class':'queue',
+			  'stroke':col(cN(c))})
+	})
+    }
+}
+
+fig7('31',MD1(30,34).runToTime(8),8)
+fig7('32',MM1(30,34,0).runToTime(6),6)
+
+////////////////////////////////////////////////////////////
+// Рис 7.5
+function toGamma(m,v)
+{
+    return Gamma(m*m/v,m/v)
+}
+function fig75(l,m,s)
+{
+    var f = x=>toGamma(1/m,s/m/m).PDF(x)+0.1/x
+    new Graphics(createSVG('fig75'))
+	.xRange([0.001,15])
+	.yRange([0,0.6])
+	.plot(x=>Exponential(l).PDF(x),{'class':'A'})
+	.plot(x=>f(x),{'class':'B'})
+	.axes({xLabel: "периоды времени, минуты",
+	       yLabel: "плотность вероятности",
+	       yTicks: 5})
+	.line([[1/l,0],[1/l,Exponential(l).PDF(1/l)]],{'class':'A'})
+	.line([[1/m,0],[1/m,f(1/m)]],{'class':'B'})
+}
+
+fig75(30/60,36/60,5)
+
+////////////////////////////////////////////////////////////
+// Рис 7.6
+
+fig7('6',MG1(30,toGamma(1/34,5/34/34)).runToTime(8),8)
+
+////////////////////////////////////////////////////////////
+// Рис 7.7
+function fig77()
+{
+    var pts = [], n = 200, T = 50, l = 1/4
+    var pr = PoissonProcess(1/4)
+    for(var i = 0; i < n; i++)
+    {
+	pr.reset()
+	pts.push(pr.runToTime(T))
+    }
+    var p = new Graphics(createSVG('fig77'))
+	.xRange([0,T])
+	.yRange([0,T/2])
+    pts.forEach(ps => p.listLinePlot(ps,{'class':'thin'}))
+    var pps = pts.map(stepInterpolation)
+    var ms = range(0,T,T/100).map(x => [x,pps.sum(p => p(x))/n])
+    var ds = range(0,T,T/100).map((x,i) => [x,sqrt(pps.sum(p => (p(x)-ms[i][1])**2)/n)])
+    var d1 = ms.zipWith(ds,(m,d)=>[m[0],m[1]+d[1]])
+    var d2 = ms.zipWith(ds,(m,d)=>[m[0],m[1]-d[1]])
+    p.listLinePlot(ms,{'class':'A'})
+	.listLinePlot(d1,{'class':'B'})
+	.listLinePlot(d2,{'class':'B'})
+	.clipPaper()
+	.axes({xLabel:'время',yLabel:'число событий'})
+}
+//fig77()
+
+////////////////////////////////////////////////////////////
+// Рис 7.8
+
+function fig78()
+{
+    var w,b,l=30/60,m=34/60,r=l/m
+    new Graphics(createSVG('fig78'))
+	.yRange([0,140])
+	.xRange([0,1])
+	.axes({yTickValues : range(0,140,15),
+	       yTickFormat : fmt['h:mm'],
+	       xLabel : "доля VIP-клиентов",
+	       xTickFormat : fmt.percent,
+	       yLabel:"среднее время ожидания"})
+	.plot(e => 1/(m-e*l),{'class':'B'})
+    	.plot(e => m/(m-e*l)/(m - l))
+	.gridLines({y:[15]})
+	.label("обычные клиенты",{at:[0.4,55]})
+    	.label("VIP",{at:[0.5,6]})
+}
+fig78()
+
+</script>
+    </html>

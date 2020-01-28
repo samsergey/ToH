@@ -6,10 +6,11 @@
 
 }
 
+/*
 .pagebreak {
     display: block;
 }
-
+*/
 .graphics {
     stroke-width : 1.75px;
     stroke-linejoin : round;
@@ -242,12 +243,18 @@
 }
 
 .matrixPlot .negatives {
-    fill : navy;
+    fill : white;
+    stroke:black;
+}
+
+.matrixPlot .zeros {
+    fill : red;
 }
 
 .matrixPlot .positives {
-    fill : indianred;
+    fill : black;
 }
+
 
 .hatch {
     stroke : black;

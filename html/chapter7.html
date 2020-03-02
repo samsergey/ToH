@@ -146,9 +146,9 @@ function fig78()
 {
     var w,b,l=30/60,m=34/60,r=l/m
     new Graphics(createSVG('fig78'))
-	.yRange([0,140])
+	.yRange([0,100])
 	.xRange([0,1])
-	.axes({yTickValues : range(0,140,15),
+	.axes({yTickValues : range(0,100,15),
 	       yTickFormat : fmt['h:mm'],
 	       xLabel : "доля VIP-клиентов",
 	       xTickFormat : fmt.percent,
@@ -160,6 +160,34 @@ function fig78()
     	.label("VIP",{at:[0.5,6]})
 }
 fig78()
+
+////////////////////////////////////////////////////////////
+// Рис 7.9
+fig7('79',MM1(30,34,1).runToTime(8),8)
+
+////////////////////////////////////////////////////////////
+// Рис 7.10
+
+const Busy = (m,l) => t => t <= 0 ? 0 : 1/(t*sqrt(l/m))*exp(-(l+m)*t)*BesselI1(2*t*sqrt(l*m))
+
+
+function fig710()
+{
+    var l=30/60,m=34/60,w,b
+    var f = t => integrate(x=>Busy(l,m)(x)*Exponential(m).PDF(t-x),[0,100])
+    new Graphics(createSVG('fig710'))
+	.xRange([0,60])
+	.yRange([0,0.15])
+	.plot(x=>f(x)+0.003,{'maxIteration':2,'class':'vip'})
+	.plot(Exponential(m-l).PDF,{'class':'year'})
+	.line([[1/(m-l),0],[1/(m-l),Exponential(m-l).PDF(1/(m-l))]],{'class':'myear'})
+	.line([[16.7,0],[16.7,f(16.7)+0.003]],{'class':'mvip'})
+	.axes({xLabel:"время ожидания, мин",
+	       yLabel:"плотность вероятности"})
+	.label("FIFO",{'at':[20,0.03]})
+    	.label("FILO",{'at':[6,0.1]})
+}
+fig710()
 
 </script>
     </html>

@@ -11,7 +11,7 @@
     <script src='../lib/graphics.js'></script>
     <script src='../lib/signal.js'></script>
     <script src='../lib/odesolve.js'></script>
-    <script src='weather.js'></script>
+    <script src='leela.js'></script>
     <link rel="stylesheet" href="../css/bw.css">
     <style>
       .good .points {
@@ -24,6 +24,15 @@
 	  fill: black;
 	  stroke-width: 0.5;
       }
+    .sink {
+	fill:none;
+	stroke:black;
+	stroke-width:1;
+    }
+    .bar {
+	fill:black;
+	fill-opacity:0.5;
+    }
     </style>
   </head>
   <body></body>
@@ -349,7 +358,7 @@
 	
     }
 
-    fig611({})
+ //   fig611({})
 
     ////////////////////////////////////////////////////////////
     // Рис 6.12
@@ -374,8 +383,214 @@
 		   xTickFormat : d3.format('i'),
 		   yTickFormat : d3.format('i')})
     }
-    fih612('fig6121',{})
-    fih612('fig6122',{p:0.9,p2:0.6})
+//    fih612('fig6121',{})
+//    fih612('fig6122',{p:0.9,p2:0.6})
+
+////////////////////////////////////////////////////////////
+    // Рис 6.13
+
+function leela()
+{
+    var jumps = {
+	10:23,
+	16:4,
+	61:3,
+	20:32,
+	22:60,
+	24:7,
+	27:41,
+	28:50,
+	29:6,
+	37:66,
+	45:67,
+	46:62,
+	52:35,
+	54:68,
+	55:2,
+	61:3,
+	63:13,
+	72:51,
+	68:1
+    }
+    var m
+    function move() {return randomInteger(6)()+1}
+    function step(s)
+    {
+	if (jumps[s]) return jumps[s]
+	m = move()
+	if (m == 6) m += move()
+	if (s > 60) m = min(m,72-s)
+	s+=m
+	return  s//jumps[s] || s
+    }
+    return step
+}
+
+function fig613(m)
+{
+    p1 = new Graphics(createSVG('fig613'),{'aspectRatio':1})
+    	.matrixPlot(leelaMatrix,{'kind':'points'})
+//	.xAxisType('inverted')
+    	.yAxisType('inverted')
+    	.axes({xLabel:"", yLabel:""})
+	.disk([2,68],1,{'class':'sink'})
+}
+
+//fig613(10)
+
+////////////////////////////////////////////////////////////
+    // Рис 6.14
+
+function fig614(f,m)
+{
+    p1 = new Graphics(createSVG('fig614'+f),{'aspectRatio':1})
+    	.matrixPlot(mpow(leelaMatrix,m),{'kind':'points'})
+//	.xAxisType('inverted')
+    	.yAxisType('inverted')
+    	.axes({xLabel:"", yLabel:""})
+}
+//fig614(1,2)
+//fig614(2,4)
+//fig614(3,10)
+//fig614(4,1000)
+
+////////////////////////////////////////////////////////////
+// Рис 6.15
+
+function fig615()
+{
+    var hs = new Histogram(1)
+    var s = 1, step = leela()
+    var m = invariant
+    repeat(50000,() => hs.add(s=step(s)))
+    new Graphics(createSVG('fig615'),{'size':600,'aspectRatio':1/2})
+	.xRange([1,73])
+	.yRange([0,0.05])
+	.histogram(hs,{'type':'PMF'})
+	.listPlot(range(1,73).zipWith(m,(i,x)=>[i+1/2,x]))
+	.axes({xLabel:"номер клетки",
+	       yLabel:"вероятность",
+	       yTickFormat:fmt.percent,
+	       yTicks:5})
+}
+//fig615()
+
+////////////////////////////////////////////////////////////
+// Рис 6.16
+function fig616()
+{
+    function leela1()
+    {
+	var step = leela()
+	hs.add(nestWhileList(step,1,s=>s!=68,250).length)
+    
+}
+    ps = nestList(m => mmul(m,leelaMatrix),leelaMatrix,240).map((m,i) => [i+2,m[0][67]])
+    
+    var hs = new Histogram(1)
+    repeat(100000, leela1)
+
+    var p1 = new Graphics(createSVG('fig616'))
+	.xRange([0,200])
+	.yRange([0,0.03])
+	.listLinePlot(ps)
+	.histogram(hs,{'type':'PDF'})
+	.clipPaper()
+	.axes({xLabel:"длительнось партии в шагах",
+	       yLabel:"вероятность",
+	       yTickFormat:fmt.percent,
+	       yTicks:3})
+}
+
+fig616()
+
+////////////////////////////////////////////////////////////
+// Рис 6.17
+function fig617()
+{
+const cells = range(0,72)
+
+function prob(ch)
+{
+    return ch.zip(ch.tail()).reduce((res,[i,j]) => res*leelaMatrix[i][j],invariant[ch[0]])
+}
+
+function findChains(chs) {
+    return best(100,chs.mapappend(ch => cells.skip(1).map(j => ch.concat([j]))))
+}
+
+function best(n,chs) {
+    return chs.sorted((x,y) => prob(y)-prob(x)).take(n)
+}
+
+function recurrence(lst,out)
+{
+    var out = out || (a => 1)
+    function dist(a,b)
+    {
+	return a==b ? out(a) : 0
+    }
+    var res = [], rot = lst.copy()
+    lst.tail().forEach(() => {
+	rot.push(rot[0])
+	rot.shift()
+	res.push(lst.zipWith(rot,dist))
+    })
+    return res
+}
+
+var chains = [4,5,6].mapappend(
+    n=>cells.mapappend(
+	x=>nest(findChains,[[x]].transpose(),n-1).map(
+	    c => [c,prob(c)])))
+    .filter(p => p[1]>0.0001)
+    .sorted((x,y)=>y[1]-x[1])
+
+function collectChains()
+{
+    s = leela()(s)
+    chain.shift()
+    chain.push(s-1)
+    i = chains.findIndex(ch => ch[0].equal(chain))
+    h.add(i<0 ? 100:i)
+    p1.cleanPaper()
+	.histogram(h,{'type':'PDF'})
+	.listPlot(ref,{'joined':true,'points':false})
+}
+
+
+function leela4()
+{
+    var p1 = new Graphics(createSVG('fig617'),{'aspectRatio':0.8})
+	.xRange([0,0.5])
+	.yRange([0,10])
+	.axes({xLabel:"вероятность встретить цепочку в партии",
+	       xTicks : 5,
+	       xTickFormat : fmt.percent,
+	       yAxis : false})
+    chains.take(10)
+	.forEach(([c,f],i) =>
+		 p1.rectangle(0,9-i+0.1,f*41,0.8,
+			      {'class':'bar'})
+		 .label(c.map(x=>x+1).toString().replace(/,/g,arrow),
+			{'at':[f*41+0.025,9-i+0.4]}))
+}
+
+    leela4()
+}
+fig617()
+////////////////////////////////////////////////////////////
+// Рис 6.18
+function fig618()
+{
+    pts = new Histogram(1).fromDistribution(Exponential(1/10),10000).LorentzCurve
+    new Graphics(createSVG('fig618'),{'aspectRatio':1,'left-margin':55,'class':'Lorentz'})
+	.LorentzPlot(pts,{'points':false,
+			  yLabel : 'доля интервалов между событиями',
+			  xLabel : 'доля общего времени наблюдения',})
+}
+fig618()
+
 
   </script>
 </html>

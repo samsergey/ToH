@@ -52,15 +52,15 @@
 	  var p = new Graphics(createSVG('fig41'),{'aspectRatio':0.8,'left-margin':55})
 	      .xRange([0,n])
 	      .yRange([0.3,0.7])
-	      .gridLines({y:[0.5,0.55]})
+	      .gridLines({y:[0.5,0.45]})
 	  repeat(100, () => p.listLinePlot(experiment(0.5),{'class':'sample'}))
-	  repeat(100, () => p.listLinePlot(experiment(0.45),{'class':'sample'}))
+	  repeat(100, () => p.listLinePlot(experiment(0.55),{'class':'sample'}))
 	  p.clipPaper()
 	      .axes({
 		  xLabel : "количество испытаний",
 		  yLabel : "оценка параметра распределения",
 		  xTickValues: range(0,n+1000,1000),
-		  yTickFormat: fmt.percent
+		  yTickFormat: fmt.number
 	      })
 
 
@@ -73,7 +73,7 @@
 	  var p = new Graphics(createSVG('fig321'))
 	      .xRange([1,7])
 	      .yRange([0,1])
-	      .axes({'xLabel' : "",
+	      .axes({'xLabel' : "x",
 		     'yLabel' : 'плотность вероятности',
 		     'xTickValues' : range(1,7),
 		     'yTickFormat' : fmt.normal
@@ -94,14 +94,14 @@
 	  p.plot(x => g(f)(x),{'plotPoints':300})
 	  
       }
-      fig321()
+      //fig321()
 
       function fig322()
       {  
 	  var p = new Graphics(createSVG('fig322'))
 	      .xRange([1,7])
 	      .yRange([0,1])
-	      .axes({'xLabel' : "",
+	      .axes({'xLabel' : "x",
 		     'yLabel' : 'плотность вероятности',
 		     'xTickValues' : range(1,7),
 		     'yTickFormat' : fmt.normal
@@ -121,7 +121,7 @@
 	  p.plot(x => g(f)(x),{'plotPoints':300})
 	  
       }
-      fig322()
+      //fig322()
 
       function fig323()
       {  
@@ -142,7 +142,7 @@
 	      .plot(x => (y=>max(0,y-2*sqrt(y*(1-y)/N/s)))(g(f)(x)),{"class":"dashed",'plotPoints':300})
 	      .plot(x => g(f)(x),{'plotPoints':300})
 	      .clipPaper()
-	      .axes({'xLabel' : '',
+	      .axes({'xLabel' : "x",
 		     'yLabel' : 'функция вероятности',
 		     'xTickValues' : range(1,7),
 		     'yTickFormat' : fmt.normal
@@ -150,7 +150,7 @@
 
 	  
       }
-      fig323()
+      //fig323()
 
       // Рис. 4.3
       function fig43()

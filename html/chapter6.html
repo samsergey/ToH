@@ -383,8 +383,8 @@
 		   xTickFormat : d3.format('i'),
 		   yTickFormat : d3.format('i')})
     }
-    fih612('fig6121',{})
-    fih612('fig6122',{p:0.9,p2:0.6})
+    //fih612('fig6121',{})
+    //fih612('fig6122',{p:0.9,p2:0.6})
 
 ////////////////////////////////////////////////////////////
     // Рис 6.13
@@ -434,6 +434,8 @@ function fig613(m)
     	.yAxisType('inverted')
     	.axes({xLabel:"", yLabel:""})
 	.disk([2,68],1,{'class':'sink'})
+	.arrow([[1,34],[50,34]],{'class':'thiner'})
+	.arrow([[50,34],[50,1]],{'class':'thiner'})
 }
 
 //fig613(10)
@@ -463,7 +465,7 @@ function fig615()
     var s = 1, step = leela()
     var m = invariant
     repeat(50000,() => hs.add(s=step(s)))
-    new Graphics(createSVG('fig615'),{'size':600,'aspectRatio':1/2})
+    new Graphics(createSVG('fig615'),{'size':400,'aspectRatio':1/2})
 	.xRange([1,73])
 	.yRange([0,0.05])
 	.histogram(hs,{'type':'PMF'})
@@ -579,6 +581,7 @@ function leela4()
     leela4()
 }
 //fig617()
+
 ////////////////////////////////////////////////////////////
 // Рис 6.18
 function fig618()

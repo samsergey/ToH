@@ -78,6 +78,15 @@
     stroke : black;
 }
 
+.thin .area {
+    fill : none;
+}
+
+.thin .line {
+    stroke : black;
+    stroke-width : 0.1px;
+}
+
 .dashed .line {
     stroke : black;
     stroke-width : 1;
@@ -263,3 +272,6 @@
     stroke-linecap  : round;    
 }
 
+.thin {
+    stroke-width: 0.1;
+}

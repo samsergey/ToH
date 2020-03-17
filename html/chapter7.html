@@ -36,7 +36,7 @@ function fig71()
 	       yTicks:5,
 	       yLabel:"длина очереди"})
 }
-fig71()
+//fig71()
 
 ////////////////////////////////////////////////////////////
 // Рис 7.2
@@ -52,7 +52,7 @@ function fig72() {
 	       xTicks:5,
 	       yTickFormat:fmt.percent})
 }
-fig72()
+//fig72()
 
 ////////////////////////////////////////////////////////////
 // Рис 7.3
@@ -80,16 +80,16 @@ function fig7(f,d,T)
     }
 }
 
-fig7('31',MD1(30,34).runToTime(8),8)
-fig7('32',MM1(30,34,0).runToTime(6),6)
+//fig7('31',MD1(30,34).runToTime(8),8)
+//fig7('32',MM1(30,34,0).runToTime(6),6)
 
 ////////////////////////////////////////////////////////////
-// Рис 7.5
+// Рис 7.4
 function toGamma(m,v)
 {
     return Gamma(m*m/v,m/v)
 }
-function fig75(l,m,s)
+function fig74(l,m,s)
 {
     var f = x=>toGamma(1/m,s/m/m).PDF(x)+0.1/x
     new Graphics(createSVG('fig75'))
@@ -104,16 +104,16 @@ function fig75(l,m,s)
 	.line([[1/m,0],[1/m,f(1/m)]],{'class':'B'})
 }
 
-fig75(30/60,36/60,5)
+//fig74(30/60,36/60,5)
+
+////////////////////////////////////////////////////////////
+// Рис 7.5
+
+//fig7('6',MG1(30,toGamma(1/34,5/34/34)).runToTime(8),8)
 
 ////////////////////////////////////////////////////////////
 // Рис 7.6
-
-fig7('6',MG1(30,toGamma(1/34,5/34/34)).runToTime(8),8)
-
-////////////////////////////////////////////////////////////
-// Рис 7.7
-function fig77()
+function fig76()
 {
     var pts = [], n = 200, T = 50, l = 1/4
     var pr = PoissonProcess(1/4)
@@ -137,12 +137,12 @@ function fig77()
 	.clipPaper()
 	.axes({xLabel:'время',yLabel:'число событий'})
 }
-//fig77()
+//fig76()
 
 ////////////////////////////////////////////////////////////
-// Рис 7.8
+// Рис 7.7
 
-function fig78()
+function fig77()
 {
     var w,b,l=30/60,m=34/60,r=l/m
     new Graphics(createSVG('fig78'))
@@ -159,35 +159,124 @@ function fig78()
 	.label("обычные клиенты",{at:[0.4,55]})
     	.label("VIP",{at:[0.5,6]})
 }
-fig78()
+//fig77()
+
+////////////////////////////////////////////////////////////
+// Рис 7.8
+//fig7('79',MM1(30,34,1).runToTime(8),8)
 
 ////////////////////////////////////////////////////////////
 // Рис 7.9
-fig7('79',MM1(30,34,1).runToTime(8),8)
-
-////////////////////////////////////////////////////////////
-// Рис 7.10
 
 const Busy = (m,l) => t => t <= 0 ? 0 : 1/(t*sqrt(l/m))*exp(-(l+m)*t)*BesselI1(2*t*sqrt(l*m))
 
 
-function fig710()
+function fig79()
 {
     var l=30/60,m=34/60,w,b
     var f = t => integrate(x=>Busy(l,m)(x)*Exponential(m).PDF(t-x),[0,100])
-    new Graphics(createSVG('fig710'))
+    new Graphics(createSVG('fig710'),{'left-margin':55})
 	.xRange([0,60])
 	.yRange([0,0.15])
-	.plot(x=>f(x)+0.003,{'maxIteration':2,'class':'vip'})
-	.plot(Exponential(m-l).PDF,{'class':'year'})
-	.line([[1/(m-l),0],[1/(m-l),Exponential(m-l).PDF(1/(m-l))]],{'class':'myear'})
-	.line([[16.7,0],[16.7,f(16.7)+0.003]],{'class':'mvip'})
+	.plot(x=>f(x)+0.003,{'maxIteration':2})
+	.plot(Exponential(m-l).PDF,{'class':'B'})
+	.line([[1/(m-l),0],[1/(m-l),Exponential(m-l).PDF(1/(m-l))]],{'class':'dashed'})
+	.line([[16.7,0],[16.7,f(16.7)+0.003]],{'class':'dashed'})
 	.axes({xLabel:"время ожидания, мин",
 	       yLabel:"плотность вероятности"})
 	.label("FIFO",{'at':[20,0.03]})
     	.label("FILO",{'at':[6,0.1]})
 }
-fig710()
+//fig79()
+
+////////////////////////////////////////////////////////////
+// Рис 7.10
+
+function runQueue(d,h)
+{
+    var W = new Histogram(h||0.01)
+    var B = new Histogram(h||0.01)
+    var L = new Histogram(1)
+    var t0 = 0,n = 0
+    d.forEach(([t,q,io])=>{
+	L.add(n,t-t0)
+	n = q.length
+	if (n == 1 && io=='enqueue') b = t
+	if (n == 0) { B.add(t-b); b = 0; }
+	if (io != 'enqueue') W.add(io)
+	t0 = t
+    })
+    return [W,B,L]
+}
+
+function fig710()
+{
+    [w,b] = runQueue(MM1(30,34,1).samples(100000))
+    lexp = new Histogram(0.01).fromDistribution(Exponential(1/w.mean),100000).LorentzCurve
+    lstack = w.LorentzCurve
+
+    new Graphics(createSVG('fig710'),{'class':'Lorentz',
+				      'aspectRatio':1,
+				      'left-margin':55})
+	.xRange([0,1])
+    	.yRange([0,1])
+    	.listPlot([[0,0],[1,1]], {'filled':true,
+				  'points':false,
+				  'joined':true,
+				  'class':'upper'})
+	.listPlot(lexp, {'filled':true,
+			 'points':false,
+			 'joined':true,
+			 'class':'A'})
+	.listPlot(lstack, {'filled':true,
+			   'points':false,
+			   'joined':true,
+			   'class':'B'})
+	.axes({xLabel : 'доля клиентов очереди',
+	       xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       yLabel : 'доля времени работы очереди',
+	       xTickValues:[0,0.25,0.5,0.75,1],
+	       yTickValues:[0,0.25,0.5,0.75,1]})
+	.rectangle(0.74,0.29,0.12,0.05,{'fill':'white'})
+	.label("FIFO",{'at':[0.75,0.3]})
+    	.rectangle(0.84,0.09,0.12,0.05,{'fill':'white'})
+    	.label("FILO",{'at':[0.85,0.1]})
+}
+
+//fig710()
+
+////////////////////////////////////////////////////////////
+// Рис 7.11
+//fig7('11',MM1(15,30).runToTime(15),15)
+
+////////////////////////////////////////////////////////////
+// Рис 7.12
+//fig7('12',MM1(15,16).runToTime(15),15)
+
+////////////////////////////////////////////////////////////
+// Рис 7.13
+var dd =[[0.5,0.176048],[0.594604,0.159214],[0.707107,0.143746],[0.840896,0.129545],[1.,0.11652],[1.18921,0.104582],[1.41421,0.0936527],[1.68179,0.0836543],[2.,0.0745172],[2.37841,0.0661763],[2.82843,0.0585716],[3.36359,0.0516478],[4.,0.0453542],[4.75683,0.0396441],[5.65685,0.0344749],[6.72717,0.0298075],[8.,0.0256059],[9.51366,0.0218373],[11.3137,0.0184715],[13.4543,0.0154807],[16.,0.012839],[19.0273,0.0105223]]
+
+function fig713()
+{
+   
+    cdf = t => 1-integrate(Busy(15,16),[0,t],{'maxDivisions':20})
+    var p = new Graphics(createSVG('fig713'),{'left-margin':55})
+	.xRange([0.5,19])
+	.xAxisType('log')
+	.yRange([0,0.2])
+        .listLinePlot(dd)
+	.gridLines({y:range(0.05,0.25,0.05)})
+	.axes({xTickValues:[0.5,1,2,4,8,16],
+	       xTickFormat:fmt.int,
+	       yTickFormat:fmt.percent,
+	       xLabel:"время занятости, дни",
+	       yLabel:"вероятность",
+	       yTicks:5
+	      })
+}
+fig713()
 
 </script>
     </html>

@@ -1,0 +1,26 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+    .queue {
+	stroke-width:0.25px;
+    }
+</style>
+    </head>
+    <body></body>
+    <script>
+    
+ 
+</script>
+    </html>

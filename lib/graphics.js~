@@ -342,7 +342,8 @@ Graphics.prototype.listPlot = function (d, opts)
 	'filledUp' : false,
 	'needles' : false,
 	'pointSize' : 3,
-	'parent' : null
+	'parent' : null,
+	'arrow': false
     }
 
     var options = Object.assign(defaults, opts || {})
@@ -392,9 +393,11 @@ Graphics.prototype.listPlot = function (d, opts)
     if (options.joined)
     {
 	var line = d3.line().x(d=>this.X(d[0])).y(d => this.Y(d[1]))
-	g.append('path').attr('class','line')
+	var l = g.append('path').attr('class','line')
 	    .attr('fill', 'none')
-	    .attr('d', line(data));
+	    .attr('d', line(data))
+	if (options.arrow)
+	    l.attr('marker-end',"url(#Triangle)");
     }
 
     if (options.points)
@@ -902,6 +905,22 @@ Graphics.prototype.line = function (pts,opts)
     return this.listPlot(pts,options)
 }
 
+Graphics.prototype.arrow = function (pts,opts)
+{
+    var defaults = {
+//	'class'  : null,
+	'parent' : null,
+	'joined':true,
+	'points':false,
+	'arrow':true
+    }
+
+    var options = Object.assign(defaults, opts || {})    
+
+    return this.listPlot(pts,options)
+}
+
+
 Graphics.prototype.image = function (src,x,y,w,h,opts)
 {
     var defaults = {
@@ -927,7 +946,7 @@ Graphics.prototype.matrixPlot = function (m,opts)
     var defaults = {
 	'class'  : null,
 	'parent' : null,
-	'scaling': (x,pmax) => sqrt(abs(x)/(pmax || 1)),
+	'scaling': (x,pmax) => pow(abs(x)/(pmax || 1),1/4),
 	'zeros'  : false,
 	'kind' : 'grid'
         }
@@ -1013,4 +1032,8 @@ var patterns = `<pattern id="h1" width="5px" height="5px" viewBox="0,0,20,20" pa
 <pattern id="h2" width="5px" height="5px" viewBox="0,0,20,20" patternUnits="userSpaceOnUse">
 <line class="hatch" x1="0" y1="20" x2="20" y2="0" />
 <line  class="hatch" x1="0" y1="0" x2="20" y2="20" />
-</pattern>`
+</pattern>
+<marker id="Triangle" viewBox="0 0 10 8" refX="8" refY="4"
+    markerWidth="6" markerHeight="6" orient="auto">
+  <path d="M 0 0 L 10 4 L 0 8 z" />
+</marker>`

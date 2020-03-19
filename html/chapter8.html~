@@ -59,6 +59,7 @@ function deadlineSample0(N,M,opts)
 	.listPlot(pts,{'pointSize':5, 'class':'samples'})
    return xs
 }
+
 function Pm(n,k)
 {
     if (k <= 0 || k > n+1) return 0
@@ -128,31 +129,112 @@ function deadlineCDF(opts)
 {
     var life = new Histogram(1).fromList(d3.range(10000).map(() => deadline(365*60,opts).length))
     var year = new Histogram(1).fromList(d3.range(10000).map(() => deadline(365,opts).length))
-    month = new Histogram(1).fromList(d3.range(10000).map(() => deadline(30,opts).length))
+    month = new Histogram(1).fromList(d3.range(10000).map(() => deadline(25,opts).length))
     week = new Histogram(1).fromList(d3.range(10000).map(() => deadline(7,opts).length))
     new Graphics(createSVG('fig3'),{'size':400,
 				    'aspectRatio':1/2,
 				    'left-margin':55})
 	.xRange([0,life.maxBin])
 	.yRange([0,1])
-//	.discretePlot(x => life.CDF(x-1),{'needles':false})
-//    	.discretePlot(x => year.CDF(x-1),{'needles':false})
-    	.discretePlot(x => month.CDF(x-1),{'needles':false})
-    	.discretePlot(x => week.CDF(x-1),{'needles':false})
-    .axes({yLabel : 'вероятность не успеть',
+    	.discretePlot(x => week.CDF(x-1),{'kind':'stairs'})
+    	.discretePlot(x => month.CDF(x-1),{'kind':'stairs'})
+    	.discretePlot(x => year.CDF(x-1),{'kind':'stairs'})
+	.discretePlot(x => life.CDF(x-1),{'kind':'stairs'})
+	.axes({yLabel : 'вероятность не успеть',
 	   xLabel : 'количество шагов для достижения цели',
 	   xTicks : 10,
 	   xTickFormat : d3.format('i'),
 	   yTickFormat : fmt.percent})
     .gridLines({y:d3.range(0.1,1.1,0.1)})
-	.label('неделя',{at:[week.mean,0.75], angle:90})
-    .label('месяц',{at:[month.mean+3,0.75]})
+	.label('неделя',{at:[3.5,0.6], angle:90})
+	.label('месяц',{at:[month.mean+3,0.4],'angle':90})
     .label('год',{at:[year.mean+4,0.625]})
-    .label('вся жизнь',{at:[life.mean+4,0.45]})
+    .label('вся жизнь',{at:[life.mean+4,0.43]})
 }
 
 deadlineCDF({'strategy':'uniform'})
 
+function Log(a,b) {return Math.log(b)/Math.log(a)}
 
+function rate2(N)
+{
+    var M = H(N)
+    return x => -1/(M+1)*log2(1-x*(1-pow(2,-M-1)))
+}
+
+
+function Gini(N,k)
+{
+    return (1 - (2*k)/(k - N*Math.log(2)) - 2/Math.log((N*Math.log(2))/k))/k
+}
+
+function deadlineMean(N,M,k,opts)
+{
+    var empiric = opts && opts['empiric'] || false
+    var cls = opts && opts['class'] || 'empiric'
+    k = k || 1
+    
+    function sample()
+    {
+	var xs
+	do {
+	    xs = deadline(N,opts)
+	} while (xs.length >= M)
+	var s = 0
+	return [0].concat(xs).concat([N]).differences(1).mapappend(x => [s++].repeat(x))
+    }
+    steps = d3.range(k)
+	.map(()=>sample())
+	.reduce((res,lst) => res.zipWith(lst,(x,y)=>x+y))
+	.map(x => x/k)
+    xmax = d3.max(steps)
+    steps = steps.map((x,i) => [i/(N-1),x/xmax])
+    if (empiric)
+	return new Graphics(fig1,{'class':'meanLine'})
+	.xRange([0,1])
+	.yRange([0,1])
+	.listPlot(steps,{'points':false,'joined':true,'class':'sampleLine'})
+//	.plot(rate(N),{plotPoints:400,'class':'mean'})
+    else
+	return new Graphics(fig1,{'class':'meanLine'})
+	.xRange([0,0.9999])
+	.yRange([0,1])
+    	.plot(rate2(N),{plotPoints:400})
+}
+
+function deadlineSample(N,M,opts)
+{
+    if (N > 0) {
+	//var xs
+	do {
+	    xs = deadline(N,opts)
+	} while (xs.length != M)
+	var pts = xs.map(x => [x/N, 0])
+	var steps = x => xs.sum(p => Heaviside(x-p/N))/M
+    }
+    else
+    {
+	pts = []
+	steps = x => -1
+    }
+    new Graphics(fig1)
+	.xRange([0,1])
+	.yRange([0,1])
+	.plot(steps,{'plotPoints':400})
+//	.listPlot([[0,0],[1,1]],{'class':'ideal','joined':true})
+	.axes({xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       'xLabel' : 'время, отпущенное на выполнение работы',
+	       'yLabel' : 'выполненная часть работ'
+	      })
+	.gridLines({'x':[1]})
+	.label('дедлайн',{at : [0.99,0.1], angle : 90, 'class':'gridLineLabel'})
+	.listPlot(pts,{'pointSize':5, 'class':'samples'})
+   return xs
+}
+
+//deadline/fig1.svg
+	//deadlineSample(365,15).add(deadlineMean(365,15,1))
+	
 </script>
     </html>

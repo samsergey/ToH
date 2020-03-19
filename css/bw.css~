@@ -87,6 +87,11 @@
     stroke-width : 0.1px;
 }
 
+.thiner .line {
+    stroke : black;
+    stroke-width : 1px;
+}
+
 .dashed .line {
     stroke : black;
     stroke-width : 1;

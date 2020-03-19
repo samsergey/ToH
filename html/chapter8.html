@@ -109,8 +109,8 @@ function deadlinePDF(N, opts)
 {
     ls = new Histogram(1).fromList(d3.range(1000000).map(() => deadline(N,opts).length+1))
     new Graphics(createSVG('fig2'),{'class':'deadline','left-margin':55})
-	.xRange([0,5*(H(N)-1)])
-	.yRange([0,0.4])
+	.xRange([0,3*(H(N)-1)])
+	.yRange([0,0.2])
    	.histogram(ls,{'type':'PDF'})
 	.axes({yLabel : 'доля завершённых цепочек',
 	       xLabel : 'длина цепочки',
@@ -118,7 +118,7 @@ function deadlinePDF(N, opts)
 	       xTickFormat : d3.format('i'),
 	       yTickFormat : d3.format('i'),
 	       yTickFormat : fmt.percent})
-	.discretePlot(k => Poisson(H(N)-1).PMF(k-1),{'joined':true})
+	.discretePlot(k => Poisson(H(N)-1).PMF(k-1),{'kind':'stairs'})
 }
 //deadlinePDF(10, {'strategy':'uniform'})
 
@@ -131,9 +131,9 @@ function deadlineCDF(opts)
     var year = new Histogram(1).fromList(d3.range(10000).map(() => deadline(365,opts).length))
     month = new Histogram(1).fromList(d3.range(10000).map(() => deadline(25,opts).length))
     week = new Histogram(1).fromList(d3.range(10000).map(() => deadline(7,opts).length))
-    new Graphics(createSVG('fig3'),{'size':400,
-				    'aspectRatio':1/2,
-				    'left-margin':55})
+    return new Graphics(createSVG('fig3'),{'size':400,
+					   'aspectRatio':1/2,
+					   'left-margin':55})
 	.xRange([0,life.maxBin])
 	.yRange([0,1])
     	.discretePlot(x => week.CDF(x-1),{'kind':'stairs'})
@@ -141,19 +141,224 @@ function deadlineCDF(opts)
     	.discretePlot(x => year.CDF(x-1),{'kind':'stairs'})
 	.discretePlot(x => life.CDF(x-1),{'kind':'stairs'})
 	.axes({yLabel : 'вероятность не успеть',
-	   xLabel : 'количество шагов для достижения цели',
-	   xTicks : 10,
-	   xTickFormat : d3.format('i'),
-	   yTickFormat : fmt.percent})
-    .gridLines({y:d3.range(0.1,1.1,0.1)})
-	.label('неделя',{at:[3.5,0.6], angle:90})
-	.label('месяц',{at:[month.mean+3,0.4],'angle':90})
-    .label('год',{at:[year.mean+4,0.625]})
-    .label('вся жизнь',{at:[life.mean+4,0.45]})
+	       xLabel : 'количество шагов для достижения цели',
+	       xTicks : 10,
+	       xTickFormat : d3.format('i'),
+	       yTickFormat : fmt.percent})
+	.gridLines({y:d3.range(0.1,1.1,0.1)})
 }
 
+/*
 deadlineCDF({'strategy':'uniform'})
+    .label('неделя',{at:[3.5,0.6], angle:90})
+    .label('месяц',{at:[month.mean+3,0.4],'angle':90})
+    .label('год',{at:[year.mean+4,0.625]})
+    .label('вся жизнь',{at:[life.mean+4,0.43]})
+*/
+
+////////////////////////////////////////////////////////////
+// Рис 8.4
 
 
+function rate(N)
+{
+    var M = floor(log2(N))
+    return x => -1/M*log2(1-x*(1-pow(2,-M)))
+}
+
+
+function Log(a,b) {return Math.log(b)/Math.log(a)}
+
+function rate2(N)
+{
+    var M = H(N)
+    return x => -1/(M+1)*log2(1-x*(1-pow(2,-M-1)))
+}
+
+
+function Gini(N,k)
+{
+    return (1 - (2*k)/(k - N*Math.log(2)) - 2/Math.log((N*Math.log(2))/k))/k
+}
+
+function deadlineMean(N,M,k,opts)
+{
+    var empiric = opts && opts['empiric'] || false
+    var cls = opts && opts['class'] || 'empiric'
+    k = k || 1
+    
+    function sample()
+    {
+	var xs
+	do {
+	    xs = deadline(N,opts)
+	} while (xs.length >= M)
+	var s = 0
+	return [0].concat(xs).concat([N]).differences(1).mapappend(x => [s++].repeat(x))
+    }
+    steps = d3.range(k)
+	.map(()=>sample())
+	.reduce((res,lst) => res.zipWith(lst,(x,y)=>x+y))
+	.map(x => x/k)
+    xmax = d3.max(steps)
+    steps = steps.map((x,i) => [i/(N-1),x/xmax])
+    if (empiric)
+	return steps
+    else
+	return rate2(N)
+}
+
+function fig84() {
+    p = new Graphics(createSVG('fig4'),{'aspectRatio':1,'left-margin':55})
+	.xRange([0,0.999])
+	.yRange([0,1])
+	.axes({xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       'xLabel' : 'время, отпущенное на выполнение работы',
+	       'yLabel' : 'выполненная часть работ'})
+    
+    range(500).map(() => p.listLinePlot(deadlineMean(365,15,10,{'empiric':true}),{'class':'thinest'}))
+    p.plot(deadlineMean(365,15,1),{'plotPoints':400})
+}
+
+//fig84()
+
+////////////////////////////////////////////////////////////
+// Рис 8.5
+
+function deadlineRates()
+{
+    new Graphics(createSVG('fig5'),{'aspectRatio':1,'left-margin':55})
+	.xRange([0,0.999])
+	.yRange([0,1])
+	.listPlot([[0,0],[1,1]],{'class':'dashed','joined':true})
+	.plot(rate(7),{'plotPoints':400,'class':'A'})
+	.plot(rate(30),{'plotPoints':400,'class':'A'})
+	.plot(rate(365),{'plotPoints':400,'class':'A'})
+	.axes({xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       'xLabel' : 'время, отпущенное на выполнение работы',
+	       'yLabel' : 'выполненная часть работ'
+	      })
+	.gridLines({'x':[1]})
+    	.label('неделя',{at : [0.65,0.4], angle : 45, 'class':'week'})
+    	.label('месяц',{at : [0.7,0.3], angle : 45, 'class':'month'})
+    	.label('год',{at : [0.825,0.25], angle : 45, 'class':'year'})
+	.label('дедлайн',{at : [0.99,0.1], angle : 90, 'class':'gridLineLabel'})
+}
+
+//deadlineRates()
+
+////////////////////////////////////////////////////////////
+// Рис 8.6
+function fig86() {
+    deadlineCDF({'strategy':'exp'})
+	.label('неделя',{at:[4,0.6], angle:90})
+	.label('месяц',{at:[13,0.5],'angle':90})
+	.label('год',{at:[21,0.5]})
+	.label('вся жизнь',{at:[35,0.43]})
+}
+
+//fig86()
+
+////////////////////////////////////////////////////////////
+// Рис 8.7
+
+function fig87()
+{
+    function dlM(n,N) {
+	return deadlineMean(365,n,N,{'strategy':'exp','empiric':true})
+    }
+    
+    function deadlineSample(N,M,opts)
+    {
+	if (N > 0) {
+	    //var xs
+	    do {
+		xs = deadline(N,opts)
+	    } while (xs.length != M)
+	    pts = xs.map(x => [x/N, 0])
+	    steps = x => xs.sum(p => Heaviside(x-p/N))/M
+	}
+	else
+	{
+	    pts = []
+	    steps = x => -1
+	}
+	return new Graphics(fg=createSVG('fig7'),{'aspectRatio':1,'left-margin':55})
+	    .xRange([0,1])
+	    .yRange([0,1])
+	//	.plot(steps,{'plotPoints':400})
+	    .listPlot([[0,0],[1,1]],{'class':'dashed','joined':true})
+	    .axes({xTickFormat : fmt.percent,
+		   yTickFormat : fmt.percent,
+		   'xLabel' : 'время, отпущенное на выполнение работы',
+		   'yLabel' : 'выполненная часть работ'
+		  })
+	    .gridLines({'x':[1]})
+	    .label('дедлайн',{at : [0.99,0.1], angle : 90, 'class':'gridLineLabel'})
+	    .listPlot(pts,{'pointSize':5, 'class':'thin'})
+	    .listLinePlot(dlM(4,5000))
+	    .label("k = 4",{at :[0.175,0.4],angle:57})
+	    .listLinePlot(dlM(7,10000))
+	    .label("k = 7",{at :[0.35,0.4],angle:45})
+	    .listLinePlot(dlM(10,10000))
+	    .label("k = 10",{at :[0.55,0.4],angle:40})
+	    .listLinePlot(dlM(13,6000))
+	    .label("k = 13",{at :[0.7,0.4],angle:42})
+	    .listLinePlot(dlM(40,4000))
+	    .label("k = 40",{at :[0.7,0.3],angle:40})
+	
+    }
+    deadlineSample(365,0,{'strategy':'exp'})
+} 
+
+//fig87()
+
+////////////////////////////////////////////////////////////
+// Рис 8.8
+function deadlinePoints()
+{
+    xs = deadline(100).map(x => [x,1])
+    new Graphics(createSVG('fig81'),{'class':'deadline'})
+	.xRange([1,100])
+	.xAxisType('log')
+	.listPlot(xs)
+}
+
+function deadlineDivRate(N,k)
+{
+    ds = d3.range(k+1).map(x => x/k)
+    return x => ds.sum(d => ((x >= d && x < d+1/k) ? d+rate(N/k)(k*(x-d))/k : 0))
+}
+
+function deadlineDiv(N)
+{
+    return new Graphics(createSVG('fig8'),{'aspectRatio':1, 'left-margin':55})
+	.xRange([0,0.9999])
+	.yRange([0,1])
+	.plot(deadlineDivRate(N,1),{plotPoints:400})
+    	.plot(deadlineDivRate(N,2),{plotPoints:400})
+    	.plot(deadlineDivRate(N,4),{plotPoints:400})
+	.listPlot([[0,0],[1,1]],{'class':'dashed','joined':true})
+	.axes({xTickFormat : fmt.percent,
+	       yTickFormat : fmt.percent,
+	       'xLabel' : 'время, отпущенное на выполнение работы',
+	       'yLabel' : 'выполненная часть работ'
+	      })
+	.gridLines({'x':ds})
+	.label('квартальный отчёт',{at : [0.24,0.3], angle : 90, 'class':'gridLineLabel'})
+	.label('полугодовой',{at : [0.49,0.55], angle : 90, 'class':'gridLineLabel'})
+	.label('ещё один',{at : [0.74,0.77], angle : 90, 'class':'gridLineLabel'})
+	.label('дедлайн',{at : [0.99,0.1], angle : 90, 'class':'gridLineLabel'})
+}
+
+
+//deadline/fig7.svg
+//deadlineDiv(365)
+
+////////////////////////////////////////////////////////////
+// Рис 8.9
+deadlinePDF(100000, {'strategy':'uniform'})
 </script>
     </html>

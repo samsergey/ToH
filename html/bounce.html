@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+    </style>
+  </head>
+  <body>
+    <canvas id='paper' width='2000' height='2000'></canvas>
+  </body>
+  <script>
+    var ctx = paper.getContext('2d')
+    const pointSize = 0.1
+    
+    const BallY = (y,v,t) => y + v*t - t*t/2
+    const BallV = (y,v,t) => v - t
+    const TableY = (y,v,t) => y*Math.cos(t)+v*Math.sin(t)
+    const TableV = (y,v,t) => v*Math.cos(t)-y*Math.sin(t)
+
+    
+    function bounce([y,vb,vt])
+    {
+	let dt=1e-4, t = dt/1.2
+	while (BallY(y,vb,t) > TableY(y,vt,t))
+	    t+=(dt*=1.2)
+	let t2 = secant(tau => BallY(y,vb,tau)-TableY(y,vt,tau),t-dt,t)
+	return [BallY(y,vb,t2),TableV(y,vt,t2),BallV(y,vb,t2)]
+    }
+
+    function point(r)
+    {
+	ctx.fillRect(X(r[0]),Y(r[1]),pointSize,pointSize)
+    }
+
+    function step(N)
+    {
+	pts = nestList(bounce,r,N)
+	return pts[N-1]
+    }
+
+    var r = [-0.14,1.3,0], pts
+    r = step(10000)
+    const X = scale(d3.extent(pts,r => r[0]),[300,1700])
+    const Y = scale(d3.extent(pts,r => r[1]),[500,1400])
+    pts.forEach(point)
+    
+    function frame()
+    {
+	r = step(10000)
+	pts.forEach(point)
+    }
+
+    window.setInterval(frame)
+
+    /*
+    new Graphics(createSVG('fig'))
+    .xRange([0,3])
+    .yRange([-3,3])
+    .plot(t=>BallY(0,1/2,t))
+    .plot(t=>TableY(0,-1/2,t))
+    .axes({})
+*/
+
+  </script>
+</html>

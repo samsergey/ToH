@@ -1,6 +1,6 @@
-    <!DOCTYPE html>
-    <html>
-    <head>
+<!DOCTYPE html>
+<html>
+  <head>
     <meta charset='UTF-8'/>
     <script src='../lib/d3.js'></script>
     <script src='../lib/analysis.js'></script>
@@ -14,324 +14,471 @@
     <link rel="stylesheet" href="../css/bw.css">
     <style>
     </style>
-    </head>
-    <body></body>
-    <script>
+  </head>
+  <body></body>
+  <script>
 
-////////////////////////////////////////////////////////////
-// Рис 9.1
-function degenerate()
-{
-    var distr = createSVG('fig11')
-    new Graphics(distr,{'size':300,'left-margin':55})
-	.xRange([0,200])
-	.yRange([0,1])
-	.listPlot([[100,1]],{'needles':true})
-	.axes({yLabel : 'доля людей в группе',
-	       yTickFormat : fmt.percent,
-	       xLabel : 'уровень богатства'})
-    var lor = createSVG('fig12')
-    new Graphics(lor,{'aspectRatio':1,
-		      'size':220,
-		      'left-margin':55,
-		      'class':'Lorentz'})
-	.LorentzPlot([[0,0],[1,1]], {Gini : 0,
-				     xLabel : 'доля участников группы',
-				     yLabel : 'доля общей суммы',
-				     'points':false})
-}
-//degenerate()
-
-////////////////////////////////////////////////////////////
-// Рис 9.2
-function poissonStrategy()
-{
-    f = Binomial(10000,1/100)
-    var lst = range(0,200,4).map(i=>[i,i>134?0:f.PMF(i)])
-    var distr = createSVG('fig21')
-    new Graphics(distr,{'size':300,'left-margin':55})
-	.xRange([0,200])
-	.listPlot(lst,{'needles':true})
-	.plot(Normal(100,100).PDF)
-	.axes({ yLabel : 'доля участников группы',
-		yTickFormat : fmt.percent,
-		xLabel : 'уровень богатства'})
-    var lor = createSVG('fig22')
-    new Graphics(lor,{'aspectRatio':1,
-		      'size':220,
-		      'left-margin':55,
-		      'class':'Lorentz'})
-	.LorentzPlot(f.LorentzCurve(range(60,130,1)),
-		     { Gini : 0.02,
-		       xLabel : 'доля участников группы',
-		       yLabel : 'доля общей суммы',
-		       'joined':true,
-		       'points':false})
-}
-//poissonStrategy()
-
-////////////////////////////////////////////////////////////
-// Рис 9.3
-
-function uniform()
-{
-    var distr = createSVG('fig31')
-    new Graphics(distr,{'size':300,'left-margin':55})
-	.xRange([0,210])
-	.yRange([0,1/150])
-	.plot(Uniform([0,200]).PDF,{'filled':true,plotPoints:400})
-	.axes({yLabel : 'доля участников группы',
-	       xLabel : 'уровень богатства',
-	       yTickValues : range(0,0.007,0.001),
-	       yTickFormat : fmt.number
-	      })
-    var lor = createSVG('fig32')
-    var h= new Histogram(2).fromDistribution(Uniform([0,100]),1000)
-    new Graphics(lor,{'aspectRatio':1,
-		      'size':220,
-		      'left-margin':55,
-		      'class':'Lorentz'})
-	.LorentzPlot('empty',{ Gini : 0.33,
-			       xLabel : 'доля участников группы',
-			       yLabel : 'доля общей суммы' })
-	.plot(x=>x*x,{'class':'lower','filled':true})
-}
-//uniform()
-
-////////////////////////////////////////////////////////////
-// Рис 9.4
-
-function diffs() {
-    var f1 = Normal(5,1)
-    var f2 = Normal(-5,1)
-    var f3 = Normal(0,2)
-    p = new Graphics(createSVG('fig94'),{'class':'welth','left-margin':30})
-    p.xRange([-10,10])
-	.yRange([0,0.5])
-	.axes({xLabel : 'денежный поток',
-	       yLabel : 'вероятность',
-	       xTickValues : [0],
-	       yTickValues : [],
-	       xTickFormat : d3.format('i'),
-	       yTicksFormat : d3.format('i')})
-	.plot(f1.PDF,{'class':'A','filled':true})
-	.plot(f2.PDF,{'class':'A','filled':true})
-	.plot(f3.PDF,{'class':'B','filled':true})
-//	.gridLines({'x':[-5,5]})
-	.label('M/n',{'at':[4.4,-0.05],'class':'axis'})
-	.label('−M/n',{'at':[-6.3,-0.05],'class':'axis'})
-	.label('прибыль',{'at':[3.5,0.45]})
-	.label('убыток',{'at':[-6.5,0.45]})
-	.label('доход =',{'at':[-1.2,0.35]}) 
-	.label('прибыль − убыток',{'at':[-3.5,0.31]})
-}
-//diffs()
-
-////////////////////////////////////////////////////////////
-// Рис 9.5
-
-function exchange(opts)
-{
-    var batch = opts["batch"] == undefined ? true : opts["batch"]
-    var alpha = opts["alpha"] || 0
-    var beta = opts["beta"] || 0
-    var minShare = opts["minShare"] || 0
-    var bound = opts["bound"] || 0
-    
-    return function (data)
+    ////////////////////////////////////////////////////////////
+    // Рис 9.1
+    function degenerate()
     {
-	function exch(i) {
-	    if (data[i] >= 1)
-	    {
-		d = minShare + floor(data[i]*alpha)
-		do {
-		    j = randomInteger(data.length)()
-		    df = d // max(min(d,minShare + floor(data[j]*beta)),1)
-		    if (bound > 0 && data[j]>=bound-df) continue
-		    data[i]-=df
-		    data[j]+=df
-		    d-=df
-		} while (d > 0)
+	var distr = createSVG('fig11')
+	new Graphics(distr,{'size':300,'left-margin':55})
+	    .xRange([0,200])
+	    .yRange([0,1])
+	    .listPlot([[100,1]],{'needles':true})
+	    .axes({yLabel : 'доля людей в группе',
+		   yTickFormat : fmt.percent,
+		   xLabel : 'уровень богатства'})
+	var lor = createSVG('fig12')
+	new Graphics(lor,{'aspectRatio':1,
+			  'size':220,
+			  'left-margin':55,
+			  'class':'Lorentz'})
+	    .LorentzPlot([[0,0],[1,1]], {Gini : 0,
+					 xLabel : 'доля участников группы',
+					 yLabel : 'доля общей суммы',
+					 'points':false})
+    }
+    //degenerate()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.2
+    function poissonStrategy()
+    {
+	f = Binomial(10000,1/100)
+	var lst = range(0,200,4).map(i=>[i,i>134?0:f.PMF(i)])
+	var distr = createSVG('fig21')
+	new Graphics(distr,{'size':300,'left-margin':55})
+	    .xRange([0,200])
+	    .listPlot(lst,{'needles':true})
+	    .plot(Normal(100,100).PDF)
+	    .axes({ yLabel : 'доля участников группы',
+		    yTickFormat : fmt.percent,
+		    xLabel : 'уровень богатства'})
+	var lor = createSVG('fig22')
+	new Graphics(lor,{'aspectRatio':1,
+			  'size':220,
+			  'left-margin':55,
+			  'class':'Lorentz'})
+	    .LorentzPlot(f.LorentzCurve(range(60,130,1)),
+			 { Gini : 0.02,
+			   xLabel : 'доля участников группы',
+			   yLabel : 'доля общей суммы',
+			   'joined':true,
+			   'points':false})
+    }
+    //poissonStrategy()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.3
+
+    function uniform()
+    {
+	var distr = createSVG('fig31')
+	new Graphics(distr,{'size':300,'left-margin':55})
+	    .xRange([0,210])
+	    .yRange([0,1/150])
+	    .plot(Uniform([0,200]).PDF,{'filled':true,plotPoints:400})
+	    .axes({yLabel : 'доля участников группы',
+		   xLabel : 'уровень богатства',
+		   yTickValues : range(0,0.007,0.001),
+		   yTickFormat : fmt.number
+		  })
+	var lor = createSVG('fig32')
+	var h= new Histogram(2).fromDistribution(Uniform([0,100]),1000)
+	new Graphics(lor,{'aspectRatio':1,
+			  'size':220,
+			  'left-margin':55,
+			  'class':'Lorentz'})
+	    .LorentzPlot('empty',{ Gini : 0.33,
+				   xLabel : 'доля участников группы',
+				   yLabel : 'доля общей суммы' })
+	    .plot(x=>x*x,{'class':'lower','filled':true})
+    }
+    //uniform()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.4
+
+    function diffs() {
+	var f1 = Normal(5,1)
+	var f2 = Normal(-5,1)
+	var f3 = Normal(0,2)
+	p = new Graphics(createSVG('fig94'),{'class':'welth','left-margin':30})
+	p.xRange([-10,10])
+	    .yRange([0,0.5])
+	    .axes({xLabel : 'денежный поток',
+		   yLabel : 'вероятность',
+		   xTickValues : [0],
+		   yTickValues : [],
+		   xTickFormat : d3.format('i'),
+		   yTicksFormat : d3.format('i')})
+	    .plot(f1.PDF,{'class':'A','filled':true})
+	    .plot(f2.PDF,{'class':'A','filled':true})
+	    .plot(f3.PDF,{'class':'B','filled':true})
+	//	.gridLines({'x':[-5,5]})
+	    .label('M/n',{'at':[4.4,-0.05],'class':'axis'})
+	    .label('−M/n',{'at':[-6.3,-0.05],'class':'axis'})
+	    .label('прибыль',{'at':[3.5,0.45]})
+	    .label('убыток',{'at':[-6.5,0.45]})
+	    .label('доход =',{'at':[-1.2,0.35]}) 
+	    .label('прибыль − убыток',{'at':[-3.5,0.31]})
+    }
+    //diffs()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.5
+
+    function exchange(opts)
+    {
+	var batch = opts["batch"] == undefined ? true : opts["batch"]
+	var alpha = opts["alpha"] || 0
+	var beta = opts["beta"] || 0
+	var minShare = opts["minShare"] || 0
+	var bound = opts["bound"] || 0
+	
+	return function (data)
+	{
+	    function exch(i) {
+		if (data[i] >= 1)
+		{
+		    d = minShare + floor(data[i]*alpha)
+		    do {
+			j = randomInteger(data.length)()
+			df = d // max(min(d,minShare + floor(data[j]*beta)),1)
+			if (bound > 0 && data[j]>=bound-df) continue
+			data[i]-=df
+			data[j]+=df
+			d-=df
+		    } while (d > 0)
+		}
 	    }
+	    if (batch)
+		for(i=0;i<data.length;i++) exch(i)
+	    else
+		exch(randomInteger(data.length)())
+	    return data
 	}
-	if (batch)
-	    for(i=0;i<data.length;i++) exch(i)
+    }
+
+    function model1()
+    {
+	var n = 500, m = 100, b = 1
+	// долго от значения rep (20)
+	var rep = 10
+	var strategy = exchange({'minShare':1})
+	var step = (k,p) => nest(strategy,p,k)
+	function histopts(c) {
+	    return {'type':'PDF', 'filled':true, 'kind':'smooth'}
+	}
+	var fig = createSVG('fig3')
+	var hs = [new Histogram(1),new Histogram(b)
+		  ,new Histogram(b),new Histogram(b)]
+	for(var i = 0; i<rep; i++)
+	{
+	    var g = [m].repeat(n)
+	    hs[0].fromList(g = step(1,g))
+	    hs[1].fromList(g = step(8e2,g))
+	    hs[2].fromList(g = step(2e3,g))
+	    hs[3].fromList(g = step(1e5,g))
+	    console.log(Math.round((i+1)/rep*100)+"%")
+	}
+	var p = new Graphics(fig,{'class':'wealth','left-margin':60})
+	    .xRange([0,4*m])
+	    .yRange([0,0.02])
+	range(0,4).forEach((c,i) => p.histogram(hs[i],histopts(c)))
+	p.plot(Exponential(1/m).PDF,{'class':'thick'})
+	    .label('a',{'at':[110,0.019]})
+	    .label('b',{'at':[130,0.01]})
+	    .label('c',{'at':[170,0.005]})
+	    .label('d',{'at':[30,0.01]})
+	    .clipPaper()
+	    .axes({xLabel:"уровень богатства",
+		   yLabel:"плотность вероятности"})
+    }
+    // вычисляется долго
+    //model1()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.6
+
+    function model1_temp()
+    {
+	var fig = createSVG('fig96')
+	var p = new Graphics(fig,{'left-margin':60})
+	    .xRange([0,400])
+	    .yRange([0,0.02])
+	    .plot(Exponential(1/50).PDF)
+	    .label("m = 50",{'at':[50, 0.01]})
+	    .plot(Exponential(1/200).PDF)
+	    .label("m = 200",{'at':[200, 0.0025]})
+	    .clipPaper()
+	    .axes({xLabel:"уровень богатства",
+		   yLabel:"плотность вероятности"})
+	
+    }
+    // model1_temp()
+
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.7
+
+    function model1_entropy()
+    {
+	var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
+	var strategy = exchange({'minShare':1,'batch':false})
+	var fig = createSVG('fig3')
+	pts = []
+	var h
+	var g = [m].repeat(n)
+	for(var i = 1; i<=N; i*=dN) {
+	    console.log(i/N*100)
+	    h = new Histogram(b).fromList(g)
+	    pts.push([i, h.entropy])
+	    g = nest(strategy,[m].repeat(n),i)
+	}
+	new Graphics(fig,{})
+	    .xRange([1,N])
+	    .xAxisType('log')
+	    .yRange([0,7])
+	    .listLinePlot(pts)
+	    .gridLines({'y':[1-ln(1/m)]})
+	    .label('a',{'at':[100,0.35]})
+	    .label('b',{'at':[5e3,1.7]})
+	    .label('c',{'at':[5e6,5.1]})
+	    .label('d',{'at':[1e8,pts[23][1]+0.25]})
+	    .axes({xLabel:"число обменов",
+		   yLabel:"энтропия распределения",
+		   xTickValues:range(0,10).map(p=>10**p),
+		   xTickFormat:fmt['pow10'],
+		   yTickValues:range(0,8),
+		   yTickFormat:fmt['int']})
+    }
+    // вычисляется долго
+    //model1_entropy()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.8
+
+    function model2()
+    {
+	var n = 2000, m = 100, b = 1, rep = 10
+	//    var n = 100, m = 100, b = 1, rep = 1
+	var strategy = exchange({'minShare':1,'bound':2*m})
+	var step = (k,p) => nest(strategy,p,k)
+	function histopts(c) {
+	    return {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
+	}
+	var fig = createSVG('fig3')
+	var hs = [new Histogram(1),new Histogram(b)
+		  ,new Histogram(b),new Histogram(b)]
+	for(var i = 0; i<rep; i++)
+	{
+	    console.log(i/rep*100+"%")
+	    var g = [m].repeat(n)
+	    hs[0].fromList(g = step(1,g))
+	    hs[1].fromList(g = step(8e2,g))
+	    hs[2].fromList(g = step(2e3,g))
+	    hs[3].fromList(g = step(2e5,g))
+	    console.log(Math.round((i+1)/rep*100)+"%")
+	}
+	var p = new Graphics(fig,{'class':'wealth','left-margin':60})
+	    .xRange([0,220])
+	    .yRange([0,0.02])
+	range(0,4).forEach((c,i) => p.histogram(hs[i],histopts(c)))
+	p.plot(Uniform([0,2*m]).PDF,{'class':'refference'})
+	    .label('a',{'at':[110,0.019]})
+	    .label('b',{'at':[130,0.01]})
+	    .label('c',{'at':[115,0.008]})
+	    .label('d',{'at':[30,0.006]})
+	    .clipPaper()
+	    .axes({xLabel:"уровень богатства",
+		   yLabel:"плотность вероятности"})
+    }
+    // вычисляется долго
+    //model2()
+
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.9
+
+    function model2_entropy()
+    {
+	var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
+	var strategy = exchange({'minShare':1,'batch':false,'bound':2*m})
+	var fig = createSVG('fig3')
+	pts = []
+	var h
+	var g = [m].repeat(n)
+	for(var i = 1; i<=N; i*=dN) {
+	    console.log(i/N*100)
+	    h = new Histogram(b).fromList(g)
+	    pts.push([i, h.entropy])
+	    g = nest(strategy,[m].repeat(n),i)
+	}
+	new Graphics(fig,)
+	    .xRange([1,N])
+	    .xAxisType('log')
+	    .yRange([0,7])
+	    .listLinePlot(pts)
+	    .gridLines({'y':[1-ln(1/m),ln(2*m)]})
+	    .label('распределение Гиббса',{'at':[100,5.7]})
+	    .axes({xLabel:"число обменов",
+		   yLabel:"энтропия распределения",
+		   xTickValues:range(0,10).map(p=>10**p),
+		   xTickFormat:fmt['pow10'],
+		   yTickValues:range(0,8),
+		   yTickFormat:fmt['int']})
+    }
+    // вычисляется долго
+    //model2_entropy()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.9
+
+    function exact(b,m)
+    {
+	f = x => exp(b/m*x)-(1+x)/(1+x*(1-b/m))
+	if (b > 2*m)
+	    l = bisection(f, -0.6, -0.01,f=>f<0)[0]
 	else
-	    exch(randomInteger(data.length)())
-	return data
+	    l = bisection(f, 0.1, 1.5,f=>f<0)[0]
+	n = (exp(l*b/m)-1)/l
+	return x => (x >= 0 && x < b) ? exp(l*x/m)/n/m : 0
     }
-}
 
-function model1()
-{
-    var n = 500, m = 100, b = 1
-    // долго от значения rep (20)
-    var rep = 10
-    var strategy = exchange({'minShare':1})
-    var step = (k,p) => nest(strategy,p,k)
-    function histopts(c) {
-	return {'type':'PDF', 'filled':true, 'kind':'smooth'}
-    }
-    var fig = createSVG('fig3')
-    var hs = [new Histogram(1),new Histogram(b)
-	      ,new Histogram(b),new Histogram(b)]
-    for(var i = 0; i<rep; i++)
+    function model3()
     {
-	var g = [m].repeat(n)
-	hs[0].fromList(g = step(1,g))
-	hs[1].fromList(g = step(8e2,g))
-	hs[2].fromList(g = step(2e3,g))
-	hs[3].fromList(g = step(1e5,g))
-	console.log(Math.round((i+1)/rep*100)+"%")
+	var n = 2000, m = 100, b1 = 2*m-m/2, b2 = 2*m+m/2, rep = 10
+//	var n = 1000, m = 100, b1 = 2*m-m/2, b2 = 2*m+m/2, rep = 1
+	var strategy1 = exchange({'minShare':1,'bound':b1})
+	var strategy2 = exchange({'minShare':1,'bound':b2})
+	var step1 = (k,p) => nest(strategy1,p,k)
+	var step2 = (k,p) => nest(strategy2,p,k)
+	var histopts = {'type':'PDF', 'kind':'smooth','class':'thiner'}
+	var fig = createSVG('fig3')
+	hs1 = new Histogram(1)
+	hs2 = new Histogram(1)
+	for(var i = 0; i<rep; i++)
+	{
+	    hs1.fromList(step1(1e4,[m].repeat(n)))
+	    hs2.fromList(step2(1e4,[m].repeat(n)))
+	    console.log(Math.round((i+1)/rep*100)+"%")
+	}
+	var p = new Graphics(fig,{'left-margin':60})
+	    .xRange([0,3*m])
+	    .yRange([0,0.02])
+	    .histogram(hs1,histopts)
+	    .histogram(hs2,histopts)
+	    .gridLines({x:[100]})
+	    .plot(exact(b1,m),{'class':'refference','plotpoints':400})
+	    .plot(exact(b2,m),{'class':'refference','domain':[0,250]})
+	    .axes({xLabel:"уровень богатства",
+		   xTickValues: range(0,350,50),
+		   yLabel:"плотность вероятности"})
     }
-    var p = new Graphics(fig,{'class':'wealth','left-margin':60})
-	.xRange([0,4*m])
-	.yRange([0,0.02])
-    range(0,4).forEach((c,i) => p.histogram(hs[i],histopts(c)))
-    p.plot(Exponential(1/m).PDF,{'class':'thick'})
-	.label('a',{'at':[110,0.019]})
-	.label('b',{'at':[130,0.01]})
-	.label('c',{'at':[170,0.005]})
-	.label('d',{'at':[30,0.01]})
-	.clipPaper()
-	.axes({xLabel:"уровень богатства",
-	       yLabel:"плотность вероятности"})
-}
-// вычисляется долго
-//model1()
+    // вычисляется долго
+    //model3()
 
-////////////////////////////////////////////////////////////
-// Рис 9.6
+    ////////////////////////////////////////////////////////////
+    // Рис 9.10
+      function model4(a)
+      {
+	  var m = 100
+	  var fig = createSVG('fig910')
+	  f = Gamma(1/a-1,1/m*(1/a-1))
+	  hs = new Histogram(1).fromDistribution(f,20000)
+	  var p = new Graphics(fig,{'left-margin':60})
+	      .xRange([0,4*m])
+	      .yRange([0,0.015])
+	      .histogram(hs,{'type':'PDF','class':'thiner', 'kind':'smooth'})
+	      .plot(Gamma(1/a-1,1/m*(1/a-1)).PDF,{'class':'refference'})
+	      .clipPaper()
+	      .axes({xLabel:"уровень богатства",
+		     yLabel:"плотность вероятности"})
+      }
+    //  model4(0.25)
 
-function model1_temp()
-{
-    var fig = createSVG('fig96')
-    var p = new Graphics(fig,{'left-margin':60})
-	.xRange([0,400])
-	.yRange([0,0.02])
-	.plot(Exponential(1/50).PDF)
-	.label("m = 50",{'at':[50, 0.01]})
-	.plot(Exponential(1/200).PDF)
-	.label("m = 200",{'at':[200, 0.0025]})
-	.clipPaper()
-	.axes({xLabel:"уровень богатства",
-	       yLabel:"плотность вероятности"})
+    ////////////////////////////////////////////////////////////
+    // Рис 9.11
+
+    function model42()
+    {
+	var m = 100
+	var f = a => Gamma(1/a-1,1/m*(1/a-1)).PDF
+	var fig = createSVG('fig9111')
+	var p = new Graphics(fig,{'left-margin':60})
+	    .xRange([0,4*m])
+	    .yRange([0,0.015])
+	    .plot(f(0.1)).label(0.1,{'at':[110,0.011]})
+	    .plot(f(0.25)).label(0.25,{'at':[80,0.0084]})
+	    .plot(f(0.5)).label(0.5,{'at':[70,0.0055]})
+	    .plot(f(0.75)).label(0.75,{'at':[50,0.0012]})
+	    .clipPaper()
+	    .axes({xLabel:"уровень богатства",
+		   yLabel:"плотность вероятности"})
+    }
     
-}
-// model1_temp()
-
-
-////////////////////////////////////////////////////////////
-// Рис 9.7
-
-function model1_entropy()
-{
-    var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
-    var strategy = exchange({'minShare':1,'batch':false})
-    var fig = createSVG('fig3')
-    pts = []
-    var h
-    var g = [m].repeat(n)
-    for(var i = 1; i<=N; i*=dN) {
-	console.log(i/N*100)
-	h = new Histogram(b).fromList(g)
-	pts.push([i, h.entropy])
-	g = nest(strategy,[m].repeat(n),i)
-    }
-    new Graphics(fig,{})
-	.xRange([1,N])
-	.xAxisType('log')
-	.yRange([0,7])
-	.listLinePlot(pts)
-	.gridLines({'y':[1-ln(1/m)]})
-	.label('a',{'at':[100,0.35]})
-	.label('b',{'at':[5e3,1.7]})
-	.label('c',{'at':[5e6,5.1]})
-	.label('d',{'at':[1e8,pts[23][1]+0.25]})
-	.axes({xLabel:"число обменов",
-	       yLabel:"энтропия распределения",
-	       xTickValues:range(0,10).map(p=>10**p),
-	       xTickFormat:fmt['pow10'],
-	       yTickValues:range(0,8),
-	       yTickFormat:fmt['int']})
-}
-// вычисляется долго
-//model1_entropy()
-
-////////////////////////////////////////////////////////////
-// Рис 9.8
-
-function model2()
-{
-    var n = 2000, m = 100, b = 1, rep = 10
-//    var n = 100, m = 100, b = 1, rep = 1
-    var strategy = exchange({'minShare':1,'bound':2*m})
-    var step = (k,p) => nest(strategy,p,k)
-    function histopts(c) {
-	return {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
-    }
-    var fig = createSVG('fig3')
-    var hs = [new Histogram(1),new Histogram(b)
-	      ,new Histogram(b),new Histogram(b)]
-    for(var i = 0; i<rep; i++)
+    function model43()
     {
+	var m = 100
+	f = a => Gamma(1/a-1,1/m*(1/a-1))
+	var pts = a => new Histogram(1).fromDistribution(f(a),10000).LorenzCurve
+	var fig = createSVG('fig9112')
+	var p = new Graphics(fig,{'class':'Lorentz','aspectRatio':1,'size':240})
+	    .xRange([0,1])
+	    .yRange([0,1])
+	    .listLinePlot([[0,0],[1,1]],{'class':'lower','filled':true})
+	    .listLinePlot(ps=f(0.08).LorentzCurve(range(0,200,1)))
+	    .listLinePlot(ps=f(0.25).LorentzCurve(range(0,300,5)))
+	    .listLinePlot(ps=f(0.5).LorentzCurve(range(0,600,5)))
+	    .listLinePlot(ps=f(0.8).LorentzCurve(range(0,600,5)))
+	    .label('0.1 (0.2)',{'at':[0.49,0.3],'angle':45})
+	    .label('0.25 (0.3)',{'at':[0.52,0.22],'angle':45})
+    	    .label('0.5 (0.5)',{'at':[0.625,0.18],'angle':45})
+            .label('0.75 (0.7)',{'at':[0.74,0.07],'angle':45})
+	    .axes({ xLabel : 'доля участников группы',
+		    yLabel : 'доля общей суммы'})
+    }
+//    model42()
+//    model43()
+
+    ////////////////////////////////////////////////////////////
+    // Рис 9.11
+
+    function model4_entropy()
+    {
+//	var n = 10000, m = 100, b = 1, N=1e6, steps=50, dN=pow(N,1/steps)
+	var n = 10000, m = 100, b = 1, N=1e6, steps=50, dN=pow(N,1/steps)
+	var strategy = exchange({'alpha':0.8,'batch':false})
+	var fig = createSVG('fig3')
+	pts = []
+	var h,j=0
 	var g = [m].repeat(n)
-	hs[0].fromList(g = step(1,g))
-	hs[1].fromList(g = step(8e2,g))
-	hs[2].fromList(g = step(2e3,g))
-	hs[3].fromList(g = step(2e5,g))
-	console.log(Math.round((i+1)/rep*100)+"%")
+	for(var i = 1; i<=N; i*=dN) {
+	    h = new Histogram(b).fromList(g)
+	    pts.push([i, h.entropy])
+	    g = nest(strategy,[m].repeat(n),i)
+	    console.log(floor(j++/steps*100)+"%")
+	}
+	new Graphics(fig)
+	    .xRange([1,N])
+	    .xAxisType('log')
+	    .yRange([0,7])
+	    .listLinePlot(pts)
+	    .gridLines({'y':[1-ln(1/m)]})
+	    .label('распределение Гиббса',{'at':[100,5.7]})
+	    .axes({xLabel:"число обменов",
+		   yLabel:"энтропия распределения",
+		   xTickValues:range(0,10).map(p=>10**p),
+		   xTickFormat:fmt['pow10'],
+		   yTickValues:range(0,8),
+		   yTickFormat:fmt['int']})
     }
-    var p = new Graphics(fig,{'class':'wealth','left-margin':60})
-	.xRange([0,2.25*m])
-	.yRange([0,0.02])
-    range(0,4).forEach((c,i) => p.histogram(hs[i],histopts(c)))
-    p.plot(Uniform([0,2*m]).PDF,{'class':'refference'})
-	.label('a',{'at':[110,0.019]})
-	.label('b',{'at':[130,0.01]})
-	.label('c',{'at':[115,0.008]})
-	.label('d',{'at':[30,0.006]})
-	.clipPaper()
-	.axes({xLabel:"уровень богатства",
-	       yLabel:"плотность вероятности"})
-}
-// вычисляется долго
-model2()
-
-
-////////////////////////////////////////////////////////////
-// Рис 9.9
-
-function model2_entropy()
-{
-    var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
-    var strategy = exchange({'minShare':1,'batch':false,'bound':2*m})
-    var fig = createSVG('fig3')
-    pts = []
-    var h
-    var g = [m].repeat(n)
-    for(var i = 1; i<=N; i*=dN) {
-	console.log(i/N*100)
-	h = new Histogram(b).fromList(g)
-	pts.push([i, h.entropy])
-	g = nest(strategy,[m].repeat(n),i)
-    }
-    new Graphics(fig,)
-	.xRange([1,N])
-	.xAxisType('log')
-	.yRange([0,7])
-	.listLinePlot(pts)
-	.gridLines({'y':[1-ln(1/m),ln(2*m)]})
-	.label('распределение Гиббса',{'at':[100,5.7]})
-	.axes({xLabel:"число обменов",
-	       yLabel:"энтропия распределения",
-	       xTickValues:range(0,10).map(p=>10**p),
-	       xTickFormat:fmt['pow10'],
-	       yTickValues:range(0,8),
-	       yTickFormat:fmt['int']})
-}
-// вычисляется долго
-//model2_entropy()
-
-    </script>
-    </html>
+    // вычисляется долго
+    model4_entropy()
+    
+    
+  </script>
+</html>

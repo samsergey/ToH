@@ -87,6 +87,13 @@
     stroke-width : 0.1px;
 }
 
+.thinest .line {
+    stroke : black;
+    stroke-width : 0.1px;
+    stroke-opacity : 0.5;
+}
+
+
 .thiner .line {
     stroke : black;
     stroke-width : 1px;
@@ -185,15 +192,17 @@
 
 .Lorentz .upper .line {
     stroke : black;
-    stroke-width : 2.5px;
+    stroke-width : 1.5px;
+    stroke-dasharray : 5,5;
 }
 
 .Lorentz .lower .area {
-    fill : dimgray;
+    fill : #aaa;
 }
 
 .Lorentz .lower .line {
     stroke : black;
+    stroke-width : 1.5px;
 }
 
 .gridLine {
@@ -277,6 +286,3 @@
     stroke-linecap  : round;    
 }
 
-.thin {
-    stroke-width: 0.1;
-}

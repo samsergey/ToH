@@ -1,0 +1,131 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='UTF-8'/>
+    <script src='../lib/d3.js'></script>
+    <script src='../lib/analysis.js'></script>
+    <script src='../lib/functions.js'></script>
+    <script src='../lib/tools.js'></script>
+    <script src='../lib/matrix.js'></script>
+    <script src='../lib/statistics.js'></script>
+    <script src='../lib/graphics.js'></script>
+    <script src='../lib/signal.js'></script>
+    <script src='../lib/odesolve.js'></script>
+    <link rel="stylesheet" href="../css/bw.css">
+    <style>
+    </style>
+    </head>
+    <body></body>
+    <script>
+
+////////////////////////////////////////////////////////////
+// Рис 9.1
+function degenerate()
+{
+    var distr = createSVG('fig11')
+    new Graphics(distr,{'size':300,'left-margin':55})
+	.xRange([0,200])
+	.yRange([0,1])
+	.listPlot([[100,1]],{'needles':true})
+	.axes({yLabel : 'доля людей в группе',
+	       yTickFormat : fmt.percent,
+	       xLabel : 'уровень богатства'})
+    var lor = createSVG('fig12')
+    new Graphics(lor,{'aspectRatio':1,
+		      'size':220,
+		      'left-margin':55,
+		      'class':'Lorentz'})
+	.LorentzPlot([[0,0],[1,1]], {Gini : 0,
+				     xLabel : 'доля участников группы',
+				     yLabel : 'доля общей суммы',
+				     'points':false})
+}
+//degenerate()
+
+////////////////////////////////////////////////////////////
+// Рис 9.2
+function poissonStrategy()
+{
+    f = Binomial(10000,1/100)
+    var lst = range(0,200,4).map(i=>[i,i>134?0:f.PMF(i)])
+    var distr = createSVG('fig21')
+    new Graphics(distr,{'size':300,'left-margin':55})
+	.xRange([0,200])
+	.listPlot(lst,{'needles':true})
+	.plot(Normal(100,100).PDF)
+	.axes({ yLabel : 'доля участников группы',
+		yTickFormat : fmt.percent,
+		xLabel : 'уровень богатства'})
+    var lor = createSVG('fig22')
+    new Graphics(lor,{'aspectRatio':1,
+		      'size':220,
+		      'left-margin':55,
+		      'class':'Lorentz'})
+	.LorentzPlot(f.LorentzCurve(range(60,130,1)),
+		     { Gini : 0.02,
+		       xLabel : 'доля участников группы',
+		       yLabel : 'доля общей суммы',
+		       'joined':true,
+		       'points':false})
+}
+//poissonStrategy()
+
+////////////////////////////////////////////////////////////
+// Рис 9.3
+
+function uniform()
+{
+    var distr = createSVG('fig31')
+    new Graphics(distr,{'size':300,'left-margin':55})
+	.xRange([0,210])
+	.yRange([0,1/150])
+	.plot(Uniform([0,200]).PDF,{'filled':true,plotPoints:400})
+	.axes({yLabel : 'доля участников группы',
+	       xLabel : 'уровень богатства',
+	       yTickValues : range(0,0.007,0.001),
+	       yTickFormat : fmt.number
+	      })
+    var lor = createSVG('fig32')
+    var h= new Histogram(2).fromDistribution(Uniform([0,100]),1000)
+    new Graphics(lor,{'aspectRatio':1,
+		      'size':220,
+		      'left-margin':55,
+		      'class':'Lorentz'})
+	.LorentzPlot('empty',{ Gini : 0.33,
+			       xLabel : 'доля участников группы',
+			       yLabel : 'доля общей суммы' })
+	.plot(x=>x*x,{'class':'lower','filled':true})
+}
+//uniform()
+
+////////////////////////////////////////////////////////////
+// Рис 9.4
+
+function diffs() {
+    var f1 = Normal(5,1)
+    var f2 = Normal(-5,1)
+    var f3 = Normal(0,2)
+    p = new Graphics(createSVG('fig94'),{'class':'welth','left-margin':30})
+    p.xRange([-10,10])
+	.yRange([0,0.5])
+	.axes({xLabel : 'денежный поток',
+	       yLabel : 'вероятность',
+	       xTickValues : [0],
+	       yTickValues : [],
+	       xTickFormat : d3.format('i'),
+	       yTicksFormat : d3.format('i')})
+	.plot(f1.PDF,{'class':'A','filled':true})
+	.plot(f2.PDF,{'class':'A','filled':true})
+	.plot(f3.PDF,{'class':'B','filled':true})
+	.gridLines({'x':[-5,5]})
+	.label('M/n',{'at':[4.7,-0.06],'class':'axis'})
+	.label('-M/n',{'at':[-5.5,-0.06],'class':'axis'})
+	.label('прибыль',{'at':[3.2,0.45]})
+	.label('убыток',{'at':[-6.5,0.45]})
+	.label('доход =',{'at':[-0.7,0.45]})
+	.label('прибыль-убыток',{'at':[-1.6,0.08]})
+}
+diffs()
+
+    </script>
+    </html>

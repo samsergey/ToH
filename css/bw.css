@@ -93,11 +93,16 @@
     stroke-opacity : 0.5;
 }
 
-
 .thiner .line {
     stroke : black;
     stroke-width : 1px;
 }
+
+.thick .line {
+    stroke : black;
+    stroke-width : 1.5px;
+}
+
 
 .dashed .line {
     stroke : black;
@@ -144,8 +149,9 @@
     font-size : 120%;
 }
 
-.axis .label {
+.label .axis {
     fill : black;
+    font-size : 100%;
 }
 
 .polarMesh {
@@ -192,15 +198,17 @@
 
 .Lorentz .upper .line {
     stroke : black;
-    stroke-width : 2.5px;
+    stroke-width : 1.5px;
+    stroke-dasharray : 5,5;
 }
 
 .Lorentz .lower .area {
-    fill : dimgray;
+    fill : #aaa;
 }
 
 .Lorentz .lower .line {
     stroke : black;
+    stroke-width : 1.5px;
 }
 
 .gridLine {

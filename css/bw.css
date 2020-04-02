@@ -6,11 +6,11 @@
 
 }
 
-/*
+
 .pagebreak {
     display: block;
 }
-*/
+
 .graphics {
     stroke-width : 1.75px;
     stroke-linejoin : round;
@@ -18,6 +18,7 @@
     font-family : sans-serif;
     font-style : italic;
     font-size : 16px;
+    page-break-after: always;
 }
 
 /* plot */
@@ -85,17 +86,19 @@
 .thin .line {
     stroke : black;
     stroke-width : 0.1px;
+    stroke-opacity : 0.125;
 }
 
 .thinest .line {
     stroke : black;
     stroke-width : 0.1px;
-    stroke-opacity : 0.5;
+    stroke-opacity : 0.05;
 }
 
 .thiner .line {
     stroke : black;
     stroke-width : 1px;
+    stroke-opacity : 0.5;
 }
 
 .thick .line {

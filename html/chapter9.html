@@ -29,7 +29,10 @@
 	    .listPlot([[100,1]],{'needles':true})
 	    .axes({yLabel : 'доля людей в группе',
 		   yTickFormat : fmt.percent,
-		   xLabel : 'уровень богатства'})
+		   xLabel : 'уровень богатства',
+		   xTickValues: range(0,250,50),
+		   yTickValues: range(0,1.2,0.2),
+		  })
 	var lor = createSVG('fig12')
 	new Graphics(lor,{'aspectRatio':1,
 			  'size':220,
@@ -55,6 +58,8 @@
 	    .plot(Normal(100,100).PDF)
 	    .axes({ yLabel : 'доля участников группы',
 		    yTickFormat : fmt.percent,
+		    xTickValues: range(0,250,50),
+		    yTickValues: range(0,0.05,0.01),
 		    xLabel : 'уровень богатства'})
 	var lor = createSVG('fig22')
 	new Graphics(lor,{'aspectRatio':1,
@@ -82,8 +87,9 @@
 	    .plot(Uniform([0,200]).PDF,{'filled':true,plotPoints:400})
 	    .axes({yLabel : 'доля участников группы',
 		   xLabel : 'уровень богатства',
+		   xTickValues: range(0,250,50),
 		   yTickValues : range(0,0.007,0.001),
-		   yTickFormat : fmt.number
+		   yTickFormat : fmt.percent05
 		  })
 	var lor = createSVG('fig32')
 	var h= new Histogram(2).fromDistribution(Uniform([0,100]),1000)
@@ -114,9 +120,9 @@
 		   yTickValues : [],
 		   xTickFormat : d3.format('i'),
 		   yTicksFormat : d3.format('i')})
-	    .plot(f1.PDF,{'class':'A','filled':true})
-	    .plot(f2.PDF,{'class':'A','filled':true})
-	    .plot(f3.PDF,{'class':'B','filled':true})
+	    .plot(f1.PDF,{'filled':true})
+	    .plot(f2.PDF,{'filled':true})
+	    .plot(f3.PDF,{'filled':true})
 	//	.gridLines({'x':[-5,5]})
 	    .label('M/n',{'at':[4.4,-0.05],'class':'axis'})
 	    .label('−M/n',{'at':[-6.3,-0.05],'class':'axis'})
@@ -164,13 +170,13 @@
 
     function model1()
     {
-	var n = 500, m = 100, b = 1
+	var n = 1000, m = 100, b = 1
 	// долго от значения rep (20)
-	var rep = 10
+	var rep = 20
 	var strategy = exchange({'minShare':1})
 	var step = (k,p) => nest(strategy,p,k)
 	function histopts(c) {
-	    return {'type':'PDF', 'filled':true, 'kind':'smooth'}
+	    return {'type':'PDF', 'class':'thiner', 'kind':'smooth'}
 	}
 	var fig = createSVG('fig3')
 	var hs = [new Histogram(1),new Histogram(b)
@@ -195,7 +201,8 @@
 	    .label('d',{'at':[30,0.01]})
 	    .clipPaper()
 	    .axes({xLabel:"уровень богатства",
-		   yLabel:"плотность вероятности"})
+		   yLabel:"плотность вероятности",
+		   yTickValues : range(0,0.025,0.005)})
     }
     // вычисляется долго
     //model1()
@@ -215,10 +222,11 @@
 	    .label("m = 200",{'at':[200, 0.0025]})
 	    .clipPaper()
 	    .axes({xLabel:"уровень богатства",
-		   yLabel:"плотность вероятности"})
+		   yLabel:"плотность вероятности",
+		   yTickValues : range(0,0.025,0.005)})
 	
     }
-    // model1_temp()
+    model1_temp()
 
 
     ////////////////////////////////////////////////////////////
@@ -264,11 +272,11 @@
     function model2()
     {
 	var n = 2000, m = 100, b = 1, rep = 10
-	//    var n = 100, m = 100, b = 1, rep = 1
+	// var n = 100, m = 100, b = 1, rep = 1
 	var strategy = exchange({'minShare':1,'bound':2*m})
 	var step = (k,p) => nest(strategy,p,k)
 	function histopts(c) {
-	    return {'type':'PDF', 'class':'plot', 'filled':true, 'kind':'smooth'}
+	    return {'type':'PDF', 'class':'thiner', 'kind':'smooth'}
 	}
 	var fig = createSVG('fig3')
 	var hs = [new Histogram(1),new Histogram(b)
@@ -294,6 +302,8 @@
 	    .label('d',{'at':[30,0.006]})
 	    .clipPaper()
 	    .axes({xLabel:"уровень богатства",
+		   xTickValues: range(0,220,50),
+		   yTickValues: range(0,0.025,0.005),
 		   yLabel:"плотность вероятности"})
     }
     // вычисляется долго
@@ -305,7 +315,8 @@
 
     function model2_entropy()
     {
-	var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
+	//var n = 5000, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
+	var n = 500, m = 100, b = 1, N=1e9, dN=pow(N,1/25)
 	var strategy = exchange({'minShare':1,'batch':false,'bound':2*m})
 	var fig = createSVG('fig3')
 	pts = []
@@ -376,6 +387,7 @@
 	    .plot(exact(b2,m),{'class':'refference','domain':[0,250]})
 	    .axes({xLabel:"уровень богатства",
 		   xTickValues: range(0,350,50),
+		   yTickValues: range(0,0.025,0.005),
 		   yLabel:"плотность вероятности"})
     }
     // вычисляется долго
@@ -392,13 +404,14 @@
 	  var p = new Graphics(fig,{'left-margin':60})
 	      .xRange([0,4*m])
 	      .yRange([0,0.015])
-	      .histogram(hs,{'type':'PDF','class':'thiner', 'kind':'smooth'})
 	      .plot(Gamma(1/a-1,1/m*(1/a-1)).PDF,{'class':'refference'})
+	      .histogram(hs,{'type':'PDF','class':'thiner', 'kind':'smooth'})
 	      .clipPaper()
 	      .axes({xLabel:"уровень богатства",
+		     yTickValues: range(0,0.02,0.005),
 		     yLabel:"плотность вероятности"})
       }
-    //  model4(0.25)
+    //model4(0.25)
 
     ////////////////////////////////////////////////////////////
     // Рис 9.11
@@ -417,6 +430,7 @@
 	    .plot(f(0.75)).label(0.75,{'at':[50,0.0012]})
 	    .clipPaper()
 	    .axes({xLabel:"уровень богатства",
+		   yTickValues: range(0,0.02,0.005),
 		   yLabel:"плотность вероятности"})
     }
     
@@ -426,7 +440,8 @@
 	f = a => Gamma(1/a-1,1/m*(1/a-1))
 	var pts = a => new Histogram(1).fromDistribution(f(a),10000).LorenzCurve
 	var fig = createSVG('fig9112')
-	var p = new Graphics(fig,{'class':'Lorentz','aspectRatio':1,'size':240})
+	var p = new Graphics(fig,{'class':'Lorentz','aspectRatio':1,
+				  'size':240, 'left-margin':55})
 	    .xRange([0,1])
 	    .yRange([0,1])
 	    .listLinePlot([[0,0],[1,1]],{'class':'lower','filled':true})
@@ -439,10 +454,14 @@
     	    .label('0.5 (0.5)',{'at':[0.625,0.18],'angle':45})
             .label('0.75 (0.7)',{'at':[0.74,0.07],'angle':45})
 	    .axes({ xLabel : 'доля участников группы',
-		    yLabel : 'доля общей суммы'})
+		    yLabel : 'доля общей суммы',
+		    xTickFormat : fmt.percent,
+		    xTickValues : range(0,1.2,0.2),
+		    yTickFormat : fmt.percent,
+		    yTickValues : range(0,1.2,0.2)})
     }
-//    model42()
-//    model43()
+    //model42()
+    //model43()
 
     ////////////////////////////////////////////////////////////
     // Рис 9.11
@@ -477,8 +496,8 @@
 		   yTickFormat:fmt['int']})
     }
     // вычисляется долго
-    model4_entropy()
-    
+    //model4_entropy()
+    document.write('done')
     
   </script>
 </html>
